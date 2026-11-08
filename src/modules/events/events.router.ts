@@ -1,13 +1,10 @@
 import { Router } from 'express';
-import { listUpcomingEvents } from '@/modules/events/events.service.js';
+import { eventsController } from '@/container.js';
 
 export const eventsRouter = Router();
 
-eventsRouter.get('/events', async (_req, res, next) => {
-  try {
-    const data = await listUpcomingEvents();
-    res.status(200).json({ data });
-  } catch (error) {
-    next(error);
-  }
-});
+eventsRouter.post('/events', eventsController.create);
+eventsRouter.get('/events', eventsController.list);
+eventsRouter.get('/events/:id', eventsController.getById);
+eventsRouter.patch('/events/:id', eventsController.update);
+eventsRouter.delete('/events/:id', eventsController.remove);
