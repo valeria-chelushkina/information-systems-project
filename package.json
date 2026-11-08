@@ -8,16 +8,20 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch src/services/ticketing/server.ts",
+    "dev:catalog": "cross-env SERVICE_NAME=catalog CATALOG_PORT=3003 tsx watch src/services/catalog/server.ts",
     "clean": "rimraf dist",
     "build": "npm run clean && tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
-    "start": "node dist/server.js",
+    "start": "node dist/services/ticketing/server.js",
+    "start:catalog": "cross-env SERVICE_NAME=catalog node dist/services/catalog/server.js",
     "typecheck": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate --config=src/db/drizzle.config.ts",
-    "db:migrate": "tsx src/db/migrate.ts",
-    "db:studio": "drizzle-kit studio --config=src/db/drizzle.config.ts",
-    "seed": "tsx src/scripts/seed.ts",
-    "load": "tsx src/scripts/load-purchases.ts"
+    "db:generate": "drizzle-kit generate --config=src/services/ticketing/db/drizzle.config.ts",
+    "db:generate:catalog": "drizzle-kit generate --config=src/services/catalog/db/drizzle.config.ts",
+    "db:migrate": "tsx src/shared/db/migrate.ts ticketing",
+    "db:migrate:catalog": "tsx src/shared/db/migrate.ts catalog",
+    "db:studio": "drizzle-kit studio --config=src/services/ticketing/db/drizzle.config.ts",
+    "seed": "tsx src/services/ticketing/scripts/seed.ts",
+    "load": "tsx src/services/ticketing/scripts/load-purchases.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
@@ -32,6 +36,7 @@
     "@types/express": "^4.17.21",
     "@types/node": "^22.10.5",
     "@types/pg": "^8.11.10",
+    "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.11",
     "rimraf": "^6.1.4",
     "tsc-alias": "^1.9.10",
