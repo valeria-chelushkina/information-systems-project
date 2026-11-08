@@ -21,6 +21,7 @@
     "db:migrate:catalog": "tsx src/shared/db/migrate.ts catalog",
     "db:studio": "drizzle-kit studio --config=src/services/ticketing/db/drizzle.config.ts",
     "seed": "tsx src/services/ticketing/scripts/seed.ts",
+    "seed:catalog": "cross-env SERVICE_NAME=catalog tsx src/services/catalog/scripts/seed.ts",
     "load": "tsx src/services/ticketing/scripts/load-purchases.ts"
   },
   "dependencies": {

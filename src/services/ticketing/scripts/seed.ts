@@ -5,22 +5,27 @@ import { events, priceTiers } from '@/services/ticketing/db/schema/index.js';
 import { timedQuery } from '@/shared/db/timed-query.js';
 import { EventsRepository } from '@/services/ticketing/modules/events/events.repository.js';
 import { TiersRepository } from '@/services/ticketing/modules/tiers/tiers.repository.js';
+import { optionalEnv } from '@/shared/config/env.js';
 import { logger } from '@/shared/observability/logger.js';
 import type { EventStatus } from '@/services/ticketing/typedefs/event.typedefs.js';
 
 const PERFORMERS = [
-  'Mafumafu',
-  'Soraru',
-  'After the Rain',
-  'Ado',
-  'Amatsuki',
-  'Uratanuki',
-  'Sou',
-  'Sakata',
-  'Syudou',
-  'Miyashita Yuu',
-  'Eve',
-  'Soramafuurasaka'
+  'Neon Harbor',
+  'The Paper Kites',
+  'Midnight Transit',
+  'Velvet Static',
+  'Northern Lights',
+  'Echo Chamber',
+  'Glass Animals',
+  'Silver Firs',
+  'Lunar Tide',
+  'The Hollow Coast',
+  'Iron Meridian',
+  'Slow Motion Club',
+  'Paper Lanterns',
+  'Golden Hour',
+  'Static Bloom',
+  'Wildflower Run',
 ];
 
 const VENUES = [
@@ -42,6 +47,52 @@ const TIER_TEMPLATES = [
   { name: 'Lower Bowl', priceCents: 6500, minQty: 100, maxQty: 300 },
   { name: 'VIP', priceCents: 15000, minQty: 20, maxQty: 80 },
 ] as const;
+
+interface CatalogPerformer {
+  id: string;
+  name: string;
+}
+
+interface CatalogVenue {
+  id: string;
+  name: string;
+}
+
+interface CatalogDirectory {
+  performers: CatalogPerformer[];
+  venues: CatalogVenue[];
+}
+
+async function loadCatalog(): Promise<CatalogDirectory> {
+  const baseUrl = optionalEnv('CATALOG_BASE_URL', 'http://127.0.0.1:3003');
+
+  async function fetchPage<T>(path: string): Promise<{ data: T[] }> {
+    let response: Response;
+
+    try {
+      response = await fetch(`${baseUrl}${path}`, { signal: AbortSignal.timeout(5000) });
+    } catch {
+      throw new Error(`Cannot reach catalog at ${baseUrl}. Start it with: npm run dev:catalog`);
+    }
+
+    if (!response.ok) {
+      throw new Error(`Catalog ${path} returned ${response.status}`);
+    }
+
+    return (await response.json()) as { data: T[] };
+  }
+
+  const [performersPage, venuesPage] = await Promise.all([
+    fetchPage<CatalogPerformer>('/api/performers?limit=100'),
+    fetchPage<CatalogVenue>('/api/venues?limit=100'),
+  ]);
+
+  if (performersPage.data.length === 0 || venuesPage.data.length === 0) {
+    throw new Error('Catalog is empty. Run: npm run seed:catalog -- --reset');
+  }
+
+  return { performers: performersPage.data, venues: venuesPage.data };
+}
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -67,7 +118,11 @@ function pickStatus(): EventStatus {
   return 'sold_out';
 }
 
-async function seedEvents(eventCount: number, reset: boolean): Promise<void> {
+async function seedEvents(
+  eventCount: number,
+  reset: boolean,
+  catalog: CatalogDirectory | null,
+): Promise<void> {
   if (reset) {
     await timedQuery('seed_truncate', () =>
       db.execute(sql`TRUNCATE TABLE ${priceTiers}, ${events} CASCADE`),
@@ -81,8 +136,14 @@ async function seedEvents(eventCount: number, reset: boolean): Promise<void> {
   const now = new Date();
 
   const eventRows = Array.from({ length: eventCount }, () => {
-    const performer = randomItem(PERFORMERS);
-    const venue = randomItem(VENUES);
+    const catalogPerformer = catalog ? randomItem(catalog.performers) : null;
+    const catalogVenue = catalog ? randomItem(catalog.venues) : null;
+
+    const performerId = catalogPerformer?.id ?? randomUUID();
+    const performerName = catalogPerformer?.name ?? randomItem(PERFORMERS);
+    const venueId = catalogVenue?.id ?? randomUUID();
+    const venueName = catalogVenue?.name ?? randomItem(VENUES);
+
     const startsAt = addMinutes(now, randomInt(60 * 24, 60 * 24 * 90));
     const status = pickStatus();
 
@@ -94,11 +155,11 @@ async function seedEvents(eventCount: number, reset: boolean): Promise<void> {
           : null;
 
     return {
-      performerId: randomUUID(),
-      performerName: performer,
-      venueId: randomUUID(),
-      venueName: venue,
-      title: `${performer} at ${venue}`,
+      performerId,
+      performerName,
+      venueId,
+      venueName,
+      title: `${performerName} at ${venueName}`,
       startsAt,
       doorsAt: addMinutes(startsAt, -60),
       durationMinutes: randomInt(90, 180),
@@ -141,6 +202,7 @@ async function seedEvents(eventCount: number, reset: boolean): Promise<void> {
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const reset = args.includes('--reset');
+  const fromCatalog = args.includes('--from-catalog');
   const eventsArg = args.find((arg) => arg.startsWith('--events='));
   const eventCount = eventsArg ? Number(eventsArg.split('=')[1]) : 200;
 
@@ -148,7 +210,16 @@ async function main(): Promise<void> {
     throw new Error('--events must be a positive integer');
   }
 
-  await seedEvents(eventCount, reset);
+  const catalog = fromCatalog ? await loadCatalog() : null;
+
+  if (catalog) {
+    logger.info(
+      { performers: catalog.performers.length, venues: catalog.venues.length },
+      'using catalog references',
+    );
+  }
+
+  await seedEvents(eventCount, reset, catalog);
   await pool.end();
 }
 

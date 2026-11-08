@@ -174,10 +174,20 @@ the schema DSL cannot express `EXCLUDE USING gist`.
 
 ## Seed data and load
 
+Seed catalog first, then ticketing so events reference real performers and
+venues:
+
 ```bash
-npm run seed                 # 200 events
+npm run seed:catalog -- --reset        # 16 performers, 10 venues, 11 bookings
+npm run seed -- --reset --from-catalog # 200 events using catalog ids
+```
+
+`seed:catalog` refuses to run against a non-empty catalog; pass `--reset` to
+reseed. Without `--from-catalog` the event seeder generates synthetic
+performer and venue ids, which is only useful while catalog is empty.
+
+```bash
 npm run seed -- --events=500
-npm run seed -- --reset
 ```
 
 Concurrency check against a running ticketing server:
@@ -202,6 +212,7 @@ npm run load -- --tier=<uuid> --concurrency=50 --quantity=1
 | `npm run db:migrate` | apply ticketing migrations |
 | `npm run db:migrate:catalog` | apply catalog migrations |
 | `npm run seed` | populate events and price tiers |
+| `npm run seed:catalog` | populate performers, venues and bookings |
 | `npm run load` | concurrent purchase scenario |
 
 ## Containerised run
