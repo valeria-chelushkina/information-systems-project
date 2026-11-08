@@ -1,0 +1,45 @@
+name: concert-ops
+
+services:
+  postgres:
+    image: postgres:17.2
+    container_name: concert-ops-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
+      POSTGRES_DB: postgres
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  ticketing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: concert-ops-ticketing
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      TICKETING_DB_NAME: ${TICKETING_DB_NAME}
+      TICKETING_DB_USER: ${TICKETING_DB_USER}
+      TICKETING_DB_PASSWORD: ${TICKETING_DB_PASSWORD}
+      TICKETING_PORT: 3000
+    ports:
+      - "${TICKETING_HOST_PORT}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
