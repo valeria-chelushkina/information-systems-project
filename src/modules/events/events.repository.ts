@@ -1,11 +1,11 @@
 import { and, asc, count, eq, gte, lte, type SQL } from 'drizzle-orm';
-import type { Database } from '@/db/client.js';
+import { db as database, type Database } from '@/db/client.js';
 import { events } from '@/db/schema/index.js';
 import { timedQuery } from '@/db/timed-query.js';
 import type { EventFilters, EventRow, NewEventRow } from '@/typedefs/event.typedefs.js';
 
 export class EventsRepository {
-  constructor(private readonly db: Database) {}
+  protected readonly db: Database = database;
 
   insertOne(values: NewEventRow): Promise<EventRow> {
     return timedQuery('insert_event', async () => {

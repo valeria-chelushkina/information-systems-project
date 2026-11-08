@@ -26,17 +26,43 @@ keys. Cross-service references are opaque UUIDs plus a denormalised snapshot.
 ## First run
 
 ```bash
-docker compose up -d db
+docker compose up -d postgres
 npm install
 npm run db:migrate
+npm run seed
 npm run dev
 ```
 
 ```bash
 curl http://localhost:3001/health
-curl http://localhost:3001/events
+curl http://localhost:3001/api/events?limit=5
 curl http://localhost:3001/metrics
 ```
+
+## API
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/health` | readiness, pings the database |
+| `GET` | `/metrics` | Prometheus exposition |
+| `POST` | `/api/events` | create an event |
+| `GET` | `/api/events` | list events (`status`, `from`, `to`, `limit`, `offset`) |
+| `GET` | `/api/events/:id` | fetch one event |
+| `PATCH` | `/api/events/:id` | partial update, including status transitions |
+| `DELETE` | `/api/events/:id` | delete an event that has no sales |
+| `POST` | `/api/events/:eventId/tiers` | create a price tier |
+| `GET` | `/api/events/:eventId/tiers` | list price tiers |
+| `PATCH` | `/api/tiers/:tierId` | update price or quantity |
+| `DELETE` | `/api/tiers/:tierId` | delete a tier with no sold or held seats |
+
+Event statuses follow a state machine:
+
+```
+draft -> scheduled -> on_sale -> sold_out -> completed
+                            \-> cancelled
+```
+
+Money is integer cents. `priceCents = 4500` means `$45.00`.
 
 ## Database workflow
 
@@ -53,6 +79,14 @@ Generated SQL is committed. Two things are not expressible in the schema DSL
 and will require hand-written migrations later: exclusion constraints for
 venue date ranges, and partial indexes.
 
+## Seed data
+
+```bash
+npm run seed                 # 200 events
+npm run seed -- --events=500
+npm run seed -- --reset      # truncate first
+```
+
 ## Commands
 
 | Command | Purpose |
@@ -63,6 +97,7 @@ venue date ranges, and partial indexes.
 | `npm run typecheck` | type-check without emitting |
 | `npm run db:generate` | generate a migration from the schema |
 | `npm run db:migrate` | apply pending migrations |
+| `npm run seed` | populate events and price tiers |
 
 ## Containerised run
 
@@ -101,14 +136,35 @@ src/
       request-metrics.ts
       error-handler.ts
     routes/
+      api.router.ts               mounts module routers under /api
       health.ts
       metrics.ts
   modules/
     events/
-      events.router.ts            HTTP shape
-      events.service.ts           business rules
-      events.repository.ts        queries
-      events.types.ts
+      events.router.ts            route table only
+      events.controller.ts        request/response handling
+      events.service.ts           business rules and state machine
+      events.repository.ts        drizzle queries
+      events.schemas.ts           zod request schemas
+    tiers/
+      tiers.router.ts
+      tiers.controller.ts
+      tiers.service.ts
+      tiers.repository.ts
+      tiers.schemas.ts
+  shared/
+    errors/
+      http-error.ts               status-carrying error type
+      database-error.ts           postgres error code mapping
+    http/
+      async-handler.ts            forwards rejected promises to express
+      validate.ts                 zod parsing with 400 responses
+  scripts/
+    seed.ts                       data generation
+  typedefs/
+    database.typedefs.ts
+    event.typedefs.ts
+    tier.typedefs.ts
   observability/
     metrics.ts                    every Prometheus metric
     logger.ts                     structured JSON logging
@@ -119,6 +175,7 @@ db/
   init/                           one-time Postgres role and database setup
 ```
 
-Rules followed across the codebase: router handles HTTP only, service holds
-business rules, repository holds queries. Every query is timed under a stable
-name so it can be charted individually.
+Layering rules: a router only maps method and path to a controller; a
+controller only handles HTTP concerns, validation and status codes; a service
+holds business rules and orchestrates; a repository only talks to the
+database. Every query is timed under a stable name.

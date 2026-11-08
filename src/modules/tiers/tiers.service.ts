@@ -1,14 +1,12 @@
-import type { EventsService } from '@/modules/events/events.service.js';
-import type { TiersRepository } from '@/modules/tiers/tiers.repository.js';
+import { EventsService } from '@/modules/events/events.service.js';
+import { TiersRepository } from '@/modules/tiers/tiers.repository.js';
 import type { CreateTierInput, UpdateTierInput } from '@/modules/tiers/tiers.schemas.js';
 import { HttpError } from '@/shared/errors/http-error.js';
 import type { NewPriceTierRow, PriceTierRow } from '@/typedefs/tier.typedefs.js';
 
 export class TiersService {
-  constructor(
-    private readonly repository: TiersRepository,
-    private readonly eventsService: EventsService,
-  ) {}
+  protected readonly repository = new TiersRepository();
+  protected readonly eventsService = new EventsService();
 
   async createTier(eventId: string, input: CreateTierInput): Promise<PriceTierRow> {
     await this.eventsService.getEventById(eventId);

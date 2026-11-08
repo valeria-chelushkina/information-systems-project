@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { EventsService } from '@/modules/events/events.service.js';
+import { EventsService } from '@/modules/events/events.service.js';
 import {
   createEventSchema,
   eventIdParamsSchema,
@@ -10,7 +10,7 @@ import { asyncHandler } from '@/shared/http/async-handler.js';
 import { validate } from '@/shared/http/validate.js';
 
 export class EventsController {
-  constructor(private readonly service: EventsService) {}
+  protected readonly service = new EventsService();
 
   create = asyncHandler(async (req: Request, res: Response) => {
     const body = validate(createEventSchema, req.body);

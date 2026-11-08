@@ -1,11 +1,11 @@
 import { asc, eq } from 'drizzle-orm';
-import type { Database } from '@/db/client.js';
+import { db as database, type Database } from '@/db/client.js';
 import { priceTiers } from '@/db/schema/index.js';
 import { timedQuery } from '@/db/timed-query.js';
 import type { NewPriceTierRow, PriceTierRow } from '@/typedefs/tier.typedefs.js';
 
 export class TiersRepository {
-  constructor(private readonly db: Database) {}
+  protected readonly db: Database = database;
 
   insertOne(values: NewPriceTierRow): Promise<PriceTierRow> {
     return timedQuery('insert_price_tier', async () => {

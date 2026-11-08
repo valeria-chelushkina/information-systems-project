@@ -1,9 +1,9 @@
 import express from 'express';
 import { errorHandler } from '@/http/middleware/error-handler.js';
 import { requestMetrics } from '@/http/middleware/request-metrics.js';
+import { apiRouter } from '@/http/routes/api.router.js';
 import { healthRouter } from '@/http/routes/health.js';
 import { metricsRouter } from '@/http/routes/metrics.js';
-import { eventsRouter } from '@/modules/events/events.router.js';
 
 export function createApp(): express.Express {
   const app = express();
@@ -12,7 +12,7 @@ export function createApp(): express.Express {
   app.use(requestMetrics);
   app.use(healthRouter);
   app.use(metricsRouter);
-  app.use(eventsRouter);
+  app.use('/api', apiRouter);
   app.use(errorHandler);
   return app;
 }

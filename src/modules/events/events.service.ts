@@ -24,7 +24,7 @@ const ALLOWED_TRANSITIONS: Record<EventStatus, readonly EventStatus[]> = {
 };
 
 export class EventsService {
-  constructor(private readonly repository: EventsRepository) {}
+  protected readonly repository = new EventsRepository();
 
   async createEvent(input: CreateEventInput): Promise<EventRow> {
     this.assertSchedule(input);

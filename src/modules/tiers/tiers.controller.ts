@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { TiersService } from '@/modules/tiers/tiers.service.js';
+import { TiersService } from '@/modules/tiers/tiers.service.js';
 import {
   createTierSchema,
   eventIdParamsSchema,
@@ -10,7 +10,7 @@ import { asyncHandler } from '@/shared/http/async-handler.js';
 import { validate } from '@/shared/http/validate.js';
 
 export class TiersController {
-  constructor(private readonly service: TiersService) {}
+  protected readonly service = new TiersService();
 
   create = asyncHandler(async (req: Request, res: Response) => {
     const { eventId } = validate(eventIdParamsSchema, req.params);

@@ -1,7 +1,9 @@
 import { Router } from 'express';
-import { tiersController } from '@/container.js';
+import { TiersController } from '@/modules/tiers/tiers.controller.js';
 
 export const tiersRouter = Router();
+
+const tiersController = new TiersController();
 
 tiersRouter.post('/events/:eventId/tiers', tiersController.create);
 tiersRouter.get('/events/:eventId/tiers', tiersController.list);
