@@ -7,16 +7,19 @@ dashboards, Loki logs, Tempo traces, a separate auth service and RabbitMQ.
 ## Architecture
 
 ```
-ticketing  (this repo, :3001)   events, price tiers, inventory, purchases
-catalog    (planned)            performers, venues, booking requests
-auth       (planned, SQLite)    users, sessions, login attempts
-notify     (planned)            RabbitMQ consumer -> notifications
+ticketing  :3001   events, price tiers, holds, orders, tickets, payments
+catalog    :3003   performers, venues, booking requests
 
 db_ticketing / db_catalog / db_notify   -> one Postgres container, :5434
+auth       (planned, SQLite)
+notify     (planned, RabbitMQ consumer)
 ```
 
 Each service owns its database. No shared tables, no cross-service foreign
-keys. Cross-service references are opaque UUIDs plus a denormalised snapshot.
+keys. A single package builds one image; each service is a separate process
+started from its own entrypoint, so shared code is compiled once and the
+`SERVICE_NAME` environment variable selects the database, port and metric
+labels.
 
 ## Requirements
 
@@ -29,17 +32,24 @@ keys. Cross-service references are opaque UUIDs plus a denormalised snapshot.
 docker compose up -d postgres
 npm install
 npm run db:migrate
+npm run db:migrate:catalog
 npm run seed
-npm run dev
+```
+
+```bash
+npm run dev            # ticketing on :3001
+npm run dev:catalog    # catalog on :3003
 ```
 
 ```bash
 curl http://localhost:3001/health
 curl http://localhost:3001/api/events?limit=5
-curl http://localhost:3001/metrics
+curl http://localhost:3003/api/venues
 ```
 
 ## API
+
+### ticketing
 
 | Method | Path | Purpose |
 | --- | --- | --- |
@@ -65,6 +75,31 @@ Event statuses follow a state machine:
 draft -> scheduled -> on_sale -> sold_out -> completed
                             \-> cancelled
 ```
+
+### catalog
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/performers` | create a performer |
+| `GET` | `/api/performers` | list performers |
+| `GET` | `/api/performers/:id` | fetch one performer |
+| `POST` | `/api/venues` | create a venue |
+| `GET` | `/api/venues` | list venues |
+| `GET` | `/api/venues/:id` | fetch one venue |
+| `POST` | `/api/bookings` | request a venue for a period |
+| `GET` | `/api/bookings` | list bookings (`venueId`, `status`) |
+| `GET` | `/api/bookings/:id` | fetch one booking |
+| `PATCH` | `/api/bookings/:id` | confirm or reject a booking |
+
+Confirming a booking runs against a database exclusion constraint:
+
+```sql
+EXCLUDE USING gist (venue_id WITH =, during WITH &&)
+WHERE (status = 'confirmed')
+```
+
+Two confirmed bookings for the same venue can never overlap; the second one
+returns `409 booking_conflict` with Postgres code `23P01`.
 
 Money is integer cents. `priceCents = 4500` means `$45.00`.
 
@@ -96,28 +131,28 @@ control the hold lifetime and the sweeper cadence.
 
 ## Database workflow
 
-The schema lives in TypeScript under `src/db/schema/`. SQL migration files
-are generated from it into `drizzle/` and applied with the migrator.
+Each service has its own schema folder and migration output:
 
 ```bash
-npm run db:generate
+npm run db:generate            # ticketing -> drizzle/ticketing
+npm run db:generate:catalog    # catalog   -> drizzle/catalog
 npm run db:migrate
-npm run db:studio
+npm run db:migrate:catalog
 ```
 
-Generated SQL is committed. Two things are not expressible in the schema DSL
-and will require hand-written migrations later: exclusion constraints for
-venue date ranges, and partial indexes.
+Generated SQL is committed. The catalog's venue-overlap constraint is a
+hand-written migration (`drizzle/catalog/0001_booking_overlap.sql`) because
+the schema DSL cannot express `EXCLUDE USING gist`.
 
-## Seed data
+## Seed data and load
 
 ```bash
 npm run seed                 # 200 events
 npm run seed -- --events=500
-npm run seed -- --reset      # truncate first
+npm run seed -- --reset
 ```
 
-Concurrency check against a running server:
+Concurrency check against a running ticketing server:
 
 ```bash
 npm run load -- --concurrency=20
@@ -128,14 +163,18 @@ npm run load -- --tier=<uuid> --concurrency=50 --quantity=1
 
 | Command | Purpose |
 | --- | --- |
-| `npm run dev` | run with hot reload |
+| `npm run dev` | ticketing with hot reload |
+| `npm run dev:catalog` | catalog with hot reload |
 | `npm run build` | compile to `dist/` |
-| `npm start` | run the compiled server |
+| `npm start` | run the compiled ticketing server |
+| `npm start:catalog` | run the compiled catalog server |
 | `npm run typecheck` | type-check without emitting |
-| `npm run db:generate` | generate a migration from the schema |
-| `npm run db:migrate` | apply pending migrations |
+| `npm run db:generate` | ticketing migration from schema |
+| `npm run db:generate:catalog` | catalog migration from schema |
+| `npm run db:migrate` | apply ticketing migrations |
+| `npm run db:migrate:catalog` | apply catalog migrations |
 | `npm run seed` | populate events and price tiers |
-| `npm run load` | concurrent purchase scenario against a running server |
+| `npm run load` | concurrent purchase scenario |
 
 ## Containerised run
 
@@ -143,93 +182,79 @@ npm run load -- --tier=<uuid> --concurrency=50 --quantity=1
 docker compose up -d --build
 ```
 
-The app container reaches `postgres:5432`; the host reaches `127.0.0.1:5434`.
-Compose supplies the container-specific `DB_HOST` and `DB_PORT`.
+| Service | Host port | Container port |
+| --- | --- | --- |
+| ticketing | `TICKETING_HOST_PORT` (3002) | 3000 |
+| catalog | `CATALOG_HOST_PORT` (3004) | 3000 |
+| postgres | 5434 | 5432 |
 
-Local development listens on `TICKETING_PORT` (3001). The container publishes
-`TICKETING_HOST_PORT` (3002) so both can run at the same time.
+Both containers run the same image with different entrypoints. Inside the
+Compose network they reach each other by service name, e.g.
+`http://catalog:3000`.
 
 ## Layout
 
 ```
 src/
-  app.ts                          express wiring
-  server.ts                       listen + graceful shutdown
-  config/
-    env.ts                        env parsing helpers
-    database.ts                   per-service database config
-    index.ts                      assembled config object
-  db/
-    client.ts                     pg pool + drizzle instance
-    executor.ts                   database or transaction executor type
-    timed-query.ts                named query timing for Prometheus
-    transaction.ts                transaction helper
-    migrate.ts                    drizzle migrator entry point
-    drizzle.config.ts             drizzle-kit config
-    schema/
-      index.ts                    schema barrel
-      events.ts
-      holds.ts
-      orders.ts
-      payments.ts
-      price-tiers.ts
-      tickets.ts
-  http/
-    middleware/
-      request-metrics.ts
-      error-handler.ts
-    routes/
-      api.router.ts               mounts module routers under /api
-      health.ts
-      metrics.ts
-  modules/
-    events/
-      events.router.ts            route table only
-      events.controller.ts        request/response handling
-      events.service.ts           business rules and state machine
-      events.repository.ts        drizzle queries
-      events.schemas.ts           zod request schemas
-    tiers/
-      tiers.router.ts
-      tiers.controller.ts
-      tiers.service.ts
-      tiers.repository.ts
-      tiers.schemas.ts
-    purchases/
-      purchases.router.ts         holds and purchases endpoints
-      purchases.controller.ts
-      purchases.service.ts        hold lifecycle, transaction, idempotency
-      purchases.schemas.ts
-      purchases.sweeper.ts        periodic expiry job
-      holds.repository.ts
-      orders.repository.ts
-      tickets.repository.ts
-      payments.repository.ts
   shared/
+    config/
+      env.ts                      env parsing helpers
+      database.ts                 per-service database config
+      index.ts                    SERVICE_NAME-driven config object
+    db/
+      client.ts                   pg pool + drizzle instance
+      executor.ts                 database or transaction executor type
+      timed-query.ts              named query timing for Prometheus
+      transaction.ts              transaction helper
+      migrate.ts                  migration runner, one folder per service
     errors/
       http-error.ts               status-carrying error type
       database-error.ts           postgres error code mapping
     http/
-      async-handler.ts            forwards rejected promises to express
-      validate.ts                 zod parsing with 400 responses
-  scripts/
-    seed.ts                       data generation
-    load-purchases.ts             concurrent purchase scenario
-  typedefs/
-    database.typedefs.ts
-    event.typedefs.ts
-    hold.typedefs.ts
-    order.typedefs.ts
-    payment.typedefs.ts
-    purchase.typedefs.ts
-    ticket.typedefs.ts
-    tier.typedefs.ts
-  observability/
-    metrics.ts                    every Prometheus metric
-    logger.ts                     structured JSON logging
+      async-handler.ts
+      validate.ts
+      middleware/
+        error-handler.ts
+        request-metrics.ts
+      routes/
+        health.ts
+        metrics.ts
+    observability/
+      metrics.ts                  every Prometheus metric
+      logger.ts                   structured JSON logging
+    typedefs/
+      database.typedefs.ts
+  services/
+    ticketing/
+      app.ts                      express wiring
+      server.ts                   listen + graceful shutdown
+      http/routes/api.router.ts
+      db/
+        drizzle.config.ts
+        schema/                   events, price-tiers, holds, orders, tickets, payments
+      modules/
+        events/                   router, controller, service, repository, schemas
+        tiers/
+        purchases/                holds, orders, tickets, payments, sweeper
+      typedefs/
+      scripts/
+        seed.ts
+        load-purchases.ts
+    catalog/
+      app.ts
+      server.ts
+      http/routes/api.router.ts
+      db/
+        drizzle.config.ts
+        schema/                   performers, venues, booking requests
+      modules/
+        performers/
+        venues/
+        bookings/
+      typedefs/
 drizzle/
-  NNNN_name.sql                   generated migrations
-  meta/                           drizzle-kit snapshots
+  ticketing/                      generated migrations
+  catalog/
 db/
   init/                           one-time Postgres role and database setup
 ```

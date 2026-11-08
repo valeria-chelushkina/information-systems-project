@@ -25,17 +25,44 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: concert-ops-ticketing
+    command: ["node", "dist/services/ticketing/server.js"]
     environment:
       NODE_ENV: production
       LOG_LEVEL: ${LOG_LEVEL}
+      SERVICE_NAME: ticketing
       DB_HOST: postgres
       DB_PORT: 5432
       TICKETING_DB_NAME: ${TICKETING_DB_NAME}
       TICKETING_DB_USER: ${TICKETING_DB_USER}
       TICKETING_DB_PASSWORD: ${TICKETING_DB_PASSWORD}
       TICKETING_PORT: 3000
+      HOLD_TTL_MS: ${HOLD_TTL_MS}
+      HOLD_SWEEP_INTERVAL_MS: ${HOLD_SWEEP_INTERVAL_MS}
     ports:
       - "${TICKETING_HOST_PORT}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  catalog:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: concert-ops-catalog
+    command: ["node", "dist/services/catalog/server.js"]
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL}
+      SERVICE_NAME: catalog
+      DB_HOST: postgres
+      DB_PORT: 5432
+      CATALOG_DB_NAME: ${CATALOG_DB_NAME}
+      CATALOG_DB_USER: ${CATALOG_DB_USER}
+      CATALOG_DB_PASSWORD: ${CATALOG_DB_PASSWORD}
+      CATALOG_PORT: 3000
+    ports:
+      - "${CATALOG_HOST_PORT}:3000"
     depends_on:
       postgres:
         condition: service_healthy
