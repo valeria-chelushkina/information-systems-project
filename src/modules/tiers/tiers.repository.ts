@@ -1,5 +1,6 @@
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import { db as database, type Database } from '@/db/client.js';
+import type { Executor } from '@/db/executor.js';
 import { priceTiers } from '@/db/schema/index.js';
 import { timedQuery } from '@/db/timed-query.js';
 import type { NewPriceTierRow, PriceTierRow } from '@/typedefs/tier.typedefs.js';
@@ -25,9 +26,9 @@ export class TiersRepository {
     );
   }
 
-  findById(id: string): Promise<PriceTierRow | null> {
+  findById(id: string, exec: Executor = this.db): Promise<PriceTierRow | null> {
     return timedQuery('find_price_tier_by_id', async () => {
-      const [row] = await this.db.select().from(priceTiers).where(eq(priceTiers.id, id));
+      const [row] = await exec.select().from(priceTiers).where(eq(priceTiers.id, id));
       return row ?? null;
     });
   }
@@ -40,6 +41,76 @@ export class TiersRepository {
         .where(eq(priceTiers.eventId, eventId))
         .orderBy(asc(priceTiers.priceCents)),
     );
+  }
+
+  reserve(
+    tierId: string,
+    quantity: number,
+    exec: Executor = this.db,
+  ): Promise<PriceTierRow | null> {
+    return timedQuery('reserve_tier_inventory', async () => {
+      const [row] = await exec
+        .update(priceTiers)
+        .set({
+          availableQty: sql`${priceTiers.availableQty} - ${quantity}`,
+          heldQty: sql`${priceTiers.heldQty} + ${quantity}`,
+        })
+        .where(and(eq(priceTiers.id, tierId), sql`${priceTiers.availableQty} >= ${quantity}`))
+        .returning();
+
+      return row ?? null;
+    });
+  }
+
+  release(
+    tierId: string,
+    quantity: number,
+    exec: Executor = this.db,
+  ): Promise<PriceTierRow | null> {
+    return timedQuery('release_tier_inventory', async () => {
+      const [row] = await exec
+        .update(priceTiers)
+        .set({
+          availableQty: sql`${priceTiers.availableQty} + ${quantity}`,
+          heldQty: sql`${priceTiers.heldQty} - ${quantity}`,
+        })
+        .where(and(eq(priceTiers.id, tierId), sql`${priceTiers.heldQty} >= ${quantity}`))
+        .returning();
+
+      return row ?? null;
+    });
+  }
+
+  sellFromHold(
+    tierId: string,
+    quantity: number,
+    exec: Executor = this.db,
+  ): Promise<PriceTierRow | null> {
+    return timedQuery('sell_from_hold', async () => {
+      const [row] = await exec
+        .update(priceTiers)
+        .set({
+          heldQty: sql`${priceTiers.heldQty} - ${quantity}`,
+          soldQty: sql`${priceTiers.soldQty} + ${quantity}`,
+        })
+        .where(and(eq(priceTiers.id, tierId), sql`${priceTiers.heldQty} >= ${quantity}`))
+        .returning();
+
+      return row ?? null;
+    });
+  }
+
+  remainingInventory(eventId: string, exec: Executor = this.db): Promise<number> {
+    return timedQuery('remaining_event_inventory', async () => {
+      const [row] = await exec
+        .select({
+          remaining: sql<number>`coalesce(sum(${priceTiers.availableQty} + ${priceTiers.heldQty}), 0)`,
+        })
+        .from(priceTiers)
+        .where(eq(priceTiers.eventId, eventId));
+
+      return Number(row?.remaining ?? 0);
+    });
   }
 
   updateById(id: string, values: Partial<NewPriceTierRow>): Promise<PriceTierRow | null> {

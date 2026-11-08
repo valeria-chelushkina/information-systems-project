@@ -1,5 +1,6 @@
 import { and, asc, count, eq, gte, lte, type SQL } from 'drizzle-orm';
 import { db as database, type Database } from '@/db/client.js';
+import type { Executor } from '@/db/executor.js';
 import { events } from '@/db/schema/index.js';
 import { timedQuery } from '@/db/timed-query.js';
 import type { EventFilters, EventRow, NewEventRow } from '@/typedefs/event.typedefs.js';
@@ -25,9 +26,9 @@ export class EventsRepository {
     );
   }
 
-  findById(id: string): Promise<EventRow | null> {
+  findById(id: string, exec: Executor = this.db): Promise<EventRow | null> {
     return timedQuery('find_event_by_id', async () => {
-      const [row] = await this.db.select().from(events).where(eq(events.id, id));
+      const [row] = await exec.select().from(events).where(eq(events.id, id));
       return row ?? null;
     });
   }
@@ -55,9 +56,13 @@ export class EventsRepository {
     });
   }
 
-  updateById(id: string, values: Partial<NewEventRow>): Promise<EventRow | null> {
+  updateById(
+    id: string,
+    values: Partial<NewEventRow>,
+    exec: Executor = this.db,
+  ): Promise<EventRow | null> {
     return timedQuery('update_event', async () => {
-      const [row] = await this.db
+      const [row] = await exec
         .update(events)
         .set(values)
         .where(eq(events.id, id))
