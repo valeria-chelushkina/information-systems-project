@@ -55,7 +55,7 @@ curl http://localhost:3003/api/venues
 | --- | --- | --- |
 | `GET` | `/health` | readiness, pings the database |
 | `GET` | `/metrics` | Prometheus exposition |
-| `POST` | `/api/events` | create an event |
+| `POST` | `/api/events` | create an event, resolving names from catalog |
 | `GET` | `/api/events` | list events (`status`, `from`, `to`, `limit`, `offset`) |
 | `GET` | `/api/events/:id` | fetch one event |
 | `PATCH` | `/api/events/:id` | partial update, including status transitions |
@@ -102,6 +102,34 @@ Two confirmed bookings for the same venue can never overlap; the second one
 returns `409 booking_conflict` with Postgres code `23P01`.
 
 Money is integer cents. `priceCents = 4500` means `$45.00`.
+
+## Service-to-service calls
+
+Creating or updating an event accepts only ids, never names. Ticketing
+resolves them over HTTP:
+
+```
+POST /api/events  { title, performerId, venueId, startsAt, durationMinutes }
+
+  ticketing --GET /api/performers/:id--> catalog
+  ticketing --GET /api/venues/:id-----> catalog
+```
+
+The returned names are snapshotted into the event row, so renaming a
+performer in catalog does not rewrite existing events.
+
+Failure modes:
+
+| Situation | Response |
+| --- | --- |
+| catalog has no such performer | `400 unknown_performer` |
+| catalog has no such venue | `400 unknown_venue` |
+| catalog unreachable or timed out | `503 catalog_unavailable` |
+| catalog returned an unexpected status | `502 catalog_error` |
+
+`CATALOG_BASE_URL` selects the address (default `http://127.0.0.1:3003`,
+compose uses `http://catalog:3000`), and `CATALOG_TIMEOUT_MS` bounds the call
+(default 3000).
 
 ## Purchase flow
 
