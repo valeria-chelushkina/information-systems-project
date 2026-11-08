@@ -1,3 +1,4 @@
+import { CatalogClient } from '@/services/ticketing/clients/catalog.client.js';
 import { EventsRepository } from '@/services/ticketing/modules/events/events.repository.js';
 import type {
   CreateEventInput,
@@ -25,16 +26,22 @@ const ALLOWED_TRANSITIONS: Record<EventStatus, readonly EventStatus[]> = {
 
 export class EventsService {
   protected readonly repository = new EventsRepository();
+  protected readonly catalog = new CatalogClient();
 
   async createEvent(input: CreateEventInput): Promise<EventRow> {
     this.assertSchedule(input);
 
+    const [performer, venue] = await Promise.all([
+      this.catalog.getPerformer(input.performerId),
+      this.catalog.getVenue(input.venueId),
+    ]);
+
     return this.repository.insertOne({
       title: input.title,
-      performerId: input.performerId,
-      performerName: input.performerName,
-      venueId: input.venueId,
-      venueName: input.venueName,
+      performerId: performer.id,
+      performerName: performer.name,
+      venueId: venue.id,
+      venueName: venue.name,
       startsAt: input.startsAt,
       doorsAt: input.doorsAt ?? null,
       durationMinutes: input.durationMinutes ?? null,
@@ -83,7 +90,19 @@ export class EventsService {
       onSaleAt: input.onSaleAt === undefined ? existing.onSaleAt : input.onSaleAt,
     });
 
-    const updated = await this.repository.updateById(id, this.toChanges(input));
+    const changes = this.toChanges(input);
+
+    if (input.performerId !== undefined) {
+      const performer = await this.catalog.getPerformer(input.performerId);
+      changes.performerName = performer.name;
+    }
+
+    if (input.venueId !== undefined) {
+      const venue = await this.catalog.getVenue(input.venueId);
+      changes.venueName = venue.name;
+    }
+
+    const updated = await this.repository.updateById(id, changes);
 
     if (!updated) {
       throw HttpError.notFound('event_not_found', `Event ${id} was not found`);

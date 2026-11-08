@@ -13,9 +13,7 @@ export const eventIdParamsSchema = z.object({
 export const createEventSchema = z.object({
   title: nameSchema,
   performerId: z.uuid(),
-  performerName: nameSchema,
   venueId: z.uuid(),
-  venueName: nameSchema,
   startsAt: dateSchema,
   doorsAt: dateSchema.optional(),
   durationMinutes: durationSchema,
@@ -27,9 +25,7 @@ export const updateEventSchema = z
   .object({
     title: nameSchema.optional(),
     performerId: z.uuid().optional(),
-    performerName: nameSchema.optional(),
     venueId: z.uuid().optional(),
-    venueName: nameSchema.optional(),
     startsAt: dateSchema.optional(),
     doorsAt: dateSchema.optional(),
     durationMinutes: durationSchema,
