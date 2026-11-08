@@ -1,0 +1,254 @@
+{
+  "id": "44fc687f-b14d-4cec-8c93-2986f13ff82e",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.events": {
+      "name": "events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "performer_id": {
+          "name": "performer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "performer_name": {
+          "name": "performer_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "venue_id": {
+          "name": "venue_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "venue_name": {
+          "name": "venue_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doors_at": {
+          "name": "doors_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duration_minutes": {
+          "name": "duration_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "on_sale_at": {
+          "name": "on_sale_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "events_status_on_sale_at_idx": {
+          "name": "events_status_on_sale_at_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "on_sale_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "events_status_check": {
+          "name": "events_status_check",
+          "value": "\"events\".\"status\" IN ('draft', 'scheduled', 'on_sale', 'sold_out', 'completed', 'cancelled')"
+        },
+        "events_doors_before_start_check": {
+          "name": "events_doors_before_start_check",
+          "value": "\"events\".\"doors_at\" IS NULL OR \"events\".\"doors_at\" < \"events\".\"starts_at\""
+        },
+        "events_duration_check": {
+          "name": "events_duration_check",
+          "value": "\"events\".\"duration_minutes\" IS NULL OR \"events\".\"duration_minutes\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.price_tiers": {
+      "name": "price_tiers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price_cents": {
+          "name": "price_cents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_qty": {
+          "name": "total_qty",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "available_qty": {
+          "name": "available_qty",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sold_qty": {
+          "name": "sold_qty",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "held_qty": {
+          "name": "held_qty",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "price_tiers_event_id_events_id_fk": {
+          "name": "price_tiers_event_id_events_id_fk",
+          "tableFrom": "price_tiers",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "price_tiers_event_name_key": {
+          "name": "price_tiers_event_name_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_id",
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "price_tiers_price_cents_check": {
+          "name": "price_tiers_price_cents_check",
+          "value": "\"price_tiers\".\"price_cents\" >= 0"
+        },
+        "price_tiers_total_qty_check": {
+          "name": "price_tiers_total_qty_check",
+          "value": "\"price_tiers\".\"total_qty\" >= 0"
+        },
+        "price_tiers_available_qty_check": {
+          "name": "price_tiers_available_qty_check",
+          "value": "\"price_tiers\".\"available_qty\" >= 0"
+        },
+        "price_tiers_sold_qty_check": {
+          "name": "price_tiers_sold_qty_check",
+          "value": "\"price_tiers\".\"sold_qty\" >= 0"
+        },
+        "price_tiers_held_qty_check": {
+          "name": "price_tiers_held_qty_check",
+          "value": "\"price_tiers\".\"held_qty\" >= 0"
+        },
+        "price_tiers_qty_consistent": {
+          "name": "price_tiers_qty_consistent",
+          "value": "\"price_tiers\".\"available_qty\" + \"price_tiers\".\"sold_qty\" + \"price_tiers\".\"held_qty\" = \"price_tiers\".\"total_qty\""
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
