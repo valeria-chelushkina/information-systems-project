@@ -15,6 +15,11 @@ const PG_ERRORS: Record<string, PgErrorMapping> = {
     message: 'Value violates a database constraint',
   },
   '22P02': { status: 400, code: 'invalid_input', message: 'Malformed identifier or value' },
+  '23P01': {
+    status: 409,
+    code: 'booking_conflict',
+    message: 'The venue already has a confirmed booking in that period',
+  },
 };
 
 function findPgCode(error: unknown, depth = 0): string | undefined {
