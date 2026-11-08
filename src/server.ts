@@ -1,6 +1,7 @@
 import { createApp } from '@/app.js';
 import { config } from '@/config/index.js';
 import { pool } from '@/db/client.js';
+import { PurchasesSweeper } from '@/modules/purchases/purchases.sweeper.js';
 import { logger } from '@/observability/logger.js';
 
 const app = createApp();
@@ -18,8 +19,13 @@ server.on('error', (error: NodeJS.ErrnoException) => {
   process.exit(1);
 });
 
+const sweeper = new PurchasesSweeper();
+sweeper.start(config.holdSweepIntervalMs);
+
 function shutdown(signal: string): void {
   logger.info({ signal }, 'shutting down');
+
+  sweeper.stop();
 
   server.close(() => {
     void pool.end().finally(() => process.exit(0));

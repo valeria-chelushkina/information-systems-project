@@ -16,7 +16,8 @@
     "db:generate": "drizzle-kit generate --config=src/db/drizzle.config.ts",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio --config=src/db/drizzle.config.ts",
-    "seed": "tsx src/scripts/seed.ts"
+    "seed": "tsx src/scripts/seed.ts",
+    "load": "tsx src/scripts/load-purchases.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
