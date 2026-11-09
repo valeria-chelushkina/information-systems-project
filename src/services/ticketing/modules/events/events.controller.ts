@@ -8,13 +8,24 @@ import {
 } from '@/services/ticketing/modules/events/events.schemas.js';
 import { asyncHandler } from '@/shared/http/async-handler.js';
 import { validate } from '@/shared/http/validate.js';
+import { HttpError } from '@/shared/errors/http-error.js';
+
+function tokenOf(req: Request): string {
+  const token = req.authToken;
+
+  if (!token) {
+    throw new HttpError(401, 'missing_token', 'Authorization header is required');
+  }
+
+  return token;
+}
 
 export class EventsController {
   protected readonly service = new EventsService();
 
   create = asyncHandler(async (req: Request, res: Response) => {
     const body = validate(createEventSchema, req.body);
-    const event = await this.service.createEvent(body);
+    const event = await this.service.createEvent(body, tokenOf(req));
 
     res.status(201).location(`/api/events/${event.id}`).json({ data: event });
   });
@@ -39,7 +50,7 @@ export class EventsController {
   update = asyncHandler(async (req: Request, res: Response) => {
     const { id } = validate(eventIdParamsSchema, req.params);
     const body = validate(updateEventSchema, req.body);
-    const event = await this.service.updateEvent(id, body);
+    const event = await this.service.updateEvent(id, body, tokenOf(req));
 
     res.status(200).json({ data: event });
   });

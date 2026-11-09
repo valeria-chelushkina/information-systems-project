@@ -1,4 +1,4 @@
-import { optionalEnv } from '@/shared/config/env.js';
+import { ticketingConfig } from '@/services/ticketing/config.js';
 import { HttpError } from '@/shared/errors/http-error.js';
 
 interface CatalogPerformer {
@@ -16,22 +16,23 @@ interface ApiEnvelope<T> {
 }
 
 export class CatalogClient {
-  protected readonly baseUrl = optionalEnv('CATALOG_BASE_URL', 'http://127.0.0.1:3003');
-  protected readonly timeoutMs = Number(optionalEnv('CATALOG_TIMEOUT_MS', '3000'));
+  protected readonly baseUrl = ticketingConfig.catalogBaseUrl;
+  protected readonly timeoutMs = ticketingConfig.catalogTimeoutMs;
 
-  getPerformer(id: string): Promise<CatalogPerformer> {
-    return this.fetchOne<CatalogPerformer>(`/api/performers/${id}`, 'performer');
+  getPerformer(id: string, token: string): Promise<CatalogPerformer> {
+    return this.fetchOne<CatalogPerformer>(`/api/performers/${id}`, 'performer', token);
   }
 
-  getVenue(id: string): Promise<CatalogVenue> {
-    return this.fetchOne<CatalogVenue>(`/api/venues/${id}`, 'venue');
+  getVenue(id: string, token: string): Promise<CatalogVenue> {
+    return this.fetchOne<CatalogVenue>(`/api/venues/${id}`, 'venue', token);
   }
 
-  private async fetchOne<T>(path: string, resource: string): Promise<T> {
+  private async fetchOne<T>(path: string, resource: string, token: string): Promise<T> {
     let response: Response;
 
     try {
       response = await fetch(`${this.baseUrl}${path}`, {
+        headers: { authorization: `Bearer ${token}` },
         signal: AbortSignal.timeout(this.timeoutMs),
       });
     } catch {

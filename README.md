@@ -7,11 +7,12 @@ dashboards, Loki logs, Tempo traces, a separate auth service and RabbitMQ.
 ## Architecture
 
 ```
-ticketing  :3001   events, price tiers, holds, orders, tickets, payments
+ticketing  :3001   events, price tiers, holds, orders, tickets, payments, refunds
 catalog    :3003   performers, venues, booking requests
+auth       :3005   users, sessions, login attempts (SQLite)
 
 db_ticketing / db_catalog / db_notify   -> one Postgres container, :5434
-auth       (planned, SQLite)
+auth.db                                 -> SQLite file on a volume
 notify     (planned, RabbitMQ consumer)
 ```
 
@@ -33,18 +34,27 @@ docker compose up -d postgres
 npm install
 npm run db:migrate
 npm run db:migrate:catalog
-npm run seed
+npm run seed:auth
+npm run seed:catalog -- --reset
 ```
 
 ```bash
 npm run dev            # ticketing on :3001
 npm run dev:catalog    # catalog on :3003
+npm run dev:auth       # auth on :3005
 ```
 
+Then, with catalog running, populate events from real catalog ids:
+
 ```bash
-curl http://localhost:3001/health
-curl http://localhost:3001/api/events?limit=5
-curl http://localhost:3003/api/venues
+npm run seed -- --reset --from-catalog
+```
+
+Every `/api` route requires a bearer token; `/health` and `/metrics` are public:
+
+```bash
+curl -s http://localhost:3001/api/events        # 401 missing_token
+curl -s http://localhost:3005/health            # {"status":"ok"}
 ```
 
 ## API
@@ -104,7 +114,51 @@ WHERE (status = 'confirmed')
 Two confirmed bookings for the same venue can never overlap; the second one
 returns `409 booking_conflict` with Postgres code `23P01`.
 
+### auth
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `POST` | `/auth/login` | exchange credentials for a session token |
+| `POST` | `/auth/logout` | revoke a session token |
+| `POST` | `/auth/introspect` | validate a token, used by the other services |
+| `GET` | `/auth/me` | current user |
+| `POST` | `/auth/users` | create a user (admin required once any user exists) |
+| `GET` | `/health` | readiness, pings the SQLite file |
+| `GET` | `/metrics` | Prometheus exposition |
+
 Money is integer cents. `priceCents = 4500` means `$45.00`.
+
+## Authentication
+
+Every `/api` route on ticketing and catalog requires a bearer token. `/health`
+and `/metrics` stay public so Prometheus can scrape them.
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:3005/auth/login \
+  -H 'content-type: application/json' \
+  -d '{"email":"customer@example.com","password":"customer-password"}' \
+  | sed -E 's/.*"token":"([^"]+)".*/\1/')
+
+curl -H "authorization: Bearer $TOKEN" http://localhost:3001/api/events
+```
+
+Seeded users:
+
+| Email | Password | Role |
+| --- | --- | --- |
+| `admin@example.com` | `admin-password` | admin |
+| `staff@example.com` | `staff-password` | staff |
+| `customer@example.com` | `customer-password` | customer |
+
+Tokens are opaque. Only a SHA-256 hash is stored and the raw value is returned
+once. Ticketing and catalog call `POST /auth/introspect` instead of verifying
+signatures locally, so revoking a session takes effect immediately.
+`AUTH_BASE_URL` selects the address (default `http://127.0.0.1:3005`, compose
+uses `http://auth:3000`).
+
+Scripts authenticate too. `npm run seed -- --from-catalog` and `npm run load`
+log in with `SEED_AUTH_EMAIL` / `SEED_AUTH_PASSWORD` (default
+`admin@example.com` / `admin-password`) before calling the APIs.
 
 ## Service-to-service calls
 
@@ -120,6 +174,10 @@ POST /api/events  { title, performerId, venueId, startsAt, durationMinutes }
 
 The returned names are snapshotted into the event row, so renaming a
 performer in catalog does not rewrite existing events.
+
+Ticketing forwards the caller's bearer token to catalog, so the catalog call
+is authorised as the same user. Without a token the event request never
+reaches the catalog client.
 
 Failure modes:
 
@@ -192,13 +250,17 @@ Generated SQL is committed. The catalog's venue-overlap constraint is a
 hand-written migration (`drizzle/catalog/0001_booking_overlap.sql`) because
 the schema DSL cannot express `EXCLUDE USING gist`.
 
+Auth has no migration runner: its SQLite schema is created at startup and by
+the seed script from `src/services/auth/db/schema.ts`.
+
 ## Seed data and load
 
 Seed catalog first, then ticketing so events reference real performers and
 venues:
 
 ```bash
-npm run seed:catalog -- --reset        # 16 performers, 10 venues, 11 bookings
+npm run seed:auth -- --reset          # 3 accounts: admin, staff, customer
+npm run seed:catalog -- --reset       # 16 performers, 10 venues, 11 bookings
 npm run seed -- --reset --from-catalog # 200 events using catalog ids
 ```
 
@@ -223,9 +285,11 @@ npm run load -- --tier=<uuid> --concurrency=50 --quantity=1
 | --- | --- |
 | `npm run dev` | ticketing with hot reload |
 | `npm run dev:catalog` | catalog with hot reload |
+| `npm run dev:auth` | auth with hot reload |
 | `npm run build` | compile to `dist/` |
 | `npm start` | run the compiled ticketing server |
 | `npm start:catalog` | run the compiled catalog server |
+| `npm start:auth` | run the compiled auth server |
 | `npm run typecheck` | type-check without emitting |
 | `npm run db:generate` | ticketing migration from schema |
 | `npm run db:generate:catalog` | catalog migration from schema |
@@ -233,6 +297,7 @@ npm run load -- --tier=<uuid> --concurrency=50 --quantity=1
 | `npm run db:migrate:catalog` | apply catalog migrations |
 | `npm run seed` | populate events and price tiers |
 | `npm run seed:catalog` | populate performers, venues and bookings |
+| `npm run seed:auth` | populate admin, staff and customer accounts |
 | `npm run load` | concurrent purchase scenario |
 
 ## Containerised run
@@ -245,11 +310,13 @@ docker compose up -d --build
 | --- | --- | --- |
 | ticketing | `TICKETING_HOST_PORT` (3002) | 3000 |
 | catalog | `CATALOG_HOST_PORT` (3004) | 3000 |
+| auth | `AUTH_HOST_PORT` (3006) | 3000 |
 | postgres | 5434 | 5432 |
 
-Both containers run the same image with different entrypoints. Inside the
-Compose network they reach each other by service name, e.g.
-`http://catalog:3000`.
+All three application containers run the same image with different
+entrypoints. Inside the Compose network they reach each other by service name:
+`http://catalog:3000`, `http://auth:3000`. The auth SQLite file lives on the
+`authdata` volume at `/app/data/auth.db`.
 
 ## Layout
 
@@ -275,6 +342,7 @@ src/
       middleware/
         error-handler.ts
         request-metrics.ts
+        require-auth.ts             bearer token -> auth introspection
       routes/
         health.ts
         metrics.ts
@@ -311,6 +379,26 @@ src/
         venues/
         bookings/
       typedefs/
+    auth/
+      app.ts
+      server.ts
+      db/
+        client.ts                 node:sqlite connection, WAL, busy timeout
+        schema.ts                 tables created at startup
+      modules/
+        auth.router.ts
+        auth.controller.ts
+        auth.service.ts
+        auth.schemas.ts
+        users.repository.ts
+        sessions.repository.ts
+        login-attempts.repository.ts
+      security/
+        password.ts               scrypt hashing
+        token.ts                  token generation and sha-256 hashing
+      typedefs/
+      scripts/
+        seed.ts
 drizzle/
   ticketing/                      generated migrations
   catalog/

@@ -2,6 +2,9 @@ import { and, eq, gte } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { db, pool } from '@/shared/db/client.js';
 import { events, priceTiers } from '@/services/ticketing/db/schema/index.js';
+import { fetchAccessToken } from '@/shared/auth/login.js';
+import { optionalEnv } from '@/shared/config/env.js';
+import { config } from '@/shared/config/index.js';
 
 interface Tally {
   ok: number;
@@ -19,6 +22,8 @@ function argValue(name: string): string | undefined {
 const baseUrl = argValue('base-url') ?? 'http://127.0.0.1:3001';
 const concurrency = Number(argValue('concurrency') ?? 20);
 const quantity = Number(argValue('quantity') ?? 1);
+
+let authToken = '';
 
 async function resolveTierId(): Promise<string> {
   const explicit = argValue('tier');
@@ -56,7 +61,10 @@ async function attempt(tierId: string): Promise<keyof Tally> {
   try {
     const holdResponse = await fetch(`${baseUrl}/api/holds`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${authToken}`,
+      },
       body: JSON.stringify({ tierId, quantity, customerRef }),
     });
 
@@ -68,7 +76,10 @@ async function attempt(tierId: string): Promise<keyof Tally> {
 
     const purchaseResponse = await fetch(`${baseUrl}/api/purchases`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${authToken}`,
+      },
       body: JSON.stringify({
         holdId: hold.data.id,
         idempotencyKey: randomUUID(),
@@ -83,6 +94,12 @@ async function attempt(tierId: string): Promise<keyof Tally> {
 }
 
 async function main(): Promise<void> {
+  authToken = await fetchAccessToken(
+    config.authBaseUrl,
+    optionalEnv('SEED_AUTH_EMAIL', 'admin@example.com'),
+    optionalEnv('SEED_AUTH_PASSWORD', 'admin-password'),
+  );
+
   const tierId = await resolveTierId();
   const before = await availableOf(tierId);
 

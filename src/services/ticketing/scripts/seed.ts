@@ -5,7 +5,10 @@ import { events, priceTiers } from '@/services/ticketing/db/schema/index.js';
 import { timedQuery } from '@/shared/db/timed-query.js';
 import { EventsRepository } from '@/services/ticketing/modules/events/events.repository.js';
 import { TiersRepository } from '@/services/ticketing/modules/tiers/tiers.repository.js';
+import { ticketingConfig } from '@/services/ticketing/config.js';
+import { fetchAccessToken } from '@/shared/auth/login.js';
 import { optionalEnv } from '@/shared/config/env.js';
+import { config } from '@/shared/config/index.js';
 import { logger } from '@/shared/observability/logger.js';
 import type { EventStatus } from '@/services/ticketing/typedefs/event.typedefs.js';
 
@@ -64,15 +67,25 @@ interface CatalogDirectory {
 }
 
 async function loadCatalog(): Promise<CatalogDirectory> {
-  const baseUrl = optionalEnv('CATALOG_BASE_URL', 'http://127.0.0.1:3003');
+  const baseUrl = ticketingConfig.catalogBaseUrl;
+  const email = optionalEnv('SEED_AUTH_EMAIL', 'admin@example.com');
+  const password = optionalEnv('SEED_AUTH_PASSWORD', 'admin-password');
+  const token = await fetchAccessToken(config.authBaseUrl, email, password);
 
   async function fetchPage<T>(path: string): Promise<{ data: T[] }> {
     let response: Response;
 
     try {
-      response = await fetch(`${baseUrl}${path}`, { signal: AbortSignal.timeout(5000) });
+      response = await fetch(`${baseUrl}${path}`, {
+        headers: { authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(5000),
+      });
     } catch {
       throw new Error(`Cannot reach catalog at ${baseUrl}. Start it with: npm run dev:catalog`);
+    }
+
+    if (response.status === 401) {
+      throw new Error(`Catalog rejected the seed token for ${email}. Is auth seeded?`);
     }
 
     if (!response.ok) {

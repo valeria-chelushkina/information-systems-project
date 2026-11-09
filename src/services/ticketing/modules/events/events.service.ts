@@ -28,12 +28,12 @@ export class EventsService {
   protected readonly repository = new EventsRepository();
   protected readonly catalog = new CatalogClient();
 
-  async createEvent(input: CreateEventInput): Promise<EventRow> {
+  async createEvent(input: CreateEventInput, token: string): Promise<EventRow> {
     this.assertSchedule(input);
 
     const [performer, venue] = await Promise.all([
-      this.catalog.getPerformer(input.performerId),
-      this.catalog.getVenue(input.venueId),
+      this.catalog.getPerformer(input.performerId, token),
+      this.catalog.getVenue(input.venueId, token),
     ]);
 
     return this.repository.insertOne({
@@ -77,7 +77,7 @@ export class EventsService {
     return event;
   }
 
-  async updateEvent(id: string, input: UpdateEventInput): Promise<EventRow> {
+  async updateEvent(id: string, input: UpdateEventInput, token: string): Promise<EventRow> {
     const existing = await this.getEventById(id);
 
     if (input.status !== undefined) {
@@ -93,12 +93,12 @@ export class EventsService {
     const changes = this.toChanges(input);
 
     if (input.performerId !== undefined) {
-      const performer = await this.catalog.getPerformer(input.performerId);
+      const performer = await this.catalog.getPerformer(input.performerId, token);
       changes.performerName = performer.name;
     }
 
     if (input.venueId !== undefined) {
-      const venue = await this.catalog.getVenue(input.venueId);
+      const venue = await this.catalog.getVenue(input.venueId, token);
       changes.venueName = venue.name;
     }
 
