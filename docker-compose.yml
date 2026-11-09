@@ -130,8 +130,37 @@ services:
       - auth
     restart: unless-stopped
 
+  loki:
+    image: grafana/loki:3.3.2
+    container_name: concert-ops-loki
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./infra/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - lokidata:/loki
+    ports:
+      - "${LOKI_HOST_PORT}:3100"
+    restart: unless-stopped
+
+  alloy:
+    image: grafana/alloy:v1.5.1
+    container_name: concert-ops-alloy
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+      - --server.http.listen-addr=0.0.0.0:12345
+    volumes:
+      - ./infra/loki/alloy.config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloydata:/var/lib/alloy/data
+    depends_on:
+      - loki
+    restart: unless-stopped
+
 volumes:
   pgdata:
   authdata:
   promdata:
   grafanadata:
+  lokidata:
+  alloydata:

@@ -15,6 +15,7 @@ db_ticketing / db_catalog / db_notify   -> one Postgres container, :5434
 auth.db                                 -> SQLite file on a volume
 prometheus :9090                        -> scrapes every service, stores the TSDB
 grafana    :3007                        -> dashboards over the Prometheus datasource
+loki       :3100                        -> log storage; alloy ships container stdout
 notify     (planned, RabbitMQ consumer)
 ```
 
@@ -315,6 +316,7 @@ docker compose up -d --build
 | auth | `AUTH_HOST_PORT` (3006) | 3000 |
 | prometheus | `PROMETHEUS_HOST_PORT` (9090) | 9090 |
 | grafana | `GRAFANA_HOST_PORT` (3007) | 3000 |
+| loki | `LOKI_HOST_PORT` (3100) | 3100 |
 | postgres | 5434 | 5432 |
 
 All application containers run the same image with different entrypoints.
@@ -378,6 +380,34 @@ sum by (status) (rate(bookings_total[5m]))
 
 Services started with `npm run dev` listen on the host, not on the Compose
 network. To scrape those, add targets such as `host.docker.internal:3001`.
+
+## Logs
+
+```bash
+docker compose up -d loki alloy
+```
+
+Every HTTP request gets an `x-request-id`: generated if absent, echoed in the
+response header, included in the completion log line, and forwarded on the
+calls to auth and catalog. That makes one request findable across services.
+
+In Grafana: **Explore → Loki**.
+
+```logql
+{container="concert-ops-ticketing"}
+{container="concert-ops-ticketing"} |= "request_id"
+{job="docker"} |= "<request-id>"          # all services for one request
+{container="concert-ops-auth"} | json | reason = "credentials"
+```
+
+Labels are `container`, `job` and `service_name`; everything else
+(`request_id`, `level`, `status`, `duration_ms`) lives in the JSON body and is
+filtered with `|=` or `| json`. Never label by request id — that creates one
+stream per request.
+
+Alloy ships container logs straight from the Docker socket
+(`infra/loki/alloy.config.alloy`), so no application change is needed beyond
+the request-id middleware. Loki stores its data on the `lokidata` volume.
 
 ## Layout
 
