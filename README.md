@@ -349,6 +349,12 @@ a restart. Grafana's datasource is provisioned from
 `infra/grafana/provisioning/datasources/prometheus.yml` with the URL
 `http://prometheus:9090`, so no manual setup is needed.
 
+The **Concert Ops Overview** dashboard is provisioned as well
+(`infra/grafana/dashboards/overview.json`): four stat panels (services up,
+tickets sold, refunds, expired holds) and eight time series (request rate,
+p95 latency, HTTP statuses, DB query p95, DB errors, purchases by outcome,
+auth failures, memory). It refreshes every 10 seconds.
+
 Useful queries:
 
 ```promql
@@ -357,6 +363,11 @@ sum by (service) (rate(http_requests_total[1m]))
 histogram_quantile(0.95, sum by (le, route) (rate(http_request_duration_seconds_bucket[5m])))
 sum by (query_name) (rate(db_query_duration_seconds_count[1m]))
 auth_failures_total
+
+sum(tickets_sold_total)
+sum by (status) (rate(purchases_total[5m]))
+sum(refunds_total)
+sum(holds_expired_total)
 ```
 
 Services started with `npm run dev` listen on the host, not on the Compose
