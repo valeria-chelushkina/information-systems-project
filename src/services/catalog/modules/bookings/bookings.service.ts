@@ -7,7 +7,9 @@ import type {
 import { PerformersService } from '@/services/catalog/modules/performers/performers.service.js';
 import { VenuesService } from '@/services/catalog/modules/venues/venues.service.js';
 import type { BookingRow } from '@/services/catalog/typedefs/booking.typedefs.js';
+import { bookingsTotal } from '@/services/catalog/observability/business-metrics.constants.js';
 import { HttpError } from '@/shared/errors/http-error.js';
+import { mapDatabaseError } from '@/shared/errors/database-error.js';
 
 export class BookingsService {
   protected readonly repository = new BookingsRepository();
@@ -22,7 +24,7 @@ export class BookingsService {
       throw HttpError.badRequest('invalid_period', 'endsAt must be later than startsAt');
     }
 
-    return this.repository.insertOne({
+    const booking = await this.repository.insertOne({
       performerId: input.performerId,
       venueId: input.venueId,
       startsAt: input.startsAt,
@@ -31,10 +33,24 @@ export class BookingsService {
       requestedBy: input.requestedBy ?? null,
       note: input.note ?? null,
     });
+
+    bookingsTotal.inc({ status: 'requested' });
+
+    return booking;
   }
 
   async decideBooking(id: string, input: DecideBookingInput): Promise<BookingRow> {
-    const decided = await this.repository.decide(id, input.status, input.decidedBy ?? null);
+    let decided: BookingRow | null;
+
+    try {
+      decided = await this.repository.decide(id, input.status, input.decidedBy ?? null);
+    } catch (error) {
+      const mapped = mapDatabaseError(error);
+      bookingsTotal.inc({
+        status: mapped?.code === 'booking_conflict' ? 'conflict' : 'failed',
+      });
+      throw error;
+    }
 
     if (!decided) {
       const existing = await this.repository.findById(id);
@@ -43,11 +59,15 @@ export class BookingsService {
         throw HttpError.notFound('booking_not_found', `Booking ${id} was not found`);
       }
 
+      bookingsTotal.inc({ status: 'failed' });
+
       throw HttpError.conflict(
         'booking_not_pending',
         `Booking ${id} is already ${existing.status}`,
       );
     }
+
+    bookingsTotal.inc({ status: input.status });
 
     return decided;
   }

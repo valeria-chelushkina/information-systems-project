@@ -25,3 +25,21 @@ export const holdsExpiredTotal = new Counter({
   help: 'Holds released by the expiry sweeper',
   registers: [registry],
 });
+
+export const holdsCreatedTotal = new Counter({
+  name: 'holds_created_total',
+  help: 'Holds created',
+  registers: [registry],
+});
+
+export const revenueCentsTotal = new Counter({
+  name: 'revenue_cents_total',
+  help: 'Revenue from paid orders, in cents',
+  registers: [registry],
+});
+
+export const refundedCentsTotal = new Counter({
+  name: 'refunded_cents_total',
+  help: 'Refunded amount, in cents',
+  registers: [registry],
+});

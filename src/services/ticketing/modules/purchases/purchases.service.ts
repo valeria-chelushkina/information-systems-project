@@ -1,8 +1,11 @@
 import { ticketingConfig } from '@/services/ticketing/config.js';
 import {
+  holdsCreatedTotal,
   holdsExpiredTotal,
   purchasesTotal,
+  refundedCentsTotal,
   refundsTotal,
+  revenueCentsTotal,
   ticketsSoldTotal,
 } from '@/services/ticketing/observability/business-metrics.constants.js';
 import { transaction } from '@/shared/db/transaction.js';
@@ -31,7 +34,7 @@ export class PurchasesService {
   protected readonly events = new EventsRepository();
 
   async createHold(input: CreateHoldInput): Promise<HoldRow> {
-    return transaction('create_hold', async (tx) => {
+    const hold = await transaction('create_hold', async (tx) => {
       const tier = await this.tiers.findById(input.tierId, tx);
 
       if (!tier) {
@@ -69,6 +72,10 @@ export class PurchasesService {
         tx,
       );
     });
+
+    holdsCreatedTotal.inc();
+
+    return hold;
   }
 
   async cancelHold(holdId: string): Promise<void> {
@@ -207,6 +214,7 @@ export class PurchasesService {
 
       purchasesTotal.inc({ status: 'ok' });
       ticketsSoldTotal.inc(result.tickets.length);
+      revenueCentsTotal.inc(result.order.totalCents);
 
       return result;
     } catch (error) {
@@ -311,6 +319,7 @@ export class PurchasesService {
     });
 
     refundsTotal.inc();
+    refundedCentsTotal.inc(result.refund.amountCents);
 
     return result;
   }
