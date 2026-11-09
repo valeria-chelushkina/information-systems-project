@@ -68,12 +68,15 @@ curl http://localhost:3003/api/venues
 | `DELETE` | `/api/holds/:id` | release an active hold |
 | `POST` | `/api/purchases` | convert a hold into an order and tickets |
 | `GET` | `/api/orders/:id` | fetch an order with its tickets |
+| `POST` | `/api/orders/:id/refund` | refund a paid order in full |
 
 Event statuses follow a state machine:
 
 ```
 draft -> scheduled -> on_sale -> sold_out -> completed
                             \-> cancelled
+
+sold_out -> on_sale        refund restored inventory
 ```
 
 ### catalog
@@ -139,6 +142,23 @@ POST /api/purchases      held_qty -= n, sold_qty += n, order + tickets + payment
 DELETE /api/holds/:id    available_qty += n, held_qty -= n
 sweeper (every 10s)      expired holds released the same way
 ```
+
+Refunds are a compensating transaction over the same rows:
+
+```
+POST /api/orders/:id/refund
+
+  lock order (must be paid)
+  sold_qty -= n, available_qty += n        per tier, sorted to avoid deadlocks
+  tickets.status = refunded
+  payments.status = refunded
+  insert refund row (full amount)
+  orders.status = refunded
+  if the event was sold_out and inventory is back, status = on_sale
+```
+
+Only paid orders can be refunded, and only once — the second attempt returns
+`409 order_not_refundable`.
 
 The seat reservation and the sale are single statements:
 
