@@ -71,6 +71,22 @@ services:
       - "${AUTH_HOST_PORT}:3000"
     restart: unless-stopped
 
+  notify:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: concert-ops-notify
+    command: ["node", "dist/services/notify/server.js"]
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL}
+      SERVICE_NAME: notify
+      NOTIFY_PORT: 3000
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+    depends_on:
+      - otel-collector
+    restart: unless-stopped
+
   ticketing:
     build:
       context: .
@@ -151,6 +167,7 @@ services:
     container_name: concert-ops-prometheus
     volumes:
       - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - promdata:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -162,6 +179,22 @@ services:
       - ticketing
       - catalog
       - auth
+      - alertmanager
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: concert-ops-alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    volumes:
+      - ./infra/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanagerdata:/alertmanager
+    ports:
+      - "${ALERTMANAGER_HOST_PORT}:9093"
+    depends_on:
+      - notify
     restart: unless-stopped
 
   loki:
@@ -219,6 +252,7 @@ volumes:
   pgdata:
   authdata:
   promdata:
+  alertmanagerdata:
   grafanadata:
   lokidata:
   alloydata:

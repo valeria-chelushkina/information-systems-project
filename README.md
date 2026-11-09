@@ -10,16 +10,17 @@ dashboards, Loki logs, Tempo traces, a separate auth service and RabbitMQ.
 ticketing  :3001   events, price tiers, holds, orders, tickets, payments, refunds
 catalog    :3003   performers, venues, booking requests
 auth       :3005   users, sessions, login attempts (SQLite)
+notify     :3008   Alertmanager webhook receiver (container port 3000)
 
 db_ticketing / db_catalog / db_notify   -> one Postgres container, :5434
 auth.db                                 -> SQLite file on a volume
 prometheus :9090                        -> scrapes every service, stores the TSDB
 postgres-exporter :9187/:9188           -> engine-level PostgreSQL metrics
+alertmanager :9093                      -> routes Prometheus alerts to notify
 grafana    :3007                        -> dashboards over the Prometheus datasource
 loki       :3100                        -> log storage; alloy ships container stdout
 tempo      :3200                        -> trace storage (behind the collector)
 otel-collector :4317/:4318              -> OTLP receiver, batches traces into tempo
-notify     (planned, RabbitMQ consumer)
 ```
 
 Each service owns its database. No shared tables, no cross-service foreign
@@ -357,6 +358,8 @@ docker compose up -d --build
 | catalog | `CATALOG_HOST_PORT` (3004) | 3000 |
 | auth | `AUTH_HOST_PORT` (3006) | 3000 |
 | prometheus | `PROMETHEUS_HOST_PORT` (9090) | 9090 |
+| alertmanager | `ALERTMANAGER_HOST_PORT` (9093) | 9093 |
+| notify | internal only | 3000 |
 | postgres-exporter-ticketing | `POSTGRES_EXPORTER_TICKETING_PORT` (9187) | 9187 |
 | postgres-exporter-catalog | `POSTGRES_EXPORTER_CATALOG_PORT` (9188) | 9187 |
 | grafana | `GRAFANA_HOST_PORT` (3007) | 3000 |
@@ -378,7 +381,7 @@ docker compose up -d prometheus grafana
 
 | Where | What |
 | --- | --- |
-| `http://localhost:9090/targets` | scrape health — all six targets should be `UP` |
+| `http://localhost:9090/targets` | scrape health - all seven targets should be `UP` |
 | `http://localhost:9090/graph` | raw PromQL |
 | `http://localhost:3007` | Grafana; credentials from `.env` |
 
@@ -465,6 +468,50 @@ max by (datname) (pg_database_size_bytes{datname=~"db_.*"})
 
 Services started with `npm run dev` listen on the host, not on the Compose
 network. To scrape those, add targets such as `host.docker.internal:3001`.
+
+## Alerts
+
+Rules live in `infra/prometheus/alerts.yml` and are loaded through
+`rule_files`; Prometheus sends firing alerts to `alertmanager:9093`, which
+routes them to the `notify` webhook receiver. `notify` logs every firing and
+resolved alert, so the notification path is visible in Loki:
+
+```logql
+{container="concert-ops-notify"} |= "alert"
+```
+
+Rules follow the course example: `groups` → `rules`, `expr` + `for`,
+`severity` labels and `summary` annotations. Targets carry
+`instance_group`, `instance_env`, `instance_type` and `team` labels, so
+`up{instance_type='service'}` and `up{instance_type='database'}` behave like
+the example's `service` and `node` selectors.
+
+| Rule | Expression | Severity |
+| --- | --- | --- |
+| `ServiceDown` | `up{instance_type='service'} == 0` for 5m | critical |
+| `DatabaseExporterDown` | `up{instance_type='database'} == 0` for 5m | critical |
+| `PostgresDown` | `pg_up == 0` for 1m | critical |
+| `ServiceError` | any 5xx in the last minute | critical |
+| `HighLatency` | p95 above 1s for 5m | warning |
+| `DbPoolSaturated` | `db_pool_waiting_requests > 0` for 3m | warning |
+| `PostgresHighConnections` | above 80% of `max_connections` for 5m | warning |
+| `PostgresLowCacheHit` | cache hit below 90% for 10m | warning |
+| `PostgresDeadlocks` | any deadlock in the last 5m | critical |
+| `PurchaseFailures` | any failed purchase in the last 5m | warning |
+| `AuthFailureSpike` | more than 1 failure/s for 5m | warning |
+
+To see the full path, stop a dependency and generate traffic:
+
+```bash
+docker compose stop postgres
+curl -H "Authorization: Bearer <token>" http://localhost:3002/api/events
+```
+
+The 5xx fires `ServiceError`, `pg_up == 0` fires `PostgresDown`, and both
+reach `notify` within one evaluation interval. Alertmanager's UI is at
+`http://localhost:9093`; `send_resolved: true` also delivers the recovery
+notification. The lesson example puts Alertmanager behind nginx at
+`/alertmanager`; here it is exposed directly, so no `path_prefix` is needed.
 
 ## Logs
 
@@ -618,13 +665,19 @@ src/
       typedefs/
       scripts/
         seed.ts
+    notify/
+      app.ts                      express wiring
+      server.ts                   listen + graceful shutdown
+      http/routes/health.ts
+      modules/alerts/             router, controller, service, schemas
 drizzle/
   ticketing/                      generated migrations
   catalog/
 db/
   init/                           roles, databases, pg_stat_statements, exporter grants
 infra/
-  prometheus/                     scrape configuration
+  prometheus/                     scrape configuration, alert rules
+  alertmanager/                   routes and webhook receiver config
   grafana/                        datasource and dashboard provisioning
   loki/                           loki config and alloy log pipeline
   tempo/                          tempo config and otel collector pipeline

@@ -1,0 +1,18 @@
+route:
+  receiver: notify-webhook
+  group_wait: 0s
+  group_interval: 1s
+  repeat_interval: 4h
+  group_by: ['alertname', 'severity']
+
+  routes:
+    - match:
+        severity: critical
+      receiver: notify-webhook
+      repeat_interval: 1h
+
+receivers:
+  - name: notify-webhook
+    webhook_configs:
+      - send_resolved: true
+        url: http://notify:3000/alerts

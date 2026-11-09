@@ -1,0 +1,88 @@
+groups:
+  - name: default
+    rules:
+      - alert: ServiceDown
+        expr: up{instance_type='service'} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.instance }} has been down for more than 5 minutes"
+
+      - alert: DatabaseExporterDown
+        expr: up{instance_type='database'} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Postgres exporter {{ $labels.instance }} has been down for more than 5 minutes"
+
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Postgres exporter {{ $labels.instance }} cannot reach the database"
+
+      - alert: ServiceError
+        expr: floor(sum by (service) (increase(http_requests_total{status=~'5..'}[1m]))) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.service }} has just thrown 5xx errors"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum by (le, service, route) (rate(http_request_duration_seconds_bucket[5m]))) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service {{ $labels.service }} has p95 latency above 1s on {{ $labels.route }} for more than 5 minutes"
+
+      - alert: DbPoolSaturated
+        expr: db_pool_waiting_requests > 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service {{ $labels.service }} has requests waiting for a database connection"
+
+      - alert: PostgresHighConnections
+        expr: 100 * max by (datname) (pg_stat_database_numbackends{datname=~'db_.*'}) / scalar(max(pg_settings_max_connections)) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database {{ $labels.datname }} is using more than 80% of max_connections"
+
+      - alert: PostgresLowCacheHit
+        expr: 100 * sum(rate(pg_stat_database_blks_hit{datname=~'db_.*'}[5m])) / (sum(rate(pg_stat_database_blks_hit{datname=~'db_.*'}[5m])) + sum(rate(pg_stat_database_blks_read{datname=~'db_.*'}[5m]))) < 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Postgres cache hit ratio is below 90% for more than 10 minutes"
+
+      - alert: PostgresDeadlocks
+        expr: floor(sum(increase(pg_stat_database_deadlocks{datname=~'db_.*'}[5m]))) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "Postgres has detected a deadlock"
+
+      - alert: PurchaseFailures
+        expr: floor(sum by (service) (increase(purchases_total{status='failed'}[5m]))) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service {{ $labels.service }} has failed purchase attempts"
+
+      - alert: AuthFailureSpike
+        expr: sum by (service) (rate(auth_failures_total[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service {{ $labels.service }} is seeing more than one authentication failure per second"
