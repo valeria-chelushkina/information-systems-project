@@ -19,20 +19,28 @@ export class CatalogClient {
   protected readonly baseUrl = ticketingConfig.catalogBaseUrl;
   protected readonly timeoutMs = ticketingConfig.catalogTimeoutMs;
 
-  getPerformer(id: string, token: string): Promise<CatalogPerformer> {
-    return this.fetchOne<CatalogPerformer>(`/api/performers/${id}`, 'performer', token);
+  getPerformer(id: string, token: string, requestId?: string): Promise<CatalogPerformer> {
+    return this.fetchOne<CatalogPerformer>(`/api/performers/${id}`, 'performer', token, requestId);
   }
 
-  getVenue(id: string, token: string): Promise<CatalogVenue> {
-    return this.fetchOne<CatalogVenue>(`/api/venues/${id}`, 'venue', token);
+  getVenue(id: string, token: string, requestId?: string): Promise<CatalogVenue> {
+    return this.fetchOne<CatalogVenue>(`/api/venues/${id}`, 'venue', token, requestId);
   }
 
-  private async fetchOne<T>(path: string, resource: string, token: string): Promise<T> {
+  private async fetchOne<T>(
+    path: string,
+    resource: string,
+    token: string,
+    requestId?: string,
+  ): Promise<T> {
     let response: Response;
 
     try {
       response = await fetch(`${this.baseUrl}${path}`, {
-        headers: { authorization: `Bearer ${token}` },
+        headers: {
+          authorization: `Bearer ${token}`,
+          ...(requestId ? { 'x-request-id': requestId } : {}),
+        },
         signal: AbortSignal.timeout(this.timeoutMs),
       });
     } catch {

@@ -45,13 +45,16 @@ function bearerToken(req: Request): string {
   return token;
 }
 
-async function introspect(token: string): Promise<AuthenticatedUser> {
+async function introspect(token: string, requestId?: string): Promise<AuthenticatedUser> {
   let response: Response;
 
   try {
     response = await fetch(`${config.authBaseUrl}/auth/introspect`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        ...(requestId ? { 'x-request-id': requestId } : {}),
+      },
       body: JSON.stringify({ token }),
       signal: AbortSignal.timeout(config.authTimeoutMs),
     });
@@ -84,7 +87,7 @@ export function requireAuth(): RequestHandler {
       try {
         const token = bearerToken(req);
         req.authToken = token;
-        req.user = await introspect(token);
+        req.user = await introspect(token, req.requestId);
         next();
       } catch (error) {
         next(error);

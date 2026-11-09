@@ -25,7 +25,7 @@ export class EventsController {
 
   create = asyncHandler(async (req: Request, res: Response) => {
     const body = validate(createEventSchema, req.body);
-    const event = await this.service.createEvent(body, tokenOf(req));
+    const event = await this.service.createEvent(body, tokenOf(req), req.requestId);
 
     res.status(201).location(`/api/events/${event.id}`).json({ data: event });
   });
@@ -50,7 +50,7 @@ export class EventsController {
   update = asyncHandler(async (req: Request, res: Response) => {
     const { id } = validate(eventIdParamsSchema, req.params);
     const body = validate(updateEventSchema, req.body);
-    const event = await this.service.updateEvent(id, body, tokenOf(req));
+    const event = await this.service.updateEvent(id, body, tokenOf(req), req.requestId);
 
     res.status(200).json({ data: event });
   });
