@@ -1,3 +1,4 @@
+import { shutdownTracing } from '@/shared/observability/tracing.js';
 import { createApp } from '@/services/ticketing/app.js';
 import { ticketingConfig } from '@/services/ticketing/config.js';
 import { config } from '@/shared/config/index.js';
@@ -29,7 +30,9 @@ function shutdown(signal: string): void {
   sweeper.stop();
 
   server.close(() => {
-    void pool.end().finally(() => process.exit(0));
+    void shutdownTracing().finally(() => {
+      void pool.end().finally(() => process.exit(0));
+    });
   });
 
   setTimeout(() => process.exit(1), 10_000).unref();

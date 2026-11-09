@@ -1,3 +1,4 @@
+import { shutdownTracing } from '@/shared/observability/tracing.js';
 import { createApp } from '@/services/catalog/app.js';
 import { config } from '@/shared/config/index.js';
 import { pool } from '@/shared/db/client.js';
@@ -22,7 +23,9 @@ function shutdown(signal: string): void {
   logger.info({ signal }, 'shutting down');
 
   server.close(() => {
-    void pool.end().finally(() => process.exit(0));
+    void shutdownTracing().finally(() => {
+      void pool.end().finally(() => process.exit(0));
+    });
   });
 
   setTimeout(() => process.exit(1), 10_000).unref();

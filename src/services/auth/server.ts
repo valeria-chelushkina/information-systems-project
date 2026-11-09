@@ -1,3 +1,4 @@
+import { shutdownTracing } from '@/shared/observability/tracing.js';
 import { createApp } from '@/services/auth/app.js';
 import { authDb } from '@/services/auth/db/client.js';
 import { createSchema } from '@/services/auth/db/schema.js';
@@ -25,8 +26,10 @@ function shutdown(signal: string): void {
   logger.info({ signal }, 'shutting down');
 
   server.close(() => {
-    authDb.close();
-    process.exit(0);
+    void shutdownTracing().finally(() => {
+      authDb.close();
+      process.exit(0);
+    });
   });
 
   setTimeout(() => process.exit(1), 10_000).unref();
