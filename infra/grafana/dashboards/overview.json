@@ -1,12 +1,15 @@
 {
   "uid": "concert-ops-overview",
   "title": "Concert Ops Overview",
-  "tags": ["concert-ops"],
+  "tags": ["concert-ops", "overview"],
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
   "refresh": "10s",
-  "time": { "from": "now-30m", "to": "now" },
+  "time": { "from": "now-1h", "to": "now" },
+  "links": [
+    { "type": "dashboards", "tags": ["concert-ops"], "asDropdown": true, "includeVars": true, "keepTime": true, "title": "Dashboards" }
+  ],
   "annotations": {
     "list": [
       {
@@ -33,17 +36,21 @@
     {
       "id": 1,
       "type": "stat",
-      "title": "Services up",
+      "title": "App services available",
+      "description": "ticketing, catalog, auth and notify",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "red", "value": null },
-              { "color": "green", "value": 4 }
+              { "color": "orange", "value": 75 },
+              { "color": "green", "value": 100 }
             ]
           }
         },
@@ -56,75 +63,133 @@
         "justifyMode": "auto",
         "textMode": "auto"
       },
-      "targets": [{ "refId": "A", "expr": "sum(up)", "instant": true, "range": false }]
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * sum(up{instance_type=\"service\"}) / count(up{instance_type=\"service\"})",
+          "instant": true,
+          "range": false
+        }
+      ]
     },
     {
       "id": 2,
       "type": "stat",
-      "title": "Tickets sold",
+      "title": "5xx error ratio",
+      "description": "share of HTTP responses with status 5xx",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
       "fieldConfig": {
-        "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "green" } },
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
         "overrides": []
       },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "value",
+        "colorMode": "background",
         "graphMode": "area",
         "justifyMode": "auto",
         "textMode": "auto"
       },
       "targets": [
-        { "refId": "A", "expr": "sum(tickets_sold_total) or vector(0)", "instant": true, "range": false }
+        {
+          "refId": "A",
+          "expr": "(100 * sum(rate(http_requests_total{status=~\"5..\"}[$__rate_interval])) / sum(rate(http_requests_total[$__rate_interval]))) or vector(0)",
+          "instant": true,
+          "range": false
+        }
       ]
     },
     {
       "id": 3,
       "type": "stat",
-      "title": "Refunds",
+      "title": "p95 latency",
+      "description": "all services",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
       "fieldConfig": {
-        "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "orange" } },
+        "defaults": {
+          "unit": "ms",
+          "noValue": "—",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 200 },
+              { "color": "red", "value": 500 }
+            ]
+          }
+        },
         "overrides": []
       },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "value",
+        "colorMode": "background",
         "graphMode": "area",
         "justifyMode": "auto",
         "textMode": "auto"
       },
       "targets": [
-        { "refId": "A", "expr": "sum(refunds_total) or vector(0)", "instant": true, "range": false }
+        {
+          "refId": "A",
+          "expr": "1000 * app:http_request_duration_p95:15m",
+          "instant": true,
+          "range": false
+        }
       ]
     },
     {
       "id": 4,
       "type": "stat",
-      "title": "Expired holds",
+      "title": "RabbitMQ backlog",
+      "description": "messages ready in the notifications queue",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
       "fieldConfig": {
-        "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "blue" } },
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        },
         "overrides": []
       },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "value",
+        "colorMode": "background",
         "graphMode": "area",
         "justifyMode": "auto",
         "textMode": "auto"
       },
       "targets": [
-        { "refId": "A", "expr": "sum(holds_expired_total) or vector(0)", "instant": true, "range": false }
+        {
+          "refId": "A",
+          "expr": "max(rabbitmq:queue_backlog) or vector(0)",
+          "instant": true,
+          "range": false
+        }
       ]
     },
     {
       "id": 5,
       "type": "timeseries",
-      "title": "Request rate by service",
+      "title": "Requests per second by service",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
       "fieldConfig": {
@@ -139,22 +204,18 @@
         "tooltip": { "mode": "multi", "sort": "desc" }
       },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (service) (rate(http_requests_total[$__rate_interval]))",
-          "legendFormat": "{{service}}"
-        }
+        { "refId": "A", "expr": "service:http_requests:rate5m", "legendFormat": "{{service}}" }
       ]
     },
     {
       "id": 6,
       "type": "timeseries",
-      "title": "p95 latency by route",
+      "title": "p95 latency by service",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
+          "unit": "ms",
           "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
         },
         "overrides": []
@@ -164,377 +225,160 @@
         "tooltip": { "mode": "multi", "sort": "desc" }
       },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le, route) (rate(http_request_duration_seconds_bucket[$__rate_interval])))",
-          "legendFormat": "{{route}}"
-        }
+        { "refId": "A", "expr": "1000 * service:http_request_duration_p95:15m", "legendFormat": "{{service}}" }
       ]
     },
     {
       "id": 7,
-      "type": "timeseries",
-      "title": "HTTP responses by status",
+      "type": "stat",
+      "title": "Tickets sold (range)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 12 },
       "fieldConfig": {
         "defaults": {
-          "unit": "reqps",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+          "unit": "short",
+          "color": { "mode": "fixed", "fixedColor": "blue" }
         },
         "overrides": []
       },
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
       },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (status) (rate(http_requests_total[$__rate_interval]))",
-          "legendFormat": "{{status}}"
-        }
+        { "refId": "A", "expr": "round(sum(increase(tickets_sold_total[$__range]))) or vector(0)", "instant": true, "range": false }
       ]
     },
     {
       "id": 8,
-      "type": "timeseries",
-      "title": "Database query p95 by query name",
+      "type": "stat",
+      "title": "Revenue (range)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 12 },
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+          "unit": "currencyUSD",
+          "color": { "mode": "fixed", "fixedColor": "green" }
         },
         "overrides": []
       },
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
       },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le, query_name) (rate(db_query_duration_seconds_bucket[$__rate_interval])))",
-          "legendFormat": "{{query_name}}"
-        }
+        { "refId": "A", "expr": "sum(increase(revenue_cents_total[$__range])) / 100 or vector(0)", "instant": true, "range": false }
       ]
     },
     {
       "id": 9,
-      "type": "timeseries",
-      "title": "Database query errors",
+      "type": "stat",
+      "title": "Purchase success ratio",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 12 },
       "fieldConfig": {
         "defaults": {
-          "unit": "ops",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "noValue": "n/a",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 95 },
+              { "color": "green", "value": 99 }
+            ]
+          }
         },
         "overrides": []
       },
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (query_name) (rate(db_query_errors_total[$__rate_interval]))",
-          "legendFormat": "{{query_name}}"
+          "expr": "100 * sum(increase(purchases_total{status=\"ok\"}[$__range])) / sum(increase(purchases_total[$__range]))",
+          "instant": true,
+          "range": false
         }
       ]
     },
     {
       "id": 10,
-      "type": "timeseries",
-      "title": "Purchases by outcome",
+      "type": "stat",
+      "title": "Refunds (range)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 12 },
       "fieldConfig": {
         "defaults": {
-          "unit": "ops",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+          "unit": "short",
+          "color": { "mode": "fixed", "fixedColor": "orange" }
         },
         "overrides": []
       },
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
       },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (status) (rate(purchases_total[$__rate_interval]))",
-          "legendFormat": "{{status}}"
-        }
+        { "refId": "A", "expr": "round(sum(increase(refunds_total[$__range]))) or vector(0)", "instant": true, "range": false }
       ]
     },
     {
       "id": 11,
-      "type": "timeseries",
-      "title": "Auth failures by reason",
+      "type": "stat",
+      "title": "DB connections used",
+      "description": "worst database, percent of max_connections",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
       "fieldConfig": {
         "defaults": {
-          "unit": "ops",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
         },
         "overrides": []
       },
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
       },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (reason) (rate(auth_failures_total[$__rate_interval]))",
-          "legendFormat": "{{reason}}"
-        }
+        { "refId": "A", "expr": "max(postgres:connections:percent)", "instant": true, "range": false }
       ]
     },
     {
       "id": 12,
-      "type": "timeseries",
-      "title": "Resident memory by service",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "process_resident_memory_bytes",
-          "legendFormat": "{{service}}"
-        }
-      ]
-    },
-    {
-      "id": 13,
       "type": "stat",
-      "title": "Revenue (USD)",
+      "title": "Postgres cache hit",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 36 },
-      "fieldConfig": {
-        "defaults": { "unit": "currencyUSD", "color": { "mode": "fixed", "fixedColor": "green" } },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(revenue_cents_total) / 100 or vector(0)",
-          "instant": true,
-          "range": false
-        }
-      ]
-    },
-    {
-      "id": 14,
-      "type": "stat",
-      "title": "Refunded (USD)",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 36 },
-      "fieldConfig": {
-        "defaults": { "unit": "currencyUSD", "color": { "mode": "fixed", "fixedColor": "orange" } },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(refunded_cents_total) / 100 or vector(0)",
-          "instant": true,
-          "range": false
-        }
-      ]
-    },
-    {
-      "id": 15,
-      "type": "stat",
-      "title": "Holds created",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 36 },
-      "fieldConfig": {
-        "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "blue" } },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "sum(holds_created_total) or vector(0)", "instant": true, "range": false }
-      ]
-    },
-    {
-      "id": 16,
-      "type": "timeseries",
-      "title": "Holds created vs purchases",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(rate(holds_created_total[$__rate_interval]))",
-          "legendFormat": "holds created"
-        },
-        {
-          "refId": "B",
-          "expr": "sum(rate(purchases_total{status=\"ok\"}[$__rate_interval]))",
-          "legendFormat": "purchases ok"
-        }
-      ]
-    },
-    {
-      "id": 17,
-      "type": "timeseries",
-      "title": "DB pool waiting requests",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "db_pool_waiting_requests",
-          "legendFormat": "{{service}}"
-        }
-      ]
-    },
-    {
-      "id": 18,
-      "type": "timeseries",
-      "title": "Bookings by status",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 48 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (status) (rate(bookings_total[$__rate_interval]))",
-          "legendFormat": "{{status}}"
-        }
-      ]
-    },
-    {
-      "id": 19,
-      "type": "timeseries",
-      "title": "Postgres connections",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 56 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "max by (datname) (pg_stat_database_numbackends{datname=~\"db_.*\"})",
-          "legendFormat": "{{datname}}"
-        }
-      ]
-    },
-    {
-      "id": 20,
-      "type": "timeseries",
-      "title": "Postgres transactions per second",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 56 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "max by (datname) (rate(pg_stat_database_xact_commit{datname=~\"db_.*\"}[$__rate_interval]))",
-          "legendFormat": "{{datname}} commit"
-        },
-        {
-          "refId": "B",
-          "expr": "max by (datname) (rate(pg_stat_database_xact_rollback{datname=~\"db_.*\"}[$__rate_interval]))",
-          "legendFormat": "{{datname}} rollback"
-        }
-      ]
-    },
-    {
-      "id": 21,
-      "type": "stat",
-      "title": "Postgres cache hit ratio",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 56 },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -559,205 +403,46 @@
         "textMode": "auto"
       },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "100 * sum(rate(pg_stat_database_blks_hit{datname=~\"db_.*\"}[$__rate_interval])) / (sum(rate(pg_stat_database_blks_hit{datname=~\"db_.*\"}[$__rate_interval])) + sum(rate(pg_stat_database_blks_read{datname=~\"db_.*\"}[$__rate_interval]))) or vector(100)",
-          "instant": true,
-          "range": false
-        }
+        { "refId": "A", "expr": "postgres:cache_hit:percent5m or vector(100)", "instant": true, "range": false }
       ]
     },
     {
-      "id": 22,
-      "type": "timeseries",
-      "title": "Postgres lock waits by mode",
+      "id": 13,
+      "type": "stat",
+      "title": "DB pool waiting",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 64 },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (mode) (max by (datname, mode) (pg_locks_count{datname=~\"db_.*\"}))",
-          "legendFormat": "{{mode}}"
-        }
-      ]
-    },
-    {
-      "id": 23,
-      "type": "timeseries",
-      "title": "Postgres deadlocks and temp files",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 64 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "max by (datname) (rate(pg_stat_database_deadlocks{datname=~\"db_.*\"}[$__rate_interval]))",
-          "legendFormat": "{{datname}} deadlocks"
-        },
-        {
-          "refId": "B",
-          "expr": "max by (datname) (rate(pg_stat_database_temp_files{datname=~\"db_.*\"}[$__rate_interval]))",
-          "legendFormat": "{{datname}} temp files"
-        }
-      ]
-    },
-    {
-      "id": 24,
-      "type": "stat",
-      "title": "Postgres database size",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 64 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes",
-          "color": { "mode": "fixed", "fixedColor": "blue" }
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
         },
         "overrides": []
       },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "value",
+        "colorMode": "background",
         "graphMode": "area",
         "justifyMode": "auto",
         "textMode": "auto"
       },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "max by (datname) (pg_database_size_bytes{datname=~\"db_.*\"})",
-          "legendFormat": "{{datname}}",
-          "instant": true,
-          "range": false
-        }
+        { "refId": "A", "expr": "sum(db_pool_waiting_requests) or vector(0)", "instant": true, "range": false }
       ]
     },
     {
-      "id": 25,
-      "type": "table",
-      "title": "Slowest statements (pg_stat_statements)",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 72 },
-      "fieldConfig": {
-        "defaults": {
-          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showHeader": true,
-        "sortBy": [{ "displayName": "mean ms", "desc": true }]
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "topk(8, (max by (datname, queryid) ((rate(pg_stat_statements_seconds_total{user!=\"exporter\"}[$__rate_interval]) / rate(pg_stat_statements_calls_total{user!=\"exporter\"}[$__rate_interval])) > 0)) * on (queryid) group_left(query) max by (queryid, query) (pg_stat_statements_query_id)) * 1000",
-          "format": "table",
-          "instant": true,
-          "range": false
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": { "Time": true, "__name__": true, "queryid": true },
-            "renameByName": { "datname": "database", "query": "statement", "Value": "mean ms" }
-          }
-        }
-      ]
-    },
-    {
-      "id": 26,
-      "type": "timeseries",
-      "title": "RabbitMQ queue depth",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 80 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "rabbitmq_queue_messages_ready",
-          "legendFormat": "ready"
-        },
-        {
-          "refId": "B",
-          "expr": "rabbitmq_queue_messages_unacked",
-          "legendFormat": "unacked"
-        }
-      ]
-    },
-    {
-      "id": 27,
-      "type": "timeseries",
-      "title": "RabbitMQ throughput",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 80 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(rate(rabbitmq_messages_published_total[$__rate_interval]))",
-          "legendFormat": "published"
-        },
-        {
-          "refId": "B",
-          "expr": "sum(rate(rabbitmq_messages_consumed_total[$__rate_interval]))",
-          "legendFormat": "consumed"
-        },
-        {
-          "refId": "C",
-          "expr": "sum(rate(rabbitmq_queue_messages_acked_total[$__rate_interval]))",
-          "legendFormat": "acked"
-        }
-      ]
-    },
-    {
-      "id": 28,
+      "id": 14,
       "type": "stat",
       "title": "RabbitMQ consumers",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 80 },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 16 },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -779,47 +464,7 @@
         "textMode": "auto"
       },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "rabbitmq_queue_consumers",
-          "instant": true,
-          "range": false
-        }
-      ]
-    },
-    {
-      "id": 29,
-      "type": "stat",
-      "title": "RabbitMQ publish failures",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 80 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(rabbitmq_publish_failures_total)",
-          "instant": true,
-          "range": false
-        }
+        { "refId": "A", "expr": "max(rabbitmq_queue_consumers) or vector(0)", "instant": true, "range": false }
       ]
     }
   ]

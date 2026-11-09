@@ -445,16 +445,31 @@ a restart. Grafana's datasource is provisioned from
 `infra/grafana/provisioning/datasources/prometheus.yml` with the URL
 `http://prometheus:9090`, so no manual setup is needed.
 
-The **Concert Ops Overview** dashboard is provisioned as well
-(`infra/grafana/dashboards/overview.json`): eleven stat panels (services up,
-tickets sold, refunds, expired holds, revenue, refunded amount, holds created,
-Postgres cache hit ratio, database size, RabbitMQ consumers, RabbitMQ publish
-failures), seventeen time series (request rate, p95 latency, HTTP statuses, DB
-query p95, DB errors, purchases by outcome, auth failures, memory, holds vs
-purchases, DB pool waiting requests, bookings by status, Postgres connections,
-transactions, locks, deadlocks/temp files, RabbitMQ queue depth, RabbitMQ
-throughput) and one table with the slowest statements. It refreshes every 10
-seconds.
+Six dashboards are provisioned from `infra/grafana/dashboards/` and grouped by
+the `concert-ops` tag, so the dashboard dropdown links them together:
+
+| Dashboard | UID | Focus |
+| --- | --- | --- |
+| Concert Ops Overview | `concert-ops-overview` | 14 golden-signal and business panels |
+| API Monitoring | `concert-ops-api` | percentiles, routes, failed requests, 2xx vs errors, route and status tables |
+| Service Detail | `concert-ops-service` | one service: route stats, latency heatmap, DB query table, pool |
+| Postgres | `concert-ops-postgres` | connections, transactions, cache, locks, slow statements |
+| Messaging | `concert-ops-messaging` | queue depth, throughput, consumers, failures |
+| Business | `concert-ops-business` | revenue, funnel, purchases, bookings, auth failures, refunds |
+
+`API Monitoring` and `Service Detail` use the `service` and `method`
+template variables. The API dashboard reproduces the classic panel set:
+p90/p95/p99 by method, slowest routes, request columns, requests per minute,
+failed requests and 2xx-vs-error bars, plus joined route/status tables.
+
+`infra/prometheus/recording-rules.yml` precomputes the values shared by
+dashboards and alerts: per-service request rate, error percentage, p95/p99,
+global p95 and error percentage, Postgres connection/cache percentages, and
+the RabbitMQ backlog. The percentile rules use a 15-minute window so values
+survive short idle periods between scenario runs.
+
+Application metrics now also include `http_requests_in_flight`, exposed by the
+request middleware and used in Service Detail.
 
 Useful queries:
 
@@ -737,7 +752,7 @@ drizzle/
 db/
   init/                           roles, databases, pg_stat_statements, exporter grants
 infra/
-  prometheus/                     scrape configuration, alert rules
+  prometheus/                     scrape config, alert and recording rules
   alertmanager/                   routes and webhook receiver config
   grafana/                        datasource and dashboard provisioning
   loki/                           loki config and alloy log pipeline

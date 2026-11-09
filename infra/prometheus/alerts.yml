@@ -33,12 +33,12 @@ groups:
           summary: "Service {{ $labels.service }} has just thrown 5xx errors"
 
       - alert: HighLatency
-        expr: histogram_quantile(0.95, sum by (le, service, route) (rate(http_request_duration_seconds_bucket[5m]))) > 1
+        expr: service:http_request_duration_p95:15m > 1
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "Service {{ $labels.service }} has p95 latency above 1s on {{ $labels.route }} for more than 5 minutes"
+          summary: "Service {{ $labels.service }} has p95 latency above 1s for more than 5 minutes"
 
       - alert: DbPoolSaturated
         expr: db_pool_waiting_requests > 0
@@ -49,7 +49,7 @@ groups:
           summary: "Service {{ $labels.service }} has requests waiting for a database connection"
 
       - alert: PostgresHighConnections
-        expr: 100 * max by (datname) (pg_stat_database_numbackends{datname=~'db_.*'}) / scalar(max(pg_settings_max_connections)) > 80
+        expr: postgres:connections:percent > 80
         for: 5m
         labels:
           severity: warning
@@ -57,7 +57,7 @@ groups:
           summary: "Database {{ $labels.datname }} is using more than 80% of max_connections"
 
       - alert: PostgresLowCacheHit
-        expr: 100 * sum(rate(pg_stat_database_blks_hit{datname=~'db_.*'}[5m])) / (sum(rate(pg_stat_database_blks_hit{datname=~'db_.*'}[5m])) + sum(rate(pg_stat_database_blks_read{datname=~'db_.*'}[5m]))) < 90
+        expr: postgres:cache_hit:percent5m < 90
         for: 10m
         labels:
           severity: warning
@@ -80,7 +80,7 @@ groups:
           summary: "RabbitMQ {{ $labels.instance }} has been down for more than 2 minutes"
 
       - alert: RabbitmqQueueBacklog
-        expr: rabbitmq_queue_messages_ready > 100
+        expr: rabbitmq:queue_backlog > 100
         for: 5m
         labels:
           severity: warning

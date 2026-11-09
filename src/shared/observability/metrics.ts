@@ -1,4 +1,4 @@
-import { collectDefaultMetrics, Counter, Histogram, Registry } from 'prom-client';
+import { collectDefaultMetrics, Counter, Gauge, Histogram, Registry } from 'prom-client';
 import { config } from '@/shared/config/index.js';
 
 export const registry = new Registry();
@@ -10,6 +10,12 @@ export const httpRequestsTotal = new Counter({
   name: 'http_requests_total',
   help: 'Total number of HTTP requests handled',
   labelNames: ['method', 'route', 'status'] as const,
+  registers: [registry],
+});
+
+export const httpRequestsInFlight = new Gauge({
+  name: 'http_requests_in_flight',
+  help: 'HTTP requests currently being handled',
   registers: [registry],
 });
 

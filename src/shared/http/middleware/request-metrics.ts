@@ -1,5 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
-import { httpRequestDuration, httpRequestsTotal } from '@/shared/observability/metrics.js';
+import {
+  httpRequestDuration,
+  httpRequestsInFlight,
+  httpRequestsTotal,
+} from '@/shared/observability/metrics.js';
 
 export function requestMetrics(req: Request, res: Response, next: NextFunction): void {
   if (req.path === '/metrics') {
@@ -9,6 +13,8 @@ export function requestMetrics(req: Request, res: Response, next: NextFunction):
 
   const end = httpRequestDuration.startTimer();
 
+  httpRequestsInFlight.inc();
+
   res.on('finish', () => {
     const labels = {
       method: req.method,
@@ -17,6 +23,10 @@ export function requestMetrics(req: Request, res: Response, next: NextFunction):
     };
     end(labels);
     httpRequestsTotal.inc(labels);
+  });
+
+  res.on('close', () => {
+    httpRequestsInFlight.dec();
   });
 
   next();

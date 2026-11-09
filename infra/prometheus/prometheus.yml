@@ -76,6 +76,7 @@ scrape_configs:
 
 rule_files:
   - /etc/prometheus/alerts.yml
+  - /etc/prometheus/recording-rules.yml
 
 alerting:
   alertmanagers:
