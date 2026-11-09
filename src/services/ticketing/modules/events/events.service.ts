@@ -19,7 +19,7 @@ const ALLOWED_TRANSITIONS: Record<EventStatus, readonly EventStatus[]> = {
   draft: ['scheduled', 'cancelled'],
   scheduled: ['on_sale', 'cancelled'],
   on_sale: ['sold_out', 'cancelled'],
-  sold_out: ['completed', 'cancelled'],
+  sold_out: ['completed', 'cancelled', 'on_sale'],
   completed: [],
   cancelled: [],
 };

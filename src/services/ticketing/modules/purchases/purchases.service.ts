@@ -3,14 +3,15 @@ import { transaction } from '@/shared/db/transaction.js';
 import { EventsRepository } from '@/services/ticketing/modules/events/events.repository.js';
 import { HoldsRepository } from '@/services/ticketing/modules/purchases/holds.repository.js';
 import { OrdersRepository } from '@/services/ticketing/modules/purchases/orders.repository.js';
-import type { CreateHoldInput, PurchaseInput } from '@/services/ticketing/modules/purchases/purchases.schemas.js';
+import type { CreateHoldInput, PurchaseInput, RefundOrderInput } from '@/services/ticketing/modules/purchases/purchases.schemas.js';
 import { PaymentsRepository } from '@/services/ticketing/modules/purchases/payments.repository.js';
+import { RefundsRepository } from '@/services/ticketing/modules/purchases/refunds.repository.js';
 import { TicketsRepository } from '@/services/ticketing/modules/purchases/tickets.repository.js';
 import { TiersRepository } from '@/services/ticketing/modules/tiers/tiers.repository.js';
 import { HttpError } from '@/shared/errors/http-error.js';
 import type { HoldRow } from '@/services/ticketing/typedefs/hold.typedefs.js';
 import type { OrderRow } from '@/services/ticketing/typedefs/order.typedefs.js';
-import type { PurchaseResult } from '@/services/ticketing/typedefs/purchase.typedefs.js';
+import type { PurchaseResult, RefundResult } from '@/services/ticketing/typedefs/purchase.typedefs.js';
 
 const HOLD_TTL_MS = config.holdTtlMs;
 
@@ -19,6 +20,7 @@ export class PurchasesService {
   protected readonly orders = new OrdersRepository();
   protected readonly tickets = new TicketsRepository();
   protected readonly payments = new PaymentsRepository();
+  protected readonly refunds = new RefundsRepository();
   protected readonly tiers = new TiersRepository();
   protected readonly events = new EventsRepository();
 
@@ -208,6 +210,85 @@ export class PurchasesService {
     }
 
     return this.loadOrder(order, false);
+  }
+
+  async refundOrder(orderId: string, input: RefundOrderInput): Promise<RefundResult> {
+    return transaction('refund_order', async (tx) => {
+      const order = await this.orders.lockById(orderId, tx);
+
+      if (!order) {
+        throw HttpError.notFound('order_not_found', `Order ${orderId} was not found`);
+      }
+
+      if (order.status !== 'paid') {
+        throw HttpError.conflict(
+          'order_not_refundable',
+          `Order ${orderId} is ${order.status} and cannot be refunded`,
+        );
+      }
+
+      const issued = await this.tickets.findByOrderId(orderId, tx);
+
+      if (issued.length === 0) {
+        throw HttpError.conflict('order_has_no_tickets', `Order ${orderId} has no tickets`);
+      }
+
+      const perTier = new Map<string, number>();
+
+      for (const ticket of issued) {
+        perTier.set(ticket.tierId, (perTier.get(ticket.tierId) ?? 0) + 1);
+      }
+
+      for (const [tierId, quantity] of [...perTier.entries()].sort(([left], [right]) =>
+        left.localeCompare(right),
+      )) {
+        const restored = await this.tiers.restoreSold(tierId, quantity, tx);
+
+        if (!restored) {
+          throw HttpError.conflict(
+            'refund_inventory_mismatch',
+            `Tier ${tierId} does not have ${quantity} sold seats to restore`,
+          );
+        }
+      }
+
+      await this.tickets.updateStatusByOrderId(orderId, 'refunded', tx);
+      await this.payments.updateStatusByOrderId(orderId, 'refunded', tx);
+
+      const refund = await this.refunds.insertOne(
+        {
+          orderId,
+          amountCents: order.totalCents,
+          reason: input.reason ?? null,
+          status: 'completed',
+        },
+        tx,
+      );
+
+      const updated = await this.orders.updateStatus(orderId, 'refunded', tx);
+
+      if (!updated) {
+        throw HttpError.notFound('order_not_found', `Order ${orderId} was not found`);
+      }
+
+      const eventId = issued[0]?.eventId;
+
+      if (eventId) {
+        const event = await this.events.findById(eventId, tx);
+
+        if (event?.status === 'sold_out') {
+          const remaining = await this.tiers.remainingInventory(eventId, tx);
+
+          if (remaining > 0) {
+            await this.events.updateById(eventId, { status: 'on_sale' }, tx);
+          }
+        }
+      }
+
+      const refundedTickets = await this.tickets.findByOrderId(orderId, tx);
+
+      return { order: updated, refund, tickets: refundedTickets };
+    });
   }
 
   private async loadOrder(order: OrderRow, created: boolean): Promise<PurchaseResult> {

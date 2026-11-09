@@ -100,6 +100,25 @@ export class TiersRepository {
     });
   }
 
+  restoreSold(
+    tierId: string,
+    quantity: number,
+    exec: Executor = this.db,
+  ): Promise<PriceTierRow | null> {
+    return timedQuery('restore_sold_inventory', async () => {
+      const [row] = await exec
+        .update(priceTiers)
+        .set({
+          availableQty: sql`${priceTiers.availableQty} + ${quantity}`,
+          soldQty: sql`${priceTiers.soldQty} - ${quantity}`,
+        })
+        .where(and(eq(priceTiers.id, tierId), sql`${priceTiers.soldQty} >= ${quantity}`))
+        .returning();
+
+      return row ?? null;
+    });
+  }
+
   remainingInventory(eventId: string, exec: Executor = this.db): Promise<number> {
     return timedQuery('remaining_event_inventory', async () => {
       const [row] = await exec

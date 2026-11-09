@@ -17,4 +17,18 @@ export class TicketsRepository {
       exec.select().from(tickets).where(eq(tickets.orderId, orderId)),
     );
   }
+
+  updateStatusByOrderId(
+    orderId: string,
+    status: string,
+    exec: Executor = this.db,
+  ): Promise<TicketRow[]> {
+    return timedQuery('update_ticket_status', () =>
+      exec
+        .update(tickets)
+        .set({ status })
+        .where(eq(tickets.orderId, orderId))
+        .returning(),
+    );
+  }
 }

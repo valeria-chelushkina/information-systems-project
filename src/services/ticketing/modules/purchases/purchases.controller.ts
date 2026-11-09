@@ -5,6 +5,7 @@ import {
   holdIdParamsSchema,
   orderIdParamsSchema,
   purchaseSchema,
+  refundOrderSchema,
 } from '@/services/ticketing/modules/purchases/purchases.schemas.js';
 import { asyncHandler } from '@/shared/http/async-handler.js';
 import { validate } from '@/shared/http/validate.js';
@@ -40,5 +41,13 @@ export class PurchasesController {
     const result = await this.service.getOrder(id);
 
     res.status(200).json({ data: { order: result.order, tickets: result.tickets } });
+  });
+
+  refund = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = validate(orderIdParamsSchema, req.params);
+    const body = validate(refundOrderSchema, req.body ?? {});
+    const result = await this.service.refundOrder(id, body);
+
+    res.status(200).json({ data: result });
   });
 }

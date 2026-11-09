@@ -37,4 +37,23 @@ export class OrdersRepository {
       return row ?? null;
     });
   }
+
+  lockById(id: string, exec: Executor = this.db): Promise<OrderRow | null> {
+    return timedQuery('lock_order', async () => {
+      const [row] = await exec.select().from(orders).where(eq(orders.id, id)).for('update');
+      return row ?? null;
+    });
+  }
+
+  updateStatus(id: string, status: string, exec: Executor = this.db): Promise<OrderRow | null> {
+    return timedQuery('update_order_status', async () => {
+      const [row] = await exec
+        .update(orders)
+        .set({ status })
+        .where(eq(orders.id, id))
+        .returning();
+
+      return row ?? null;
+    });
+  }
 }

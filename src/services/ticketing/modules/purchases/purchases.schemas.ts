@@ -20,5 +20,10 @@ export const purchaseSchema = z.object({
   customerEmail: z.email(),
 });
 
+export const refundOrderSchema = z.object({
+  reason: z.string().trim().max(500).optional(),
+});
+
 export type CreateHoldInput = z.infer<typeof createHoldSchema>;
 export type PurchaseInput = z.infer<typeof purchaseSchema>;
+export type RefundOrderInput = z.infer<typeof refundOrderSchema>;

@@ -26,4 +26,20 @@ export class PaymentsRepository {
       return row ?? null;
     });
   }
+
+  updateStatusByOrderId(
+    orderId: string,
+    status: string,
+    exec: Executor = this.db,
+  ): Promise<PaymentRow | null> {
+    return timedQuery('update_payment_status', async () => {
+      const [row] = await exec
+        .update(payments)
+        .set({ status })
+        .where(eq(payments.orderId, orderId))
+        .returning();
+
+      return row ?? null;
+    });
+  }
 }
