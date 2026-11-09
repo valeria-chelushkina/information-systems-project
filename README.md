@@ -13,6 +13,8 @@ auth       :3005   users, sessions, login attempts (SQLite)
 
 db_ticketing / db_catalog / db_notify   -> one Postgres container, :5434
 auth.db                                 -> SQLite file on a volume
+prometheus :9090                        -> scrapes every service, stores the TSDB
+grafana    :3007                        -> dashboards over the Prometheus datasource
 notify     (planned, RabbitMQ consumer)
 ```
 
@@ -311,12 +313,54 @@ docker compose up -d --build
 | ticketing | `TICKETING_HOST_PORT` (3002) | 3000 |
 | catalog | `CATALOG_HOST_PORT` (3004) | 3000 |
 | auth | `AUTH_HOST_PORT` (3006) | 3000 |
+| prometheus | `PROMETHEUS_HOST_PORT` (9090) | 9090 |
+| grafana | `GRAFANA_HOST_PORT` (3007) | 3000 |
 | postgres | 5434 | 5432 |
 
-All three application containers run the same image with different
-entrypoints. Inside the Compose network they reach each other by service name:
-`http://catalog:3000`, `http://auth:3000`. The auth SQLite file lives on the
-`authdata` volume at `/app/data/auth.db`.
+All application containers run the same image with different entrypoints.
+Inside the Compose network they reach each other by service name:
+`http://catalog:3000`, `http://auth:3000`, `http://prometheus:9090`. The auth
+SQLite file lives on the `authdata` volume at `/app/data/auth.db`.
+
+## Monitoring
+
+```bash
+docker compose up -d prometheus grafana
+```
+
+| Where | What |
+| --- | --- |
+| `http://localhost:9090/targets` | scrape health — all four targets should be `UP` |
+| `http://localhost:9090/graph` | raw PromQL |
+| `http://localhost:3007` | Grafana; credentials from `.env` |
+
+Prometheus scrapes every 10 seconds using Compose service names and the
+**container** port 3000:
+
+```yaml
+scrape_configs:
+  - job_name: 'ticketing'
+    static_configs:
+      - targets: ['ticketing:3000']
+```
+
+The TSDB lives on the `promdata` volume at `/prometheus`, so history survives
+a restart. Grafana's datasource is provisioned from
+`infra/grafana/provisioning/datasources/prometheus.yml` with the URL
+`http://prometheus:9090`, so no manual setup is needed.
+
+Useful queries:
+
+```promql
+up
+sum by (service) (rate(http_requests_total[1m]))
+histogram_quantile(0.95, sum by (le, route) (rate(http_request_duration_seconds_bucket[5m])))
+sum by (query_name) (rate(db_query_duration_seconds_count[1m]))
+auth_failures_total
+```
+
+Services started with `npm run dev` listen on the host, not on the Compose
+network. To scrape those, add targets such as `host.docker.internal:3001`.
 
 ## Layout
 
