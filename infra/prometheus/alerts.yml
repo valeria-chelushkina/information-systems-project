@@ -71,6 +71,38 @@ groups:
         annotations:
           summary: "Postgres has detected a deadlock"
 
+      - alert: RabbitmqDown
+        expr: up{instance_type='broker'} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RabbitMQ {{ $labels.instance }} has been down for more than 2 minutes"
+
+      - alert: RabbitmqQueueBacklog
+        expr: rabbitmq_queue_messages_ready > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RabbitMQ has more than 100 ready messages"
+
+      - alert: RabbitmqNoConsumers
+        expr: rabbitmq_queue_consumers == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RabbitMQ has no active consumers"
+
+      - alert: RabbitmqPublishFailures
+        expr: increase(rabbitmq_publish_failures_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service {{ $labels.service }} failed to publish a RabbitMQ message"
+
       - alert: PurchaseFailures
         expr: floor(sum by (service) (increase(purchases_total{status='failed'}[5m]))) > 0
         for: 5m

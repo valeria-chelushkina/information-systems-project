@@ -51,6 +51,29 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  rabbitmq:
+    image: rabbitmq:4.0-management
+    container_name: concert-ops-rabbitmq
+    hostname: rabbitmq
+    command: >
+      bash -lc "rabbitmq-plugins enable --offline rabbitmq_prometheus && rabbitmq-server"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASSWORD}
+    ports:
+      - "${RABBITMQ_HOST_PORT}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT}:15672"
+      - "${RABBITMQ_PROMETHEUS_PORT}:15692"
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
   auth:
     build:
       context: .
@@ -83,8 +106,12 @@ services:
       SERVICE_NAME: notify
       NOTIFY_PORT: 3000
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@rabbitmq:5672
     depends_on:
-      - otel-collector
+      otel-collector:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
 
   ticketing:
@@ -108,10 +135,13 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       HOLD_TTL_MS: ${HOLD_TTL_MS}
       HOLD_SWEEP_INTERVAL_MS: ${HOLD_SWEEP_INTERVAL_MS}
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@rabbitmq:5672
     ports:
       - "${TICKETING_HOST_PORT}:3000"
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
       auth:
         condition: service_started
@@ -180,6 +210,7 @@ services:
       - catalog
       - auth
       - alertmanager
+      - rabbitmq
     restart: unless-stopped
 
   alertmanager:
@@ -253,6 +284,7 @@ volumes:
   authdata:
   promdata:
   alertmanagerdata:
+  rabbitmqdata:
   grafanadata:
   lokidata:
   alloydata:

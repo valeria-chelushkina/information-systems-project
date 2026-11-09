@@ -4,16 +4,21 @@ Concert/performance management platform used as the subject system for an
 observability lab: PostgreSQL in Docker, Prometheus metrics, Grafana
 dashboards, Loki logs, Tempo traces, a separate auth service and RabbitMQ.
 
+Per-service observability documentation (Ukrainian) lives in [`docs/`](docs/README.md).
+
 ## Architecture
 
 ```
 ticketing  :3001   events, price tiers, holds, orders, tickets, payments, refunds
 catalog    :3003   performers, venues, booking requests
 auth       :3005   users, sessions, login attempts (SQLite)
-notify     :3008   Alertmanager webhook receiver (container port 3000)
+notify     :3008   alert webhook receiver and RabbitMQ consumer (container port 3000)
 
 db_ticketing / db_catalog / db_notify   -> one Postgres container, :5434
 auth.db                                 -> SQLite file on a volume
+rabbitmq   :5672                        -> purchase.completed events
+rabbitmq UI :15672                      -> management console
+rabbitmq metrics :15692                 -> built-in Prometheus endpoint
 prometheus :9090                        -> scrapes every service, stores the TSDB
 postgres-exporter :9187/:9188           -> engine-level PostgreSQL metrics
 alertmanager :9093                      -> routes Prometheus alerts to notify
@@ -360,6 +365,9 @@ docker compose up -d --build
 | prometheus | `PROMETHEUS_HOST_PORT` (9090) | 9090 |
 | alertmanager | `ALERTMANAGER_HOST_PORT` (9093) | 9093 |
 | notify | internal only | 3000 |
+| rabbitmq | `RABBITMQ_HOST_PORT` (5672) | 5672 |
+| rabbitmq management | `RABBITMQ_MANAGEMENT_PORT` (15672) | 15672 |
+| rabbitmq metrics | `RABBITMQ_PROMETHEUS_PORT` (15692) | 15692 |
 | postgres-exporter-ticketing | `POSTGRES_EXPORTER_TICKETING_PORT` (9187) | 9187 |
 | postgres-exporter-catalog | `POSTGRES_EXPORTER_CATALOG_PORT` (9188) | 9187 |
 | grafana | `GRAFANA_HOST_PORT` (3007) | 3000 |
@@ -381,7 +389,7 @@ docker compose up -d prometheus grafana
 
 | Where | What |
 | --- | --- |
-| `http://localhost:9090/targets` | scrape health - all seven targets should be `UP` |
+| `http://localhost:9090/targets` | scrape health - all eight targets should be `UP` |
 | `http://localhost:9090/graph` | raw PromQL |
 | `http://localhost:3007` | Grafana; credentials from `.env` |
 
@@ -414,6 +422,14 @@ the `pg_stat_statements_query_id` info metric.
 Both exporters see cluster-wide `pg_stat_database` rows, so dashboard queries
 deduplicate with `max by (datname)` rather than summing across jobs.
 
+RabbitMQ exposes its own metrics through the built-in `rabbitmq_prometheus`
+plugin on `15692`, so no separate exporter container is needed. The broker
+also publishes application counters (`rabbitmq_messages_published_total`,
+`rabbitmq_messages_consumed_total`). RabbitMQ 4.0 aggregates queue metrics by
+default, so the panels use `rabbitmq_queue_messages_ready`,
+`rabbitmq_queue_consumers` and `rabbitmq_queue_messages_acked_total` without a
+`queue` label.
+
 On an existing `pgdata` volume the init scripts do not run again. After the
 compose change that adds the preload setting, apply the monitoring script
 once:
@@ -430,13 +446,15 @@ a restart. Grafana's datasource is provisioned from
 `http://prometheus:9090`, so no manual setup is needed.
 
 The **Concert Ops Overview** dashboard is provisioned as well
-(`infra/grafana/dashboards/overview.json`): nine stat panels (services up,
+(`infra/grafana/dashboards/overview.json`): eleven stat panels (services up,
 tickets sold, refunds, expired holds, revenue, refunded amount, holds created,
-Postgres cache hit ratio, database size), fifteen time series (request rate,
-p95 latency, HTTP statuses, DB query p95, DB errors, purchases by outcome,
-auth failures, memory, holds vs purchases, DB pool waiting requests, bookings
-by status, Postgres connections, transactions, locks, deadlocks/temp files)
-and one table with the slowest statements. It refreshes every 10 seconds.
+Postgres cache hit ratio, database size, RabbitMQ consumers, RabbitMQ publish
+failures), seventeen time series (request rate, p95 latency, HTTP statuses, DB
+query p95, DB errors, purchases by outcome, auth failures, memory, holds vs
+purchases, DB pool waiting requests, bookings by status, Postgres connections,
+transactions, locks, deadlocks/temp files, RabbitMQ queue depth, RabbitMQ
+throughput) and one table with the slowest statements. It refreshes every 10
+seconds.
 
 Useful queries:
 
@@ -464,10 +482,41 @@ max by (datname) (rate(pg_stat_database_xact_commit{datname=~"db_.*"}[5m]))
   (sum(rate(pg_stat_database_blks_hit[5m])) + sum(rate(pg_stat_database_blks_read[5m])))
 sum by (mode) (max by (datname, mode) (pg_locks_count{datname=~"db_.*"}))
 max by (datname) (pg_database_size_bytes{datname=~"db_.*"})
+
+rabbitmq_queue_messages_ready
+rabbitmq_queue_consumers
+sum(rate(rabbitmq_messages_published_total[5m]))
+sum by (status) (rate(rabbitmq_messages_consumed_total[5m]))
+sum(rate(rabbitmq_queue_messages_acked_total[5m]))
 ```
 
 Services started with `npm run dev` listen on the host, not on the Compose
 network. To scrape those, add targets such as `host.docker.internal:3001`.
+
+## Messaging
+
+`ticketing` publishes `purchase.completed` after a purchase transaction
+commits. `notify` consumes the durable `notifications` queue, validates the
+payload and logs the notification. RabbitMQ runs with the management UI and
+the built-in Prometheus plugin.
+
+| Where | What |
+| --- | --- |
+| `http://localhost:15672` | management UI (`RABBITMQ_DEFAULT_*` from `.env`) |
+| `http://localhost:15692/metrics` | broker metrics |
+| Queue `notifications` | one consumer when `notify` is running |
+
+```bash
+docker compose up -d rabbitmq
+npm run scenario -- --name=purchase --rate=2 --duration=3 \
+  --ticketing-url=http://127.0.0.1:3002 \
+  --catalog-url=http://127.0.0.1:3004
+docker logs concert-ops-notify --tail 20 | grep "purchase notification received"
+```
+
+Stopping `notify` and buying tickets leaves messages in `Ready`; starting it
+again drains the queue, because the queue and messages are durable. Full
+details are in [`docs/rabbitmq.md`](docs/rabbitmq.md).
 
 ## Alerts
 
@@ -497,6 +546,10 @@ the example's `service` and `node` selectors.
 | `PostgresHighConnections` | above 80% of `max_connections` for 5m | warning |
 | `PostgresLowCacheHit` | cache hit below 90% for 10m | warning |
 | `PostgresDeadlocks` | any deadlock in the last 5m | critical |
+| `RabbitmqDown` | `up{instance_type='broker'} == 0` for 2m | critical |
+| `RabbitmqQueueBacklog` | more than 100 ready messages for 5m | warning |
+| `RabbitmqNoConsumers` | no active consumers for 5m | warning |
+| `RabbitmqPublishFailures` | any failed publish in the last 5m | warning |
 | `PurchaseFailures` | any failed purchase in the last 5m | warning |
 | `AuthFailureSpike` | more than 1 failure/s for 5m | warning |
 
@@ -614,7 +667,12 @@ src/
     observability/
       tracing.ts                  OpenTelemetry SDK, started before express and pg
       metrics.ts                  every Prometheus metric
+      messaging-metrics.ts        publish/consume counters
       logger.ts                   structured JSON logging
+    messaging/
+      connection.ts               shared amqplib connection
+      purchase-topology.ts        exchange, queue, routing key, assertions
+      purchase-event.typedefs.ts  purchase.completed payload
     typedefs/
       database.typedefs.ts
   services/
@@ -629,6 +687,8 @@ src/
         events/                   router, controller, service, repository, schemas
         tiers/
         purchases/                holds, orders, tickets, payments, sweeper
+      messaging/
+        purchase.publisher.ts     confirms and publishes purchase.completed
       typedefs/
       scripts/
         seed.ts
@@ -669,7 +729,8 @@ src/
       app.ts                      express wiring
       server.ts                   listen + graceful shutdown
       http/routes/health.ts
-      modules/alerts/             router, controller, service, schemas
+      modules/alerts/             webhook router, controller, service, schemas
+      modules/notifications/      RabbitMQ consumer, schema, handler
 drizzle/
   ticketing/                      generated migrations
   catalog/
@@ -681,6 +742,7 @@ infra/
   grafana/                        datasource and dashboard provisioning
   loki/                           loki config and alloy log pipeline
   tempo/                          tempo config and otel collector pipeline
+docs/                             per-service observability documentation (Ukrainian)
 ```
 
 Layering rules: a router only maps method and path to a controller; a

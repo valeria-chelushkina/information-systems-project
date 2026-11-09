@@ -18,4 +18,5 @@ export const config = {
   logLevel: optionalEnv('LOG_LEVEL', 'info'),
   authBaseUrl: optionalEnv('AUTH_BASE_URL', 'http://127.0.0.1:3005'),
   authTimeoutMs: Number(optionalEnv('AUTH_TIMEOUT_MS', '3000')),
+  rabbitmqUrl: optionalEnv('RABBITMQ_URL', 'amqp://admin:admin@127.0.0.1:5672'),
 } as const;

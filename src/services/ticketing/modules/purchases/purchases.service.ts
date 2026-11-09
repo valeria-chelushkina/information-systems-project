@@ -17,6 +17,7 @@ import { PaymentsRepository } from '@/services/ticketing/modules/purchases/payme
 import { RefundsRepository } from '@/services/ticketing/modules/purchases/refunds.repository.js';
 import { TicketsRepository } from '@/services/ticketing/modules/purchases/tickets.repository.js';
 import { TiersRepository } from '@/services/ticketing/modules/tiers/tiers.repository.js';
+import { PurchasePublisher } from '@/services/ticketing/messaging/purchase.publisher.js';
 import { HttpError } from '@/shared/errors/http-error.js';
 import type { HoldRow } from '@/services/ticketing/typedefs/hold.typedefs.js';
 import type { OrderRow } from '@/services/ticketing/typedefs/order.typedefs.js';
@@ -32,6 +33,7 @@ export class PurchasesService {
   protected readonly refunds = new RefundsRepository();
   protected readonly tiers = new TiersRepository();
   protected readonly events = new EventsRepository();
+  protected readonly publisher = new PurchasePublisher();
 
   async createHold(input: CreateHoldInput): Promise<HoldRow> {
     const hold = await transaction('create_hold', async (tx) => {
@@ -215,6 +217,8 @@ export class PurchasesService {
       purchasesTotal.inc({ status: 'ok' });
       ticketsSoldTotal.inc(result.tickets.length);
       revenueCentsTotal.inc(result.order.totalCents);
+
+      void this.publisher.publish(result);
 
       return result;
     } catch (error) {

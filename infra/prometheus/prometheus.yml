@@ -65,6 +65,15 @@ scrape_configs:
           instance_type: database
           team: platform
 
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+        labels:
+          instance_group: concert-ops
+          instance_env: lab
+          instance_type: broker
+          team: platform
+
 rule_files:
   - /etc/prometheus/alerts.yml
 

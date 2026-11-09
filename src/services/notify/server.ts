@@ -1,12 +1,15 @@
 import { shutdownTracing } from '@/shared/observability/tracing.js';
 import { createApp } from '@/services/notify/app.js';
+import { NotificationsConsumer } from '@/services/notify/modules/notifications/notifications.consumer.js';
 import { config } from '@/shared/config/index.js';
 import { logger } from '@/shared/observability/logger.js';
 
 const app = createApp();
+const consumer = new NotificationsConsumer();
 
 const server = app.listen(config.port, () => {
   logger.info({ port: config.port, env: config.nodeEnv }, 'notify service listening');
+  void consumer.start();
 });
 
 server.on('error', (error: NodeJS.ErrnoException) => {
@@ -20,6 +23,8 @@ server.on('error', (error: NodeJS.ErrnoException) => {
 
 function shutdown(signal: string): void {
   logger.info({ signal }, 'shutting down');
+
+  void consumer.stop();
 
   server.close(() => {
     void shutdownTracing().finally(() => {
