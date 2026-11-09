@@ -1,6 +1,6 @@
 import type { Database } from '@/shared/db/client.js';
 
-export type ServiceName = 'ticketing' | 'catalog' | 'notify';
+export type ServiceName = 'ticketing' | 'catalog' | 'auth' | 'notify';
 
 export interface DatabaseConfig {
   host: string;

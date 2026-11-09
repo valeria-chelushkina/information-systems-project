@@ -7,3 +7,4 @@ dist
 *.log
 README.md
 db/init
+data

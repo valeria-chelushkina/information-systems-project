@@ -20,6 +20,25 @@ services:
       retries: 20
     restart: unless-stopped
 
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: concert-ops-auth
+    command: ["node", "dist/services/auth/server.js"]
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL}
+      SERVICE_NAME: auth
+      AUTH_PORT: 3000
+      AUTH_DB_PATH: /app/data/auth.db
+      AUTH_TOKEN_TTL_MS: ${AUTH_TOKEN_TTL_MS}
+    volumes:
+      - authdata:/app/data
+    ports:
+      - "${AUTH_HOST_PORT}:3000"
+    restart: unless-stopped
+
   ticketing:
     build:
       context: .
@@ -37,6 +56,7 @@ services:
       TICKETING_DB_PASSWORD: ${TICKETING_DB_PASSWORD}
       TICKETING_PORT: 3000
       CATALOG_BASE_URL: http://catalog:3000
+      AUTH_BASE_URL: http://auth:3000
       HOLD_TTL_MS: ${HOLD_TTL_MS}
       HOLD_SWEEP_INTERVAL_MS: ${HOLD_SWEEP_INTERVAL_MS}
     ports:
@@ -44,6 +64,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      auth:
+        condition: service_started
+      catalog:
+        condition: service_started
     restart: unless-stopped
 
   catalog:
@@ -62,12 +86,16 @@ services:
       CATALOG_DB_USER: ${CATALOG_DB_USER}
       CATALOG_DB_PASSWORD: ${CATALOG_DB_PASSWORD}
       CATALOG_PORT: 3000
+      AUTH_BASE_URL: http://auth:3000
     ports:
       - "${CATALOG_HOST_PORT}:3000"
     depends_on:
       postgres:
         condition: service_healthy
+      auth:
+        condition: service_started
     restart: unless-stopped
 
 volumes:
   pgdata:
+  authdata:

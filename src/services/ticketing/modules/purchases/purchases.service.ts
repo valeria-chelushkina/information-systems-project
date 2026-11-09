@@ -1,4 +1,4 @@
-import { config } from '@/shared/config/index.js';
+import { ticketingConfig } from '@/services/ticketing/config.js';
 import { transaction } from '@/shared/db/transaction.js';
 import { EventsRepository } from '@/services/ticketing/modules/events/events.repository.js';
 import { HoldsRepository } from '@/services/ticketing/modules/purchases/holds.repository.js';
@@ -13,7 +13,7 @@ import type { HoldRow } from '@/services/ticketing/typedefs/hold.typedefs.js';
 import type { OrderRow } from '@/services/ticketing/typedefs/order.typedefs.js';
 import type { PurchaseResult, RefundResult } from '@/services/ticketing/typedefs/purchase.typedefs.js';
 
-const HOLD_TTL_MS = config.holdTtlMs;
+const HOLD_TTL_MS = ticketingConfig.holdTtlMs;
 
 export class PurchasesService {
   protected readonly holds = new HoldsRepository();

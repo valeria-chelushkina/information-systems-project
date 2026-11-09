@@ -1,4 +1,5 @@
 import { createApp } from '@/services/ticketing/app.js';
+import { ticketingConfig } from '@/services/ticketing/config.js';
 import { config } from '@/shared/config/index.js';
 import { pool } from '@/shared/db/client.js';
 import { PurchasesSweeper } from '@/services/ticketing/modules/purchases/purchases.sweeper.js';
@@ -20,7 +21,7 @@ server.on('error', (error: NodeJS.ErrnoException) => {
 });
 
 const sweeper = new PurchasesSweeper();
-sweeper.start(config.holdSweepIntervalMs);
+sweeper.start(ticketingConfig.holdSweepIntervalMs);
 
 function shutdown(signal: string): void {
   logger.info({ signal }, 'shutting down');
