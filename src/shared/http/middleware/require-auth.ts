@@ -6,6 +6,7 @@ import type {
 } from 'express';
 import { config } from '@/shared/config/index.js';
 import { HttpError } from '@/shared/errors/http-error.js';
+import { authFailuresTotal } from '@/shared/observability/metrics.js';
 
 export interface AuthenticatedUser {
   userId: string;
@@ -30,12 +31,14 @@ function bearerToken(req: Request): string {
   const header = req.headers.authorization;
 
   if (!header?.startsWith('Bearer ')) {
+    authFailuresTotal.inc({ reason: 'missing_token' });
     throw new HttpError(401, 'missing_token', 'Authorization header is required');
   }
 
   const token = header.slice(7).trim();
 
   if (!token) {
+    authFailuresTotal.inc({ reason: 'missing_token' });
     throw new HttpError(401, 'missing_token', 'Bearer token is empty');
   }
 
@@ -53,14 +56,17 @@ async function introspect(token: string): Promise<AuthenticatedUser> {
       signal: AbortSignal.timeout(config.authTimeoutMs),
     });
   } catch {
+    authFailuresTotal.inc({ reason: 'auth_unavailable' });
     throw new HttpError(503, 'auth_unavailable', 'Authorization service is unavailable');
   }
 
   if (response.status === 401) {
+    authFailuresTotal.inc({ reason: 'invalid_token' });
     throw new HttpError(401, 'invalid_token', 'Session token is invalid or expired');
   }
 
   if (!response.ok) {
+    authFailuresTotal.inc({ reason: 'auth_error' });
     throw new HttpError(
       502,
       'auth_error',

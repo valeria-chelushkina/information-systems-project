@@ -8,6 +8,7 @@ import { createToken, hashToken } from '@/services/auth/security/token.js';
 import type { UserDto, UserRow } from '@/services/auth/typedefs/user.typedefs.js';
 import { optionalEnv } from '@/shared/config/env.js';
 import { HttpError } from '@/shared/errors/http-error.js';
+import { authFailuresTotal } from '@/shared/observability/metrics.js';
 
 const TOKEN_TTL_MS = Number(optionalEnv('AUTH_TOKEN_TTL_MS', '86400000'));
 const DUMMY_HASH = hashPassword('dummy-password-for-timing');
@@ -41,10 +42,12 @@ export class AuthService {
     this.attempts.record({ email, success: valid, ip });
 
     if (!valid || !user) {
+      authFailuresTotal.inc({ reason: 'credentials' });
       throw new HttpError(401, 'invalid_credentials', 'Invalid email or password');
     }
 
     if (user.is_active === 0) {
+      authFailuresTotal.inc({ reason: 'user_inactive' });
       throw new HttpError(403, 'user_inactive', 'This user is disabled');
     }
 
@@ -75,12 +78,14 @@ export class AuthService {
     );
 
     if (!session) {
+      authFailuresTotal.inc({ reason: 'invalid_token' });
       throw new HttpError(401, 'invalid_token', 'Session token is invalid or expired');
     }
 
     const user = this.users.findById(session.user_id);
 
     if (!user || user.is_active === 0) {
+      authFailuresTotal.inc({ reason: 'invalid_token' });
       throw new HttpError(401, 'invalid_token', 'Session token is invalid or expired');
     }
 

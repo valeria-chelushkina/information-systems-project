@@ -35,3 +35,10 @@ export const dbQueryErrorsTotal = new Counter({
   labelNames: ['query_name'] as const,
   registers: [registry],
 });
+
+export const authFailuresTotal = new Counter({
+  name: 'auth_failures_total',
+  help: 'Authentication and authorization failures, by reason',
+  labelNames: ['reason'] as const,
+  registers: [registry],
+});
