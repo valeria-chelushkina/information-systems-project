@@ -350,10 +350,11 @@ a restart. Grafana's datasource is provisioned from
 `http://prometheus:9090`, so no manual setup is needed.
 
 The **Concert Ops Overview** dashboard is provisioned as well
-(`infra/grafana/dashboards/overview.json`): four stat panels (services up,
-tickets sold, refunds, expired holds) and eight time series (request rate,
-p95 latency, HTTP statuses, DB query p95, DB errors, purchases by outcome,
-auth failures, memory). It refreshes every 10 seconds.
+(`infra/grafana/dashboards/overview.json`): seven stat panels (services up,
+tickets sold, refunds, expired holds, revenue, refunded amount, holds created)
+and eleven time series (request rate, p95 latency, HTTP statuses, DB query p95,
+DB errors, purchases by outcome, auth failures, memory, holds vs purchases,
+DB pool waiting requests, bookings by status). It refreshes every 10 seconds.
 
 Useful queries:
 
@@ -368,6 +369,11 @@ sum(tickets_sold_total)
 sum by (status) (rate(purchases_total[5m]))
 sum(refunds_total)
 sum(holds_expired_total)
+sum(holds_created_total)
+sum(revenue_cents_total) / 100
+sum(refunded_cents_total) / 100
+db_pool_waiting_requests
+sum by (status) (rate(bookings_total[5m]))
 ```
 
 Services started with `npm run dev` listen on the host, not on the Compose
