@@ -1,4 +1,10 @@
 import { ticketingConfig } from '@/services/ticketing/config.js';
+import {
+  holdsExpiredTotal,
+  purchasesTotal,
+  refundsTotal,
+  ticketsSoldTotal,
+} from '@/services/ticketing/observability/business-metrics.constants.js';
 import { transaction } from '@/shared/db/transaction.js';
 import { EventsRepository } from '@/services/ticketing/modules/events/events.repository.js';
 import { HoldsRepository } from '@/services/ticketing/modules/purchases/holds.repository.js';
@@ -83,7 +89,7 @@ export class PurchasesService {
   }
 
   async expireHolds(limit = 100): Promise<number> {
-    return transaction('expire_holds', async (tx) => {
+    const expiredCount = await transaction('expire_holds', async (tx) => {
       const expired = await this.holds.findExpired(limit, tx);
 
       if (expired.length === 0) {
@@ -108,17 +114,24 @@ export class PurchasesService {
 
       return expired.length;
     });
+
+    if (expiredCount > 0) {
+      holdsExpiredTotal.inc(expiredCount);
+    }
+
+    return expiredCount;
   }
 
   async purchase(input: PurchaseInput): Promise<PurchaseResult> {
     const existing = await this.orders.findByIdempotencyKey(input.idempotencyKey);
 
     if (existing) {
+      purchasesTotal.inc({ status: 'replay' });
       return this.loadOrder(existing, false);
     }
 
     try {
-      return await transaction('purchase_order', async (tx) => {
+      const result = await transaction('purchase_order', async (tx) => {
         const hold = await this.holds.lockById(input.holdId, tx);
 
         if (!hold) {
@@ -191,13 +204,20 @@ export class PurchasesService {
 
         return { order, tickets: issued, created: true };
       });
+
+      purchasesTotal.inc({ status: 'ok' });
+      ticketsSoldTotal.inc(result.tickets.length);
+
+      return result;
     } catch (error) {
       const concurrent = await this.orders.findByIdempotencyKey(input.idempotencyKey);
 
       if (concurrent) {
+        purchasesTotal.inc({ status: 'replay' });
         return this.loadOrder(concurrent, false);
       }
 
+      purchasesTotal.inc({ status: 'failed' });
       throw error;
     }
   }
@@ -213,7 +233,7 @@ export class PurchasesService {
   }
 
   async refundOrder(orderId: string, input: RefundOrderInput): Promise<RefundResult> {
-    return transaction('refund_order', async (tx) => {
+    const result = await transaction('refund_order', async (tx) => {
       const order = await this.orders.lockById(orderId, tx);
 
       if (!order) {
@@ -289,6 +309,10 @@ export class PurchasesService {
 
       return { order: updated, refund, tickets: refundedTickets };
     });
+
+    refundsTotal.inc();
+
+    return result;
   }
 
   private async loadOrder(order: OrderRow, created: boolean): Promise<PurchaseResult> {
