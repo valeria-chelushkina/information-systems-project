@@ -16,6 +16,8 @@ auth.db                                 -> SQLite file on a volume
 prometheus :9090                        -> scrapes every service, stores the TSDB
 grafana    :3007                        -> dashboards over the Prometheus datasource
 loki       :3100                        -> log storage; alloy ships container stdout
+tempo      :3200                        -> trace storage (behind the collector)
+otel-collector :4317/:4318              -> OTLP receiver, batches traces into tempo
 notify     (planned, RabbitMQ consumer)
 ```
 
@@ -317,6 +319,8 @@ docker compose up -d --build
 | prometheus | `PROMETHEUS_HOST_PORT` (9090) | 9090 |
 | grafana | `GRAFANA_HOST_PORT` (3007) | 3000 |
 | loki | `LOKI_HOST_PORT` (3100) | 3100 |
+| tempo | `TEMPO_HOST_PORT` (3200) | 3200 |
+| otel-collector | `OTEL_COLLECTOR_GRPC_PORT` (4317) / `OTEL_COLLECTOR_HTTP_PORT` (4318) | 4317 / 4318 |
 | postgres | 5434 | 5432 |
 
 All application containers run the same image with different entrypoints.
@@ -409,6 +413,48 @@ Alloy ships container logs straight from the Docker socket
 (`infra/loki/alloy.config.alloy`), so no application change is needed beyond
 the request-id middleware. Loki stores its data on the `lokidata` volume.
 
+## Traces
+
+```bash
+docker compose up -d tempo
+```
+
+Each service starts the OpenTelemetry NodeSDK **before** express and pg are
+imported, exporting OTLP HTTP to the collector at `http://otel-collector:4318`.
+The collector batches and forwards to Tempo over gRPC (`tempo:4317`), which is
+the topology used in the course example: applications never talk to Tempo
+directly. Auto-instrumentation covers inbound HTTP, express, pg and fetch, so
+one request produces:
+
+```
+ticketing  POST /api/events            203 ms
+  ticketing  GET  /performers/:id       38 ms   → catalog
+  ticketing  GET  /venues/:id           44 ms   → catalog
+  ticketing  pg.query:INSERT db_ticketing
+  auth       POST /auth/introspect       3 ms
+  catalog    GET  /performers/:id       23 ms
+  catalog    pg.query:SELECT db_catalog
+```
+
+W3C `traceparent` is propagated automatically by the fetch and http
+instrumentation, which is why auth and catalog spans land in the same trace.
+
+Grafana: **Explore → Tempo**, or query the API directly:
+
+```powershell
+Invoke-RestMethod "http://localhost:3200/api/search?limit=10"
+Invoke-RestMethod "http://localhost:3200/api/traces/<traceID>"
+```
+
+`/metrics` and `/health` are excluded from tracing so Prometheus scrapes do
+not flood Tempo with 5 ms traces. `OTEL_EXPORTER_OTLP_ENDPOINT` selects the
+collector (default `http://127.0.0.1:4318`, compose uses
+`http://otel-collector:4318`).
+
+`infra/tempo/otel-collector-config.yaml` holds the receiver/processor/exporter
+pipeline. Tempo's own storage is a named volume (`tempodata`) rather than a
+bind mount, so no `tempo-init` chown step is needed.
+
 ## Layout
 
 ```
@@ -438,6 +484,7 @@ src/
         health.ts
         metrics.ts
     observability/
+      tracing.ts                  OpenTelemetry SDK, started before express and pg
       metrics.ts                  every Prometheus metric
       logger.ts                   structured JSON logging
     typedefs/
@@ -495,6 +542,11 @@ drizzle/
   catalog/
 db/
   init/                           one-time Postgres role and database setup
+infra/
+  prometheus/                     scrape configuration
+  grafana/                        datasource and dashboard provisioning
+  loki/                           loki config and alloy log pipeline
+  tempo/                          tempo config and otel collector pipeline
 ```
 
 Layering rules: a router only maps method and path to a controller; a
