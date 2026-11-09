@@ -18,3 +18,11 @@ scrape_configs:
   - job_name: 'auth'
     static_configs:
       - targets: ['auth:3000']
+
+  - job_name: 'postgres-ticketing'
+    static_configs:
+      - targets: ['postgres-exporter-ticketing:9187']
+
+  - job_name: 'postgres-catalog'
+    static_configs:
+      - targets: ['postgres-exporter-catalog:9187']

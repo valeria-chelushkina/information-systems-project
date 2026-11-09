@@ -14,6 +14,7 @@ auth       :3005   users, sessions, login attempts (SQLite)
 db_ticketing / db_catalog / db_notify   -> one Postgres container, :5434
 auth.db                                 -> SQLite file on a volume
 prometheus :9090                        -> scrapes every service, stores the TSDB
+postgres-exporter :9187/:9188           -> engine-level PostgreSQL metrics
 grafana    :3007                        -> dashboards over the Prometheus datasource
 loki       :3100                        -> log storage; alloy ships container stdout
 tempo      :3200                        -> trace storage (behind the collector)
@@ -356,6 +357,8 @@ docker compose up -d --build
 | catalog | `CATALOG_HOST_PORT` (3004) | 3000 |
 | auth | `AUTH_HOST_PORT` (3006) | 3000 |
 | prometheus | `PROMETHEUS_HOST_PORT` (9090) | 9090 |
+| postgres-exporter-ticketing | `POSTGRES_EXPORTER_TICKETING_PORT` (9187) | 9187 |
+| postgres-exporter-catalog | `POSTGRES_EXPORTER_CATALOG_PORT` (9188) | 9187 |
 | grafana | `GRAFANA_HOST_PORT` (3007) | 3000 |
 | loki | `LOKI_HOST_PORT` (3100) | 3100 |
 | tempo | `TEMPO_HOST_PORT` (3200) | 3200 |
@@ -375,7 +378,7 @@ docker compose up -d prometheus grafana
 
 | Where | What |
 | --- | --- |
-| `http://localhost:9090/targets` | scrape health — all four targets should be `UP` |
+| `http://localhost:9090/targets` | scrape health — all six targets should be `UP` |
 | `http://localhost:9090/graph` | raw PromQL |
 | `http://localhost:3007` | Grafana; credentials from `.env` |
 
@@ -389,17 +392,48 @@ scrape_configs:
       - targets: ['ticketing:3000']
 ```
 
+Application metrics cover HTTP, pool and business counters. Two
+`postgres_exporter` containers add the engine view, one per service database:
+
+| Exporter | Database | Host port |
+| --- | --- | --- |
+| `postgres-exporter-ticketing` | `db_ticketing` | `POSTGRES_EXPORTER_TICKETING_PORT` (9187) |
+| `postgres-exporter-catalog` | `db_catalog` | `POSTGRES_EXPORTER_CATALOG_PORT` (9188) |
+
+They connect as the dedicated `exporter` role with `pg_monitor`, not as the
+application roles, so `pg_stat_activity`, `pg_locks` and `pg_stat_statements`
+are fully visible. `db/init/02_monitoring.sql` creates that role and the
+extension; the postgres service preloads `pg_stat_statements`. The collector
+runs with `--collector.stat_statements` and
+`--collector.stat_statements.include_query`, which exposes statement text as
+the `pg_stat_statements_query_id` info metric.
+
+Both exporters see cluster-wide `pg_stat_database` rows, so dashboard queries
+deduplicate with `max by (datname)` rather than summing across jobs.
+
+On an existing `pgdata` volume the init scripts do not run again. After the
+compose change that adds the preload setting, apply the monitoring script
+once:
+
+```bash
+docker compose up -d postgres
+docker compose exec -T postgres psql -U postgres -d postgres \
+  -f /docker-entrypoint-initdb.d/02_monitoring.sql
+```
+
 The TSDB lives on the `promdata` volume at `/prometheus`, so history survives
 a restart. Grafana's datasource is provisioned from
 `infra/grafana/provisioning/datasources/prometheus.yml` with the URL
 `http://prometheus:9090`, so no manual setup is needed.
 
 The **Concert Ops Overview** dashboard is provisioned as well
-(`infra/grafana/dashboards/overview.json`): seven stat panels (services up,
-tickets sold, refunds, expired holds, revenue, refunded amount, holds created)
-and eleven time series (request rate, p95 latency, HTTP statuses, DB query p95,
-DB errors, purchases by outcome, auth failures, memory, holds vs purchases,
-DB pool waiting requests, bookings by status). It refreshes every 10 seconds.
+(`infra/grafana/dashboards/overview.json`): nine stat panels (services up,
+tickets sold, refunds, expired holds, revenue, refunded amount, holds created,
+Postgres cache hit ratio, database size), fifteen time series (request rate,
+p95 latency, HTTP statuses, DB query p95, DB errors, purchases by outcome,
+auth failures, memory, holds vs purchases, DB pool waiting requests, bookings
+by status, Postgres connections, transactions, locks, deadlocks/temp files)
+and one table with the slowest statements. It refreshes every 10 seconds.
 
 Useful queries:
 
@@ -419,6 +453,14 @@ sum(revenue_cents_total) / 100
 sum(refunded_cents_total) / 100
 db_pool_waiting_requests
 sum by (status) (rate(bookings_total[5m]))
+
+pg_up
+max by (datname) (pg_stat_database_numbackends{datname=~"db_.*"})
+max by (datname) (rate(pg_stat_database_xact_commit{datname=~"db_.*"}[5m]))
+100 * sum(rate(pg_stat_database_blks_hit[5m])) /
+  (sum(rate(pg_stat_database_blks_hit[5m])) + sum(rate(pg_stat_database_blks_read[5m])))
+sum by (mode) (max by (datname, mode) (pg_locks_count{datname=~"db_.*"}))
+max by (datname) (pg_database_size_bytes{datname=~"db_.*"})
 ```
 
 Services started with `npm run dev` listen on the host, not on the Compose
@@ -580,7 +622,7 @@ drizzle/
   ticketing/                      generated migrations
   catalog/
 db/
-  init/                           one-time Postgres role and database setup
+  init/                           roles, databases, pg_stat_statements, exporter grants
 infra/
   prometheus/                     scrape configuration
   grafana/                        datasource and dashboard provisioning
