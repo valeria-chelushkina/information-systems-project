@@ -25,6 +25,7 @@
     "seed": "tsx src/services/ticketing/scripts/seed.ts",
     "seed:catalog": "cross-env SERVICE_NAME=catalog tsx src/services/catalog/scripts/seed.ts",
     "seed:auth": "cross-env SERVICE_NAME=auth tsx src/services/auth/scripts/seed.ts",
+    "scenario": "tsx src/scripts/scenarios/runner.ts",
     "load": "tsx src/services/ticketing/scripts/load-purchases.ts"
   },
   "dependencies": {

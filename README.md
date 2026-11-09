@@ -284,6 +284,45 @@ npm run load -- --concurrency=20
 npm run load -- --tier=<uuid> --concurrency=50 --quantity=1
 ```
 
+## Scenario runner
+
+Named traffic patterns that produce a readable dashboard and assert the
+system behaves correctly.
+
+```bash
+AUTH_BASE_URL=http://127.0.0.1:3006 npm run scenario -- \
+  --name=browse --rate=5 --duration=60 \
+  --ticketing-url=http://127.0.0.1:3002 \
+  --catalog-url=http://127.0.0.1:3004 \
+  --annotate
+```
+
+PowerShell has no inline `VAR=value command` and no `\` continuation, so on
+Windows use:
+
+```powershell
+$env:AUTH_BASE_URL = "http://127.0.0.1:3006"
+npm run scenario -- `
+  --name=browse --rate=5 --duration=60 `
+  --ticketing-url=http://127.0.0.1:3002 `
+  --catalog-url=http://127.0.0.1:3004 `
+  --annotate
+```
+
+| Scenario | Traffic | Assertion |
+| --- | --- | --- |
+| `browse` | `GET /api/events` at `--rate` for `--duration` | every response is 200 |
+| `purchase` | hold then purchase at `--rate` | at least one success, no network errors |
+| `surge` | creates an event with `--seats` and fires `--buyers` at once | exactly `min(buyers, seats)` succeed and the tier counters stay consistent |
+| `chaos` | bad password, missing token, invalid token, unknown event, invalid body | each request gets its expected 4xx |
+| `refund` | purchase then refund `--count` times | every refund returns 200 |
+
+`--annotate` posts start/end markers to Grafana (`GRAFANA_URL`, admin
+credentials), so a spike on a graph is labelled with the scenario that caused
+it. The provisioned dashboard includes a **Load tests** annotation layer that
+matches the `load-test` tag, so the markers appear on every panel. The runner
+exits non-zero when the assertion fails, so it can be used in a pipeline.
+
 ## Commands
 
 | Command | Purpose |
