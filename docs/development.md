@@ -45,6 +45,8 @@ curl -s http://localhost:3005/health            # {"status":"ok"}
 | `npm start:catalog` | run compiled catalog |
 | `npm start:auth` | run compiled auth |
 | `npm run typecheck` | type-check without emitting |
+| `npm run test` | run unit tests |
+| `npm run test:watch` | run tests in watch mode |
 | `npm run scenario` | run a load scenario |
 | `npm run load` | concurrent purchase check |
 | `npm run db:generate` | ticketing migration from schema |
@@ -105,6 +107,19 @@ npm run scenario -- --name=mixed --duration=300 --rate=3
 
 See [scenarios](scenarios.md) for all scenario names and the mixed worker
 cadence.
+
+## Tests
+
+Unit tests live in `tests/unit/` and use Vitest:
+
+```bash
+npm run test
+npm run test:watch
+```
+
+They cover event state transitions, tier inventory, hold/purchase/refund rules,
+booking period and conflict handling, password/token primitives and RabbitMQ
+payload schemas. No database or Docker is needed.
 
 ## Containerised stack
 

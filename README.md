@@ -114,6 +114,7 @@ migrations, seed scripts and the `npm run dev*` processes.
 | `npm run seed -- --reset --from-catalog` | 200 events from real catalog ids |
 | `npm run load -- --concurrency=20` | quick concurrent purchase check |
 | `npm run typecheck` | TypeScript check |
+| `npm run test` | unit tests with Vitest |
 | `npm run dev` | ticketing with hot reload (local development) |
 
 `demo:alerts` intentionally stops PostgreSQL for a short controlled outage;

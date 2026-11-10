@@ -17,6 +17,8 @@
     "start:catalog": "cross-env SERVICE_NAME=catalog node dist/services/catalog/server.js",
     "start:auth": "cross-env SERVICE_NAME=auth node dist/services/auth/server.js",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:generate": "drizzle-kit generate --config=src/services/ticketing/db/drizzle.config.ts",
     "db:generate:catalog": "drizzle-kit generate --config=src/services/catalog/db/drizzle.config.ts",
     "db:migrate": "tsx src/shared/db/migrate.ts ticketing",
@@ -53,6 +55,7 @@
     "rimraf": "^6.1.4",
     "tsc-alias": "^1.9.10",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^5.1.0"
   }
 }
