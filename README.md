@@ -89,12 +89,16 @@ docker compose --env-file .env.example down
 | Command | Purpose |
 | --- | --- |
 | `npm run demo` | one-command Docker demo (build, migrate, seed, mixed scenario) |
+| `npm run demo:alerts` | triggers `ServiceError` and `PostgresDown`, checks Alertmanager and `notify`, then restores PostgreSQL |
 | `npm run scenario -- --name=mixed --duration=300 --rate=3` | five-minute load simulation against running services |
 | `npm run scenario -- --name=surge --seats=3 --buyers=10` | concurrency/inventory assertion |
 | `npm run seed -- --reset --from-catalog` | 200 events from real catalog ids |
 | `npm run load -- --concurrency=20` | quick concurrent purchase check |
 | `npm run typecheck` | TypeScript check |
 | `npm run dev` | ticketing with hot reload (local development) |
+
+`demo:alerts` intentionally stops PostgreSQL for a short controlled outage;
+run it when no load test is active. It restarts PostgreSQL before exiting.
 
 Scenario commands use local-dev ports by default (ticketing `3001`, catalog
 `3003`, auth `3005`). Against Compose, add

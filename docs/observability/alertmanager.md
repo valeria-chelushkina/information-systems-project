@@ -105,6 +105,29 @@ After `docker compose start postgres` the `resolved` notification arrives.
 If this is the first 5xx in a new metric series, `increase()` may ignore the
 first sample; make the request again and the alert fires on the next interval.
 
+## Run the alert demo
+
+With the stack running:
+
+```bash
+npm run demo:alerts
+```
+
+The script:
+
+1. checks auth, ticketing, Prometheus and Alertmanager;
+2. stops PostgreSQL for a short controlled outage;
+3. generates 5xx responses so `ServiceError` fires;
+4. waits for Prometheus `firing` and Alertmanager `active`;
+5. prints the matching `notify` log line;
+6. restarts PostgreSQL in a `finally` block;
+7. waits for `ServiceError` to clear and prints the `resolved` notification.
+
+It exits `0` when the alert fires and clears, otherwise `1`. The command is
+safe for data but should not run at the same time as a load scenario.
+
+Open `http://localhost:9090/alerts` and `http://localhost:9093` while it runs.
+
 ## Where it is used in code
 
 Prometheus connects rules and Alertmanager in
