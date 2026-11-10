@@ -34,23 +34,36 @@ and a full observability stack.
 - Docker Desktop
 - Node.js >= 22 only for local development or `npm` scripts
 
-## Quick start
+## Getting started
 
-From a fresh clone, with Docker running:
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/valeria-chelushkina/information-systems-lab.git
+cd information-systems-lab
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Run the demo
 
 ```bash
 npm run demo
 ```
+
+This is the recommended way to see the system. It starts the full Docker stack,
+applies migrations, seeds the databases and runs the **mixed** scenario for
+**5 minutes at 3 purchases/s**. No `.env` setup is required.
 
 Without Node or `npm install`, use the command it wraps:
 
 ```bash
 docker compose --env-file .env.example --profile demo up --build -d
 ```
-
-The command builds the image, starts the stack, applies migrations, seeds the
-databases and runs the **mixed** scenario for **5 minutes at 3 purchases/s**.
-The `demo` container exits `0`; the rest of the stack keeps running.
 
 | Where | URL |
 | --- | --- |
@@ -83,6 +96,12 @@ deleting volumes:
 ```bash
 docker compose --env-file .env.example down
 ```
+
+### Manual setup
+
+To run the services locally instead of the demo, follow
+[Development](docs/development.md). It covers `.env`, PostgreSQL and RabbitMQ,
+migrations, seed scripts and the `npm run dev*` processes.
 
 ## Main commands
 
@@ -145,26 +164,4 @@ per-service documents: [Prometheus](docs/observability/prometheus.md),
 | [Development](docs/development.md) | local setup, migrations, seeds, all commands |
 | [Observability](docs/observability/README.md) | per-service guides and quick health checks |
 
-## Local development
 
-```bash
-docker compose up -d postgres
-npm install
-npm run db:migrate
-npm run db:migrate:catalog
-npm run seed:auth
-npm run seed:catalog -- --reset
-```
-
-Start the services, then seed events that reference catalog ids:
-
-```bash
-npm run dev
-npm run dev:catalog
-npm run dev:auth
-
-npm run seed -- --reset --from-catalog
-```
-
-The full sequence, ports and configuration are in
-[development](docs/development.md) and [architecture](docs/architecture.md).
