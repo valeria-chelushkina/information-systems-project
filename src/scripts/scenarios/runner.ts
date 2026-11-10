@@ -2,6 +2,7 @@ import { annotate } from '@/shared/load/annotate.js';
 import { browse } from '@/scripts/scenarios/browse.js';
 import { chaos } from '@/scripts/scenarios/chaos.js';
 import { login, type ScenarioContext, type ScenarioResult } from '@/scripts/scenarios/context.js';
+import { mixed } from '@/scripts/scenarios/mixed.js';
 import { parseOptions, type ScenarioOptions } from '@/scripts/scenarios/options.js';
 import { purchase } from '@/scripts/scenarios/purchase.js';
 import { refund } from '@/scripts/scenarios/refund.js';
@@ -15,6 +16,7 @@ const SCENARIOS: Record<string, Scenario> = {
   surge,
   chaos,
   refund,
+  mixed,
 };
 
 function percentile(values: number[], p: number): number {

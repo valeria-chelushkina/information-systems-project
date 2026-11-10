@@ -39,7 +39,71 @@ labels.
 - Node.js >= 22
 - Docker Desktop
 
+## One-command demo
+
+From a fresh clone, with Docker running:
+
+```bash
+npm run demo
+```
+
+This is only a shortcut for the Docker command below, so it also works without
+Node or `npm install`:
+
+```bash
+docker compose --env-file .env.example --profile demo up --build -d
+```
+
+The command:
+
+1. builds the application image and starts the full stack;
+2. waits for `auth`, `catalog`, `ticketing`, `grafana`, PostgreSQL and RabbitMQ;
+3. applies the ticketing and catalog migrations;
+4. reseeds auth, catalog and ticketing;
+5. runs the `mixed` scenario for **5 minutes** at **3 purchases/s**;
+6. posts start/end annotations to Grafana;
+7. exits the `demo` container with code `0`, leaving the stack running.
+
+| Where | URL |
+| --- | --- |
+| Grafana | `http://localhost:3007` (`admin` / `admin-password`) |
+| Prometheus | `http://localhost:9090` |
+| Alertmanager | `http://localhost:9093` |
+| RabbitMQ | `http://localhost:15672` (`admin` / `admin`) |
+
+Watch the simulation:
+
+```bash
+docker compose --env-file .env.example logs -f demo
+```
+
+Change duration or purchase rate with shell variables (PowerShell):
+
+```powershell
+$env:DEMO_DURATION = "60"
+$env:DEMO_RATE = "2"
+npm run demo
+```
+
+or bash:
+
+```bash
+DEMO_DURATION=60 DEMO_RATE=2 npm run demo
+```
+
+The demo **reseeds the databases** on every run (it truncates events,
+bookings and users), so do not use it on data you want to keep. Stop the stack
+without deleting volumes:
+
+```bash
+docker compose --env-file .env.example down
+```
+
+Use `down -v` if you also want to remove the data volumes.
+
 ## First run
+
+For local development without the demo profile:
 
 ```bash
 docker compose up -d postgres
@@ -323,6 +387,37 @@ npm run scenario -- `
 | `surge` | creates an event with `--seats` and fires `--buyers` at once | exactly `min(buyers, seats)` succeed and the tier counters stay consistent |
 | `chaos` | bad password, missing token, invalid token, unknown event, invalid body | each request gets its expected 4xx |
 | `refund` | purchase then refund `--count` times | every refund returns 200 |
+| `mixed` | continuous mix: event lifecycle and status changes, bookings, purchases, refunds, hold cancels, browse, chaos | at least one event, booking, purchase and refund complete; no network errors |
+
+For a five-minute busy run (purchases at 3 per second, all other workers on
+their own cadence):
+
+```powershell
+$env:AUTH_BASE_URL = "http://127.0.0.1:3006"
+npm run scenario -- `
+  --name=mixed --duration=300 --rate=3 `
+  --ticketing-url=http://127.0.0.1:3002 `
+  --catalog-url=http://127.0.0.1:3004 `
+  --annotate
+```
+
+`mixed` runs these workers in parallel for the whole duration:
+
+| Worker | Cadence | What it produces |
+| --- | --- | --- |
+| event lifecycle | every 30 s | draft → scheduled → on_sale, tier with 250 seats |
+| status cycle | every 20 s | sold_out → restock → on_sale |
+| event cancel | every 45 s | on_sale → cancelled (keeps at least 2 active) |
+| bookings | every 4 s | requested → confirmed/rejected; every 8th overlaps to produce `409` |
+| purchases | `--rate` per second | holds, purchases, order IDs for refunds |
+| refunds | every 2 s | full refund of a previously purchased order |
+| hold cancel | every 5 s | hold created and immediately cancelled |
+| browse | every 1 s | `GET /api/events` |
+| chaos | every 8 s | wrong password, bad token, unknown event, invalid body |
+
+This leaves events, bookings, orders and tickets in the database. Use
+`--rate=5` for roughly 1500 purchases over five minutes, or reset the seeds
+after a demo.
 
 `--annotate` posts start/end markers to Grafana (`GRAFANA_URL`, admin
 credentials), so a spike on a graph is labelled with the scenario that caused

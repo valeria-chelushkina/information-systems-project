@@ -114,6 +114,52 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: concert-ops-demo
+    command: ["node", "dist/scripts/demo.js"]
+    profiles: ["demo"]
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL}
+      SERVICE_NAME: ticketing
+      DB_HOST: postgres
+      DB_PORT: 5432
+      TICKETING_DB_NAME: ${TICKETING_DB_NAME}
+      TICKETING_DB_USER: ${TICKETING_DB_USER}
+      TICKETING_DB_PASSWORD: ${TICKETING_DB_PASSWORD}
+      CATALOG_DB_NAME: ${CATALOG_DB_NAME}
+      CATALOG_DB_USER: ${CATALOG_DB_USER}
+      CATALOG_DB_PASSWORD: ${CATALOG_DB_PASSWORD}
+      AUTH_DB_PATH: /app/data/auth.db
+      AUTH_BASE_URL: http://auth:3000
+      CATALOG_BASE_URL: http://catalog:3000
+      TICKETING_URL: http://ticketing:3000
+      CATALOG_URL: http://catalog:3000
+      GRAFANA_URL: http://grafana:3000
+      GRAFANA_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GRAFANA_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      DEMO_DURATION: ${DEMO_DURATION:-300}
+      DEMO_RATE: ${DEMO_RATE:-3}
+    volumes:
+      - authdata:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth:
+        condition: service_started
+      catalog:
+        condition: service_started
+      ticketing:
+        condition: service_started
+      grafana:
+        condition: service_started
+    restart: "no"
+
   ticketing:
     build:
       context: .

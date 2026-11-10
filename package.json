@@ -26,6 +26,7 @@
     "seed:catalog": "cross-env SERVICE_NAME=catalog tsx src/services/catalog/scripts/seed.ts",
     "seed:auth": "cross-env SERVICE_NAME=auth tsx src/services/auth/scripts/seed.ts",
     "scenario": "tsx src/scripts/scenarios/runner.ts",
+    "demo": "docker compose --env-file .env.example --profile demo up --build -d",
     "load": "tsx src/services/ticketing/scripts/load-purchases.ts"
   },
   "dependencies": {
