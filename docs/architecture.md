@@ -155,6 +155,10 @@ Persistent data lives in named volumes: `pgdata`, `authdata`, `promdata`,
 `grafanadata`, `lokidata`, `alloydata`, `tempodata`, `alertmanagerdata`,
 `rabbitmqdata`.
 
+Docker container logs use the `json-file` driver with rotation:
+`max-size=10m`, `max-file=3`. The shared setting is the `x-logging` anchor in
+`docker-compose.yml`.
+
 ## Design decisions
 
 | Decision | Reason |
