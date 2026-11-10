@@ -178,8 +178,6 @@ Captured from the Docker demo with the Last 15 minutes time range.
 
 ![Route statistics](docs/screenshots/api-monitoring-2.png)
 
-[Full Grafana PDF export](docs/screenshots/api-monitoring.pdf)
-
 ### Service Detail
 
 ![Service Detail](docs/screenshots/service-detail-1.png)
