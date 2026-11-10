@@ -164,5 +164,48 @@ per-service documents: [Prometheus](docs/observability/prometheus.md),
 | [Scenarios](docs/scenarios.md) | browse, purchase, surge, chaos, refund, mixed |
 | [Development](docs/development.md) | local setup, migrations, seeds, all commands |
 | [Observability](docs/observability/README.md) | per-service guides and quick health checks |
+## Screenshots
 
+Captured from the Docker demo with the Last 15 minutes time range.
 
+### Concert Ops Overview
+
+![Concert Ops Overview](docs/screenshots/overview.png)
+
+### API Monitoring
+
+![API Monitoring](docs/screenshots/api-monitoring-1.png)
+
+![Route statistics](docs/screenshots/api-monitoring-2.png)
+
+[Full Grafana PDF export](docs/screenshots/api-monitoring.pdf)
+
+### Service Detail
+
+![Service Detail](docs/screenshots/service-detail-1.png)
+
+![Database query statistics](docs/screenshots/service-detail-2.png)
+
+### Postgres
+
+![Postgres](docs/screenshots/postgres-1.png)
+
+![Slow statements](docs/screenshots/postgres-2.png)
+
+### Messaging
+
+![Messaging](docs/screenshots/messaging.png)
+
+### Business
+
+![Business](docs/screenshots/business-1.png)
+
+![Events by status](docs/screenshots/business-2.png)
+
+### Logs
+
+![Logs](docs/screenshots/logs.png)
+
+### Traces
+
+![Traces](docs/screenshots/traces.png)
