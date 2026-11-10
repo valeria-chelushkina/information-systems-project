@@ -7,6 +7,10 @@
   "version": 1,
   "refresh": "10s",
   "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"],
+    "time_options": ["5m", "15m", "30m", "1h", "3h", "6h", "12h", "24h", "2d", "7d"]
+  },
   "links": [
     { "type": "dashboards", "tags": ["concert-ops"], "asDropdown": true, "includeVars": true, "keepTime": true, "title": "Dashboards" }
   ],
@@ -32,152 +36,76 @@
     ]
   },
   "templating": { "list": [] },
-  "timepicker": {
-    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"],
-    "time_options": ["5m", "15m", "30m", "1h", "3h", "6h", "12h", "24h", "2d", "7d"]
-  },
   "panels": [
     {
       "id": 1,
-      "type": "timeseries",
-      "title": "Revenue per minute",
+      "type": "stat",
+      "title": "Paid orders (range)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
       "fieldConfig": {
-        "defaults": {
-          "unit": "currencyUSD",
-          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "always", "pointSize": 4 }
-        },
+        "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "blue" } },
         "overrides": []
       },
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": false },
-        "tooltip": { "mode": "single", "sort": "desc" }
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
       },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(rate(revenue_cents_total[$__rate_interval])) / 100 * 60",
-          "legendFormat": "USD/min"
-        }
+        { "refId": "A", "expr": "round(sum(increase(purchases_total{status=\"ok\"}[$__range]))) or vector(0)", "instant": true, "range": false }
       ]
     },
     {
       "id": 2,
-      "type": "timeseries",
-      "title": "Purchase funnel",
+      "type": "stat",
+      "title": "Tickets sold (range)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
       "fieldConfig": {
-        "defaults": {
-          "unit": "ops",
-          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "always", "pointSize": 4 }
-        },
+        "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "blue" } },
         "overrides": []
       },
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
       },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(rate(holds_created_total[$__rate_interval]))",
-          "legendFormat": "holds created"
-        },
-        {
-          "refId": "B",
-          "expr": "sum(rate(purchases_total{status=\"ok\"}[$__rate_interval]))",
-          "legendFormat": "purchases ok"
-        },
-        {
-          "refId": "C",
-          "expr": "sum(rate(tickets_sold_total[$__rate_interval]))",
-          "legendFormat": "tickets sold"
-        }
+        { "refId": "A", "expr": "round(sum(increase(tickets_sold_total[$__range]))) or vector(0)", "instant": true, "range": false }
       ]
     },
     {
       "id": 3,
-      "type": "timeseries",
-      "title": "Purchases by outcome",
+      "type": "stat",
+      "title": "Revenue (range)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
       "fieldConfig": {
-        "defaults": {
-          "unit": "ops",
-          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "always", "pointSize": 4 }
-        },
+        "defaults": { "unit": "currencyUSD", "color": { "mode": "fixed", "fixedColor": "green" } },
         "overrides": []
       },
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
       },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (status) (rate(purchases_total[$__rate_interval]))",
-          "legendFormat": "{{status}}"
-        }
+        { "refId": "A", "expr": "sum(increase(revenue_cents_total[$__range])) / 100 or vector(0)", "instant": true, "range": false }
       ]
     },
     {
       "id": 4,
-      "type": "timeseries",
-      "title": "Bookings by status",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops",
-          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "always", "pointSize": 4 }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (status) (rate(bookings_total[$__rate_interval]))",
-          "legendFormat": "{{status}}"
-        }
-      ]
-    },
-    {
-      "id": 5,
-      "type": "timeseries",
-      "title": "Auth failures by reason",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ops",
-          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "always", "pointSize": 4 }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (reason) (rate(auth_failures_total[$__rate_interval]))",
-          "legendFormat": "{{reason}}"
-        }
-      ]
-    },
-    {
-      "id": 6,
       "type": "stat",
-      "title": "Refunds (range)",
+      "title": "Refunded orders (range)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 16 },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
       "fieldConfig": {
         "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "orange" } },
         "overrides": []
@@ -194,13 +122,24 @@
       ]
     },
     {
-      "id": 7,
+      "id": 5,
       "type": "stat",
-      "title": "Refunded amount (range)",
+      "title": "Rejected holds",
+      "description": "sold out or not on sale",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 16 },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
       "fieldConfig": {
-        "defaults": { "unit": "currencyUSD", "color": { "mode": "fixed", "fixedColor": "orange" } },
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        },
         "overrides": []
       },
       "options": {
@@ -211,20 +150,161 @@
         "textMode": "auto"
       },
       "targets": [
+        { "refId": "A", "expr": "round(sum(increase(hold_rejections_total[$__range]))) or vector(0)", "instant": true, "range": false }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Purchase success rate",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "noValue": "n/a",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 80 },
+              { "color": "green", "value": 95 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
         {
           "refId": "A",
-          "expr": "sum(increase(refunded_cents_total[$__range])) / 100 or vector(0)",
+          "expr": "100 * sum(increase(purchases_total{status=\"ok\"}[$__range])) / (sum(increase(purchases_total{status=\"ok\"}[$__range])) + (sum(increase(purchases_total{status=\"failed\"}[$__range])) or vector(0)) + (sum(increase(hold_rejections_total[$__range])) or vector(0)))",
           "instant": true,
           "range": false
         }
       ]
     },
     {
-      "id": 8,
-      "type": "stat",
-      "title": "Expired holds (range)",
+      "id": 7,
+      "type": "timeseries",
+      "title": "Revenue per minute",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 16 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "always", "pointSize": 4 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "tooltip": { "mode": "single", "sort": "desc" }
+      },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(revenue_cents_total[$__rate_interval])) / 100 * 60", "legendFormat": "USD/min" }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Purchase funnel",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "always", "pointSize": 4 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(holds_created_total[$__rate_interval]))", "legendFormat": "holds created" },
+        { "refId": "B", "expr": "sum(rate(purchases_total{status=\"ok\"}[$__rate_interval]))", "legendFormat": "purchases ok" },
+        { "refId": "C", "expr": "sum(rate(tickets_sold_total[$__rate_interval]))", "legendFormat": "tickets sold" }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "piechart",
+      "title": "Events by status",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 12 },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      },
+      "options": {
+        "pieType": "donut",
+        "displayLabels": ["name", "percent"],
+        "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "values": ["value", "percent"] },
+        "tooltip": { "mode": "single", "sort": "none" },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        { "refId": "A", "expr": "events_total", "legendFormat": "{{status}}", "instant": true, "range": false }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "bargauge",
+      "title": "Seats sold vs available",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 12 },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0 },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "sold" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "available" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "held" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }]
+          }
+        ]
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "valueMode": "color",
+        "namePlacement": "auto",
+        "sizing": "auto",
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "legend": { "showLegend": false },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "targets": [
+        { "refId": "A", "expr": "inventory_sold_seats", "legendFormat": "sold", "instant": true, "range": false },
+        { "refId": "B", "expr": "inventory_available_seats", "legendFormat": "available", "instant": true, "range": false },
+        { "refId": "C", "expr": "inventory_held_seats", "legendFormat": "held", "instant": true, "range": false }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Upcoming events",
+      "description": "scheduled, on sale or sold out in the future",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 12 },
       "fieldConfig": {
         "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "blue" } },
         "overrides": []
@@ -237,9 +317,188 @@
         "textMode": "auto"
       },
       "targets": [
+        { "refId": "A", "expr": "max(events_upcoming_total) or vector(0)", "instant": true, "range": false }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Purchases by outcome",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 20 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        { "refId": "A", "expr": "sum by (status) (rate(purchases_total[$__rate_interval]))", "legendFormat": "{{status}}" }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Bookings by status",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 20 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        { "refId": "A", "expr": "sum by (status) (rate(bookings_total[$__rate_interval]))", "legendFormat": "{{status}}" }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Auth failures by reason",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 20 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        { "refId": "A", "expr": "sum by (reason) (rate(auth_failures_total[$__rate_interval]))", "legendFormat": "{{reason}}" }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "stat",
+      "title": "Refunded amount (range)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 28 },
+      "fieldConfig": {
+        "defaults": { "unit": "currencyUSD", "color": { "mode": "fixed", "fixedColor": "orange" } },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        { "refId": "A", "expr": "sum(increase(refunded_cents_total[$__range])) / 100 or vector(0)", "instant": true, "range": false }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "stat",
+      "title": "Average order value",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 28 },
+      "fieldConfig": {
+        "defaults": { "unit": "currencyUSD", "noValue": "n/a" },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
         {
           "refId": "A",
-          "expr": "round(sum(increase(holds_expired_total[$__range]))) or vector(0)",
+          "expr": "(sum(increase(revenue_cents_total[$__range])) / 100) / sum(increase(purchases_total{status=\"ok\"}[$__range]))",
+          "instant": true,
+          "range": false
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "type": "stat",
+      "title": "Refund rate",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 28 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "n/a",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 10 },
+              { "color": "red", "value": 20 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * sum(increase(refunds_total[$__range])) / sum(increase(purchases_total{status=\"ok\"}[$__range]))",
+          "instant": true,
+          "range": false
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "type": "stat",
+      "title": "Hold to purchase rate",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 28 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "noValue": "n/a",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 50 },
+              { "color": "green", "value": 80 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * sum(increase(purchases_total{status=\"ok\"}[$__range])) / sum(increase(holds_created_total[$__range]))",
           "instant": true,
           "range": false
         }

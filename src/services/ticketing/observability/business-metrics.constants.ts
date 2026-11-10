@@ -32,6 +32,20 @@ export const holdsCreatedTotal = new Counter({
   registers: [registry],
 });
 
+export const holdRejectionsTotal = new Counter({
+  name: 'hold_rejections_total',
+  help: 'Hold attempts rejected before purchase',
+  labelNames: ['reason'] as const,
+  registers: [registry],
+});
+
+holdRejectionsTotal.inc({ reason: 'insufficient_inventory' }, 0);
+holdRejectionsTotal.inc({ reason: 'event_not_on_sale' }, 0);
+
+purchasesTotal.inc({ status: 'ok' }, 0);
+purchasesTotal.inc({ status: 'failed' }, 0);
+purchasesTotal.inc({ status: 'replay' }, 0);
+
 export const revenueCentsTotal = new Counter({
   name: 'revenue_cents_total',
   help: 'Revenue from paid orders, in cents',

@@ -550,7 +550,7 @@ the `concert-ops` tag, so the dashboard dropdown links them together:
 | Service Detail | `concert-ops-service` | one service: route stats, latency heatmap, DB query table, pool |
 | Postgres | `concert-ops-postgres` | connections, transactions, cache, locks, slow statements |
 | Messaging | `concert-ops-messaging` | queue depth, throughput, consumers, failures |
-| Business | `concert-ops-business` | revenue, funnel, purchases, bookings, auth failures, refunds |
+| Business | `concert-ops-business` | sales outcomes, revenue, funnel, event portfolio, bookings, auth failures, unit economics |
 
 `API Monitoring` and `Service Detail` use the `service` and `method`
 template variables. The API dashboard reproduces the classic panel set:
@@ -565,6 +565,13 @@ survive short idle periods between scenario runs.
 
 Application metrics now also include `http_requests_in_flight`, exposed by the
 request middleware and used in Service Detail.
+
+Business state gauges are recomputed from PostgreSQL every 15 seconds by
+`BusinessStateSweeper`: `events_total{status}`, `inventory_total_seats`,
+`inventory_sold_seats`, `inventory_available_seats`, `inventory_held_seats`
+and `events_upcoming_total`. `hold_rejections_total{reason}` counts attempts
+rejected at the hold stage (sold out or not on sale), so the Business dashboard
+can show a real success rate instead of only completed purchases.
 
 Useful queries:
 
@@ -660,6 +667,8 @@ the example's `service` and `node` selectors.
 | `RabbitmqQueueBacklog` | more than 100 ready messages for 5m | warning |
 | `RabbitmqNoConsumers` | no active consumers for 5m | warning |
 | `RabbitmqPublishFailures` | any failed publish in the last 5m | warning |
+| `NoEventsOnSale` | `events_total{status='on_sale'} == 0` for 10m | warning |
+| `RefundRateHigh` | more than 20% refunds in the last hour for 30m | warning |
 | `PurchaseFailures` | any failed purchase in the last 5m | warning |
 | `AuthFailureSpike` | more than 1 failure/s for 5m | warning |
 

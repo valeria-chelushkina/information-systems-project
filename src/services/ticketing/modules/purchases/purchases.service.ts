@@ -1,5 +1,6 @@
 import { ticketingConfig } from '@/services/ticketing/config.js';
 import {
+  holdRejectionsTotal,
   holdsCreatedTotal,
   holdsExpiredTotal,
   purchasesTotal,
@@ -50,12 +51,14 @@ export class PurchasesService {
       }
 
       if (event.status !== 'on_sale') {
+        holdRejectionsTotal.inc({ reason: 'event_not_on_sale' });
         throw HttpError.conflict('event_not_on_sale', `Event ${event.id} is not on sale`);
       }
 
       const reserved = await this.tiers.reserve(tier.id, input.quantity, tx);
 
       if (!reserved) {
+        holdRejectionsTotal.inc({ reason: 'insufficient_inventory' });
         throw HttpError.conflict(
           'insufficient_inventory',
           'Not enough seats are available for this price tier',

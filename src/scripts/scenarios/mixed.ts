@@ -71,7 +71,6 @@ export async function mixed(ctx: ScenarioContext): Promise<ScenarioResult> {
   }
 
   const createEvent = async (): Promise<void> => {
-    const started = Date.now();
     const performer = pick(performers);
     const venue = pick(venueRows);
 

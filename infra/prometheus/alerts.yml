@@ -103,6 +103,22 @@ groups:
         annotations:
           summary: "Service {{ $labels.service }} failed to publish a RabbitMQ message"
 
+      - alert: NoEventsOnSale
+        expr: events_total{status='on_sale'} == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No events are currently on sale"
+
+      - alert: RefundRateHigh
+        expr: 100 * sum(increase(refunds_total[1h])) / sum(increase(purchases_total{status='ok'}[1h])) > 20
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 20% of paid orders were refunded in the last hour"
+
       - alert: PurchaseFailures
         expr: floor(sum by (service) (increase(purchases_total{status='failed'}[5m]))) > 0
         for: 5m

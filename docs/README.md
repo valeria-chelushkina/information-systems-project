@@ -48,7 +48,7 @@ Alloy ──► Loki ──► Grafana
 | Service Detail | `concert-ops-service` | один сервіс із heatmap і статистикою запитів |
 | Postgres | `concert-ops-postgres` | з'єднання, транзакції, кеш, блокування, повільні запити |
 | Messaging | `concert-ops-messaging` | черга RabbitMQ, throughput, споживачі |
-| Business | `concert-ops-business` | дохід, воронка, бронювання, auth-помилки |
+| Business | `concert-ops-business` | результати продажів, дохід, воронка, стан подій, unit-економіка |
 
 ## Швидка перевірка всього стеку
 

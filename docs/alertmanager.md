@@ -6,7 +6,7 @@ Alertmanager приймає алерти від Prometheus і вирішує, щ
 групує схожі, приглушує дублікати, повторює надсилання за розписом і передає
 їх отримувачу.
 
-У проєкті Prometheus обчислює 15 правил з `infra/prometheus/alerts.yml`.
+У проєкті Prometheus обчислює 17 правил з `infra/prometheus/alerts.yml`.
 Коли правило переходить у `firing`, Alertmanager групує його та викликає
 webhook `notify`. Після відновлення надсилається `resolved`, бо ввімкнено
 `send_resolved: true`.

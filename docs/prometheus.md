@@ -53,7 +53,7 @@ Invoke-WebRequest -UseBasicParsing http://localhost:9090/-/ready |
   Select-Object @{ n = 'job'; e = { $_.labels.job } }, health
 ```
 
-4. Правила: `http://localhost:9090/rules` — група `default` з 15 алертами
+4. Правила: `http://localhost:9090/rules` — група `default` з 17 алертами
    та група `concert-ops` з 10 записаними метриками. Алерти мають стан
    `inactive` / `pending` / `firing`.
 
