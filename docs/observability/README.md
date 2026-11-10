@@ -42,7 +42,7 @@ Alloy ──► Loki ──► Grafana
 
 ## Dashboards
 
-Grafana contains six provisioned dashboards, grouped by the `concert-ops` tag:
+Grafana contains eight provisioned dashboards, grouped by the `concert-ops` tag:
 
 | Dashboard | UID | Focus |
 | --- | --- | --- |
@@ -52,6 +52,8 @@ Grafana contains six provisioned dashboards, grouped by the `concert-ops` tag:
 | Postgres | `concert-ops-postgres` | connections, transactions, cache, locks, slow statements |
 | Messaging | `concert-ops-messaging` | queue depth, throughput, consumers, failures |
 | Business | `concert-ops-business` | sales outcomes, revenue, funnel, event portfolio, unit economics |
+| Logs | `concert-ops-logs` | log volume, errors, request lookup, status from logs |
+| Traces | `concert-ops-traces` | recent traces and error traces |
 
 ## Quick health check
 

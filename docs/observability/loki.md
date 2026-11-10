@@ -35,7 +35,8 @@ Invoke-WebRequest -UseBasicParsing http://localhost:3100/ready |
 
 Expected: `ready`.
 
-2. Logs in Grafana: **Explore → Loki → Code**:
+2. Logs in Grafana: the **Logs** dashboard (`concert-ops-logs`) shows volume,
+   errors and a request-id search, or use **Explore → Loki → Code**:
 
 ```logql
 {container="concert-ops-ticketing"}

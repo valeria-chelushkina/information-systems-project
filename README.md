@@ -106,9 +106,9 @@ More commands: [development](docs/development.md). More scenarios:
 
 ## Observability
 
-Grafana contains six provisioned dashboards: Overview, API Monitoring, Service
-Detail, Postgres, Messaging and Business. The stack exposes metrics, logs and
-traces out of the box.
+Grafana contains eight provisioned dashboards: Overview, API Monitoring,
+Service Detail, Postgres, Messaging, Business, Logs and Traces. The stack
+exposes metrics, logs and traces out of the box.
 
 | Where | What |
 | --- | --- |

@@ -11,9 +11,9 @@ itself; it queries three provisioned datasources:
 | Loki | `loki` | `http://loki:3100` |
 | Tempo | `tempo` | `http://tempo:3200` |
 
-It is the main demo surface: six dashboards cover the golden signals, API
-latency, one service in detail, PostgreSQL, messaging and the business view.
-Explore is used for ad-hoc logs and traces.
+It is the main demo surface: eight dashboards cover the golden signals, API
+latency, one service in detail, PostgreSQL, messaging, the business view, logs
+and traces.
 
 ## Configuration
 
@@ -41,10 +41,12 @@ GRAFANA_ADMIN_PASSWORD=admin-password
 | Postgres | `concert-ops-postgres` | connections, transactions, cache, locks, slow statements |
 | Messaging | `concert-ops-messaging` | queue depth, throughput, consumers, failures |
 | Business | `concert-ops-business` | sales outcomes, revenue, funnel, event portfolio, unit economics |
+| Logs | `concert-ops-logs` | log volume, errors, request lookup, status from logs |
+| Traces | `concert-ops-traces` | recent traces and error traces |
 
 **API Monitoring** and **Service Detail** use `service` and `method` variables;
-**Postgres** uses `datname`. Every dashboard has a **Dashboards** dropdown in
-the top bar.
+**Postgres** uses `datname`; **Traces** uses `service`. Every dashboard has a
+**Dashboards** dropdown in the top bar.
 
 The **Business** dashboard opens on the last hour, not the last day: a demo run
 lasts five minutes, so on a 24-hour graph it would be a thin line. Use the time

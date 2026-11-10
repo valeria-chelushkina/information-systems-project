@@ -57,7 +57,9 @@ Invoke-RestMethod "http://localhost:3200/api/traces/<traceID>"
 The response contains `batches`, `resource.attributes` with `service.name` and
 `scopeSpans` with names such as `POST`, `pg.query:SELECT db_ticketing`.
 
-4. Grafana: **Explore → Tempo → Search**, service `ticketing`, or:
+4. Grafana: the **Traces** dashboard (`concert-ops-traces`) lists recent and
+   error traces. For the waterfall, use **Explore → Tempo → Search**, service
+   `ticketing`, or:
 
 ```
 {resource.service.name="ticketing"}
