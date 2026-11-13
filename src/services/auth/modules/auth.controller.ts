@@ -2,7 +2,9 @@ import type { Request, Response } from 'express';
 import { AuthService } from '@/services/auth/modules/auth.service.js';
 import {
   createUserSchema,
+  listUsersQuerySchema,
   loginSchema,
+  registerSchema,
   tokenSchema,
 } from '@/services/auth/modules/auth.schemas.js';
 import { asyncHandler } from '@/shared/http/async-handler.js';
@@ -40,6 +42,13 @@ export class AuthController {
     res.status(200).json({ data: result });
   });
 
+  register = asyncHandler(async (req: Request, res: Response) => {
+    const body = validate(registerSchema, req.body);
+    const user = this.service.register(body);
+
+    res.status(201).json({ data: user });
+  });
+
   logout = asyncHandler(async (req: Request, res: Response) => {
     const { token } = validate(tokenSchema, req.body);
     this.service.logout(token);
@@ -65,5 +74,15 @@ export class AuthController {
     const user = this.service.createUser(body, optionalBearer(req));
 
     res.status(201).json({ data: user });
+  });
+
+  listUsers = asyncHandler(async (req: Request, res: Response) => {
+    const query = validate(listUsersQuerySchema, req.query);
+    const page = this.service.listUsers(optionalBearer(req), query.limit, query.offset);
+
+    res.status(200).json({
+      data: page.items,
+      meta: { total: page.total, limit: page.limit, offset: page.offset },
+    });
   });
 }

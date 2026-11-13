@@ -25,3 +25,8 @@ export interface UserDto {
   email: string;
   role: UserRole;
 }
+
+export interface AdminUserDto extends UserDto {
+  isActive: boolean;
+  createdAt: string;
+}

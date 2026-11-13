@@ -28,6 +28,12 @@ export class UsersRepository {
     return row ?? null;
   }
 
+  findAll(): UserRow[] {
+    return this.db
+      .prepare('SELECT * FROM users ORDER BY created_at ASC')
+      .all() as unknown as UserRow[];
+  }
+
   insertOne(user: NewUser): UserRow {
     this.db
       .prepare(

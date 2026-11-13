@@ -1,11 +1,19 @@
 import { randomUUID } from 'node:crypto';
 import { LoginAttemptsRepository } from '@/services/auth/modules/login-attempts.repository.js';
-import type { CreateUserInput, LoginInput } from '@/services/auth/modules/auth.schemas.js';
+import type {
+  CreateUserInput,
+  LoginInput,
+  RegisterInput,
+} from '@/services/auth/modules/auth.schemas.js';
 import { SessionsRepository } from '@/services/auth/modules/sessions.repository.js';
 import { UsersRepository } from '@/services/auth/modules/users.repository.js';
 import { hashPassword, verifyPassword } from '@/services/auth/security/password.js';
 import { createToken, hashToken } from '@/services/auth/security/token.js';
-import type { UserDto, UserRow } from '@/services/auth/typedefs/user.typedefs.js';
+import type {
+  AdminUserDto,
+  UserDto,
+  UserRow,
+} from '@/services/auth/typedefs/user.typedefs.js';
 import { optionalEnv } from '@/shared/config/env.js';
 import { HttpError } from '@/shared/errors/http-error.js';
 import { authFailuresTotal } from '@/shared/observability/metrics.js';
@@ -25,8 +33,25 @@ export interface IntrospectionResult {
   role: string;
 }
 
+export interface AdminUserPage {
+  items: AdminUserDto[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 function toDto(user: UserRow): UserDto {
   return { id: user.id, email: user.email, role: user.role };
+}
+
+function toAdminDto(user: UserRow): AdminUserDto {
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    isActive: user.is_active === 1,
+    createdAt: user.created_at,
+  };
 }
 
 export class AuthService {
@@ -105,15 +130,7 @@ export class AuthService {
 
   createUser(input: CreateUserInput, actorToken?: string): UserDto {
     if (this.users.count() > 0) {
-      if (!actorToken) {
-        throw new HttpError(401, 'missing_token', 'An admin token is required');
-      }
-
-      const actor = this.introspect(actorToken);
-
-      if (actor.role !== 'admin') {
-        throw new HttpError(403, 'forbidden', 'Admin role required');
-      }
+      this.assertAdmin(actorToken);
     }
 
     const email = input.email.toLowerCase();
@@ -132,6 +149,50 @@ export class AuthService {
     });
 
     return toDto(user);
+  }
+
+  listUsers(actorToken?: string, limit = 20, offset = 0): AdminUserPage {
+    this.assertAdmin(actorToken);
+
+    const all = this.users.findAll();
+
+    return {
+      items: all.slice(offset, offset + limit).map(toAdminDto),
+      total: all.length,
+      limit,
+      offset,
+    };
+  }
+
+  register(input: RegisterInput): UserDto {
+    const email = input.email.toLowerCase();
+
+    if (this.users.findByEmail(email)) {
+      throw HttpError.conflict('email_taken', 'Email is already registered');
+    }
+
+    const user = this.users.insertOne({
+      id: randomUUID(),
+      email,
+      passwordHash: hashPassword(input.password),
+      role: 'customer',
+      isActive: 1,
+      createdAt: new Date().toISOString(),
+    });
+
+    return toDto(user);
+  }
+
+  private assertAdmin(actorToken?: string): void {
+    if (!actorToken) {
+      throw new HttpError(401, 'missing_token', 'An admin token is required');
+    }
+
+    const actor = this.introspect(actorToken);
+
+    if (actor.role !== 'admin') {
+      throw new HttpError(403, 'forbidden', 'Admin role required');
+    }
   }
 
   countRecentFailures(email: string, minutes = 15): number {
