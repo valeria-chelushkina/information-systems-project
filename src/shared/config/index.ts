@@ -6,6 +6,7 @@ const DEFAULT_PORTS: Record<ServiceName, string> = {
   catalog: '3003',
   auth: '3005',
   notify: '3008',
+  web: '3009',
 };
 
 const serviceName = optionalEnv('SERVICE_NAME', 'ticketing') as ServiceName;
