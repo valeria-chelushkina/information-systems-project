@@ -4,6 +4,7 @@ import {
   adminEventListQuerySchema,
   eventCreateSchema,
   purchaseSchema,
+  publicEventsQuerySchema,
   registerSchema,
   tierCreateSchema,
 } from '@/services/web/api/schemas.js';
@@ -96,5 +97,23 @@ describe('request validation', () => {
     }
 
     expect(adminEventListQuerySchema.safeParse({ from: '17.11.2026' }).success).toBe(false);
+  });
+
+  it('parses public lineup filters', () => {
+    const result = publicEventsQuerySchema.safeParse({
+      search: 'After',
+      performerId: 'c9f839f2-4d22-4750-b44b-b22be893138f',
+      from: '2026-11-17',
+      to: '2026-11-18',
+      limit: '9',
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.limit).toBe(9);
+      expect(result.data.search).toBe('After');
+    }
+
+    expect(publicEventsQuerySchema.safeParse({ to: '18.11.2026' }).success).toBe(false);
   });
 });

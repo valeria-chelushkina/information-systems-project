@@ -24,11 +24,19 @@ export class PublicEventsService {
   protected readonly tiers = new TiersRepository();
 
   async listEvents(query: ListPublicEventsQuery): Promise<PublicEventPage> {
-    const from = new Date();
+    const now = new Date();
+    const from = query.from && query.from.getTime() > now.getTime() ? query.from : now;
+    const filters = {
+      statuses: PUBLIC_EVENT_STATUSES,
+      from,
+      to: query.to,
+      search: query.search,
+      performerId: query.performerId,
+    };
 
     const [items, total] = await Promise.all([
-      this.events.findUpcoming(PUBLIC_EVENT_STATUSES, from, query.limit, query.offset),
-      this.events.countUpcoming(PUBLIC_EVENT_STATUSES, from),
+      this.events.findUpcoming(filters, query.limit, query.offset),
+      this.events.countUpcoming(filters),
     ]);
 
     return {

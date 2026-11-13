@@ -150,6 +150,11 @@ export interface CustomerOrder {
   event: CustomerOrderEvent | null;
 }
 
+export interface PerformerOption {
+  id: string;
+  name: string;
+}
+
 export interface AdminUserDto {
   id: string;
   email: string;

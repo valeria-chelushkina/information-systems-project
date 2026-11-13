@@ -1,5 +1,6 @@
 import express from 'express';
 import { apiRouter } from '@/services/catalog/http/routes/api.router.js';
+import { publicRouter } from '@/services/catalog/modules/public/public.router.js';
 import { errorHandler } from '@/shared/http/middleware/error-handler.js';
 import { requestContext } from '@/shared/http/middleware/request-context.js';
 import { requestMetrics } from '@/shared/http/middleware/request-metrics.js';
@@ -15,6 +16,7 @@ export function createApp(): express.Express {
   app.use(requestMetrics);
   app.use(healthRouter);
   app.use(metricsRouter);
+  app.use('/public', publicRouter);
   app.use('/api', requireAuth(), apiRouter);
   app.use(errorHandler);
   return app;

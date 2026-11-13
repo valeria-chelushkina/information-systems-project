@@ -46,6 +46,15 @@ export interface EventQuery {
   offset?: number;
 }
 
+export interface PublicEventQuery {
+  limit: number;
+  offset: number;
+  search?: string;
+  performerId?: string;
+  from?: string;
+  to?: string;
+}
+
 export class TicketingClient {
   listEvents(token: string, query: EventQuery = {}): Promise<Page<EventDto>> {
     return callPage<EventDto>(webConfig.ticketingBaseUrl, '/api/events', {
@@ -170,9 +179,16 @@ export class TicketingClient {
     );
   }
 
-  listPublicEvents(limit: number, offset = 0): Promise<Page<PublicEventDto>> {
+  listPublicEvents(query: PublicEventQuery): Promise<Page<PublicEventDto>> {
     return callPage<PublicEventDto>(webConfig.ticketingBaseUrl, '/public/events', {
-      query: { limit, offset },
+      query: {
+        limit: query.limit,
+        offset: query.offset,
+        search: query.search,
+        performerId: query.performerId,
+        from: query.from,
+        to: query.to,
+      },
     });
   }
 

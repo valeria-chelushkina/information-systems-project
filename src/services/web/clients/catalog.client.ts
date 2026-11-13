@@ -4,6 +4,7 @@ import type {
   BookingDto,
   BookingStatus,
   PerformerDto,
+  PerformerOption,
   VenueDto,
 } from '@/services/web/typedefs/api.typedefs.js';
 
@@ -45,6 +46,12 @@ export class CatalogClient {
   listVenues(token: string, limit = 100, offset = 0): Promise<Page<VenueDto>> {
     return callPage<VenueDto>(webConfig.catalogBaseUrl, '/api/venues', {
       token,
+      query: { limit, offset },
+    });
+  }
+
+  listPublicPerformers(limit = 100, offset = 0): Promise<Page<PerformerOption>> {
+    return callPage<PerformerOption>(webConfig.catalogBaseUrl, '/public/performers', {
       query: { limit, offset },
     });
   }

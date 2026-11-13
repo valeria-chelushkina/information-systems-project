@@ -15,6 +15,10 @@ export const registerSchema = z.object({
 });
 
 export const publicEventsQuerySchema = z.object({
+  search: z.string().trim().max(200).optional(),
+  performerId: z.uuid().optional(),
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   limit: z.coerce.number().int().min(1).max(24).default(6),
   offset: z.coerce.number().int().min(0).default(0),
 });

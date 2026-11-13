@@ -24,6 +24,14 @@ export interface EventFilters {
   offset: number;
 }
 
+export interface UpcomingEventFilters {
+  statuses: readonly EventStatus[];
+  from: Date;
+  to?: Date;
+  search?: string;
+  performerId?: string;
+}
+
 export interface EventPage {
   items: EventRow[];
   total: number;

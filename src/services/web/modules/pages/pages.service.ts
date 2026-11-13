@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { CatalogClient } from '@/services/web/clients/catalog.client.js';
 import { UpstreamError } from '@/services/web/clients/http.client.js';
 import { TicketingClient } from '@/services/web/clients/ticketing.client.js';
 import { canSeeOrder, isStaff } from '@/services/web/modules/session/session.helpers.js';
@@ -6,12 +7,14 @@ import type {
   CustomerOrder,
   EventDto,
   OrderDetail,
+  PerformerOption,
   PublicEventCard,
   PublicEventDto,
   PublicTierDto,
   SessionUser,
 } from '@/services/web/typedefs/api.typedefs.js';
 import type { Page } from '@/services/web/clients/http.client.js';
+import type { PublicEventQuery } from '@/services/web/clients/ticketing.client.js';
 import { HttpError } from '@/shared/errors/http-error.js';
 
 export interface PublicEventsResult {
@@ -36,12 +39,17 @@ export interface OrderPageResult {
 
 export class PagesService {
   protected readonly ticketing = new TicketingClient();
+  protected readonly catalog = new CatalogClient();
 
-  async listPublic(limit: number, offset: number): Promise<PublicEventsResult> {
-    const page = await this.ticketing.listPublicEvents(limit, offset);
+  async listPublic(query: PublicEventQuery): Promise<PublicEventsResult> {
+    const page = await this.ticketing.listPublicEvents(query);
     const items = await this.withPrices(page.items);
 
     return { items, total: page.total, limit: page.limit, offset: page.offset };
+  }
+
+  listPublicPerformers(): Promise<Page<PerformerOption>> {
+    return this.catalog.listPublicPerformers(100, 0);
   }
 
   eventDetail(id: string): Promise<EventDetailResult> {

@@ -8,6 +8,7 @@ import type {
   EventRow,
   EventStatus,
   NewEventRow,
+  UpcomingEventFilters,
 } from '@/services/ticketing/typedefs/event.typedefs.js';
 
 export class EventsRepository {
@@ -72,8 +73,7 @@ export class EventsRepository {
   }
 
   findUpcoming(
-    statuses: readonly EventStatus[],
-    from: Date,
+    filters: UpcomingEventFilters,
     limit: number,
     offset: number,
   ): Promise<EventRow[]> {
@@ -81,19 +81,19 @@ export class EventsRepository {
       this.db
         .select()
         .from(events)
-        .where(this.buildUpcomingFilter(statuses, from))
+        .where(this.buildUpcomingFilter(filters))
         .orderBy(asc(events.startsAt))
         .limit(limit)
         .offset(offset),
     );
   }
 
-  countUpcoming(statuses: readonly EventStatus[], from: Date): Promise<number> {
+  countUpcoming(filters: UpcomingEventFilters): Promise<number> {
     return timedQuery('count_public_events', async () => {
       const [row] = await this.db
         .select({ value: count() })
         .from(events)
-        .where(this.buildUpcomingFilter(statuses, from));
+        .where(this.buildUpcomingFilter(filters));
 
       return Number(row?.value ?? 0);
     });
@@ -157,7 +157,31 @@ export class EventsRepository {
     return conditions.length > 0 ? and(...conditions) : undefined;
   }
 
-  private buildUpcomingFilter(statuses: readonly EventStatus[], from: Date): SQL {
-    return and(inArray(events.status, [...statuses]), gte(events.startsAt, from)) as SQL;
+  private buildUpcomingFilter(filters: UpcomingEventFilters): SQL {
+    const conditions: SQL[] = [
+      inArray(events.status, [...filters.statuses]),
+      gte(events.startsAt, filters.from),
+    ];
+
+    if (filters.to) {
+      conditions.push(lte(events.startsAt, filters.to));
+    }
+    if (filters.performerId) {
+      conditions.push(eq(events.performerId, filters.performerId));
+    }
+    if (filters.search) {
+      const escaped = filters.search.replace(/[\\%_]/g, '\\$&');
+      const term = `%${escaped}%`;
+
+      conditions.push(
+        or(
+          ilike(events.title, term),
+          ilike(events.performerName, term),
+          ilike(events.venueName, term),
+        ) as SQL,
+      );
+    }
+
+    return and(...conditions) as SQL;
   }
 }
