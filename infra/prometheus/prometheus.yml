@@ -47,6 +47,15 @@ scrape_configs:
           instance_type: service
           team: backend
 
+  - job_name: 'web'
+    static_configs:
+      - targets: ['web:3000']
+        labels:
+          instance_group: concert-ops
+          instance_env: lab
+          instance_type: service
+          team: frontend
+
   - job_name: 'postgres-ticketing'
     static_configs:
       - targets: ['postgres-exporter-ticketing:9187']
