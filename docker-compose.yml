@@ -118,6 +118,16 @@ services:
       NOTIFY_PORT: 3000
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@rabbitmq:5672
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      ALERT_EMAIL_TO: ${ALERT_EMAIL_TO:-}
+      ALERT_EMAIL_RETRY_MINUTES: ${ALERT_EMAIL_RETRY_MINUTES:-15}
+      WEB_PUBLIC_URL: http://localhost:${WEB_HOST_PORT:-3008}
+      GRAFANA_PUBLIC_URL: http://localhost:${GRAFANA_HOST_PORT}
     depends_on:
       otel-collector:
         condition: service_started

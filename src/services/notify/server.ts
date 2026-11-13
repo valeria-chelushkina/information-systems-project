@@ -1,5 +1,6 @@
 import { shutdownTracing } from '@/shared/observability/tracing.js';
 import { createApp } from '@/services/notify/app.js';
+import { notifyConfig } from '@/services/notify/config.js';
 import { NotificationsConsumer } from '@/services/notify/modules/notifications/notifications.consumer.js';
 import { config } from '@/shared/config/index.js';
 import { logger } from '@/shared/observability/logger.js';
@@ -9,6 +10,7 @@ const consumer = new NotificationsConsumer();
 
 const server = app.listen(config.port, () => {
   logger.info({ port: config.port, env: config.nodeEnv }, 'notify service listening');
+  logger.info({ enabled: notifyConfig.emailEnabled }, 'alert email notifications');
   void consumer.start();
 });
 

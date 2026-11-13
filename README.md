@@ -132,7 +132,8 @@ More commands: [development](docs/development.md). More scenarios:
 
 Grafana contains eight provisioned dashboards: Overview, API Monitoring,
 Service Detail, Postgres, Messaging, Business, Logs and Traces. The stack
-exposes metrics, logs and traces out of the box.
+exposes metrics, logs and traces out of the box. Alerts can also be emailed by
+configuring `SMTP_*` and `ALERT_EMAIL_TO` for `notify`.
 
 | Where | What |
 | --- | --- |

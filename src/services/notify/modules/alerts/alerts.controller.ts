@@ -10,7 +10,7 @@ export class AlertsController {
   handle = asyncHandler(async (req: Request, res: Response) => {
     const { alerts } = validate(notificationSchema, req.body);
 
-    this.service.handle(alerts);
+    await this.service.handle(alerts);
 
     res.status(200).json({ status: 'ok', received: alerts.length });
   });

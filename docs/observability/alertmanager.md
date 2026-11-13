@@ -10,6 +10,10 @@ Prometheus evaluates 17 rules from `infra/prometheus/alerts.yml`. When a rule
 becomes `firing`, Alertmanager groups it and calls the `notify` webhook. On
 recovery it sends `resolved`, because `send_resolved: true`.
 
+`notify` optionally forwards both firing and resolved alerts to email; see
+[notify](notify.md#email-notifications). Alertmanager itself does not need SMTP
+configuration.
+
 | Rule | Condition |
 | --- | --- |
 | `ServiceDown` | `up{instance_type="service"} == 0` for 5m |
