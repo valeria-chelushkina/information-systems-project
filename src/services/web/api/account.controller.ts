@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { ok } from '@/services/web/api/respond.js';
-import { idParamsSchema, purchaseSchema } from '@/services/web/api/schemas.js';
+import { idParamsSchema, pageQuerySchema, purchaseSchema } from '@/services/web/api/schemas.js';
 import { PagesService } from '@/services/web/modules/pages/pages.service.js';
 import { currentToken, currentUser } from '@/services/web/modules/session/session.middleware.js';
 import { asyncHandler } from '@/shared/http/async-handler.js';
@@ -26,6 +26,14 @@ export class AccountController {
     const order = await this.service.order(user, token, id);
 
     ok(res, order);
+  });
+
+  orders = asyncHandler(async (req: Request, res: Response) => {
+    const token = currentToken(res);
+    const query = validate(pageQuerySchema, req.query);
+    const page = await this.service.listOrders(token, query.limit, query.offset);
+
+    ok(res, page);
   });
 
   refund = asyncHandler(async (req: Request, res: Response) => {

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { count, desc, eq } from 'drizzle-orm';
 import { db as database, type Database } from '@/shared/db/client.js';
 import type { Executor } from '@/shared/db/executor.js';
 import { orders } from '@/services/ticketing/db/schema/index.js';
@@ -35,6 +35,33 @@ export class OrdersRepository {
         .where(eq(orders.idempotencyKey, key));
 
       return row ?? null;
+    });
+  }
+
+  findByCustomerRef(
+    customerRef: string,
+    limit: number,
+    offset: number,
+  ): Promise<OrderRow[]> {
+    return timedQuery('list_orders_by_customer', () =>
+      this.db
+        .select()
+        .from(orders)
+        .where(eq(orders.customerRef, customerRef))
+        .orderBy(desc(orders.createdAt))
+        .limit(limit)
+        .offset(offset),
+    );
+  }
+
+  countByCustomerRef(customerRef: string): Promise<number> {
+    return timedQuery('count_orders_by_customer', async () => {
+      const [row] = await this.db
+        .select({ value: count() })
+        .from(orders)
+        .where(eq(orders.customerRef, customerRef));
+
+      return Number(row?.value ?? 0);
     });
   }
 

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db as database, type Database } from '@/shared/db/client.js';
 import type { Executor } from '@/shared/db/executor.js';
 import { tickets } from '@/services/ticketing/db/schema/index.js';
@@ -15,6 +15,16 @@ export class TicketsRepository {
   findByOrderId(orderId: string, exec: Executor = this.db): Promise<TicketRow[]> {
     return timedQuery('list_tickets_by_order', () =>
       exec.select().from(tickets).where(eq(tickets.orderId, orderId)),
+    );
+  }
+
+  findByOrderIds(orderIds: string[]): Promise<TicketRow[]> {
+    if (orderIds.length === 0) {
+      return Promise.resolve([]);
+    }
+
+    return timedQuery('list_tickets_by_orders', () =>
+      this.db.select().from(tickets).where(inArray(tickets.orderId, orderIds)),
     );
   }
 

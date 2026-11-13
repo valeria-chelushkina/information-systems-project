@@ -23,6 +23,10 @@ import { HttpError } from '@/shared/errors/http-error.js';
 import type { HoldRow } from '@/services/ticketing/typedefs/hold.typedefs.js';
 import type { OrderRow } from '@/services/ticketing/typedefs/order.typedefs.js';
 import type { PurchaseResult, RefundResult } from '@/services/ticketing/typedefs/purchase.typedefs.js';
+import {
+  toCustomerEvent,
+  type CustomerOrderPage,
+} from '@/services/ticketing/typedefs/customer-order.typedefs.js';
 
 const HOLD_TTL_MS = ticketingConfig.holdTtlMs;
 
@@ -329,6 +333,39 @@ export class PurchasesService {
     refundedCentsTotal.inc(result.refund.amountCents);
 
     return result;
+  }
+
+  async listOrders(
+    customerRef: string,
+    limit: number,
+    offset: number,
+  ): Promise<CustomerOrderPage> {
+    const [orders, total] = await Promise.all([
+      this.orders.findByCustomerRef(customerRef, limit, offset),
+      this.orders.countByCustomerRef(customerRef),
+    ]);
+
+    if (orders.length === 0) {
+      return { items: [], total, limit, offset };
+    }
+
+    const tickets = await this.tickets.findByOrderIds(orders.map((order) => order.id));
+    const eventIds = [...new Set(tickets.map((ticket) => ticket.eventId))];
+    const events = await this.events.findByIds(eventIds);
+    const eventsById = new Map(events.map((event) => [event.id, event]));
+
+    const items = orders.map((order) => {
+      const orderTickets = tickets.filter((ticket) => ticket.orderId === order.id);
+      const event = orderTickets[0] ? eventsById.get(orderTickets[0].eventId) : undefined;
+
+      return {
+        order,
+        tickets: orderTickets,
+        event: event ? toCustomerEvent(event) : null,
+      };
+    });
+
+    return { items, total, limit, offset };
   }
 
   private async loadOrder(order: OrderRow, created: boolean): Promise<PurchaseResult> {

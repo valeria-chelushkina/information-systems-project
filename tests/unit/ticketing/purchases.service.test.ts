@@ -13,10 +13,13 @@ const mocks = vi.hoisted(() => ({
     insertOne: vi.fn(),
     lockById: vi.fn(),
     updateStatus: vi.fn(),
+    findByCustomerRef: vi.fn(),
+    countByCustomerRef: vi.fn(),
   },
   tickets: {
     insertMany: vi.fn(),
     findByOrderId: vi.fn(),
+    findByOrderIds: vi.fn(),
     updateStatusByOrderId: vi.fn(),
   },
   payments: {
@@ -36,6 +39,7 @@ const mocks = vi.hoisted(() => ({
   },
   events: {
     findById: vi.fn(),
+    findByIds: vi.fn(),
     updateById: vi.fn(),
   },
   publisher: {
@@ -148,6 +152,39 @@ describe('PurchasesService', () => {
     mocks.transaction.mockImplementation(async (_name: string, run: (tx: unknown) => Promise<unknown>) =>
       run({}),
     );
+  });
+
+  it('lists a customer orders with tickets and event snapshots', async () => {
+    mocks.orders.findByCustomerRef.mockResolvedValue([
+      order(),
+      order({ id: 'order-2', idempotencyKey: 'idempotency-2' }),
+    ]);
+    mocks.orders.countByCustomerRef.mockResolvedValue(2);
+    mocks.tickets.findByOrderIds.mockResolvedValue([
+      ticket(),
+      ticket({ id: 'ticket-2', orderId: 'order-2' }),
+    ]);
+    mocks.events.findByIds.mockResolvedValue([
+      {
+        id: 'event-1',
+        title: 'After the Rain',
+        performerName: 'After the Rain',
+        venueName: 'Tokyo Dome',
+        startsAt: new Date('2026-11-17T12:35:34.053Z'),
+        status: 'on_sale',
+      },
+    ]);
+
+    const page = await service.listOrders('customer-1', 10, 0);
+
+    expect(page.total).toBe(2);
+    expect(page.limit).toBe(10);
+    expect(page.offset).toBe(0);
+    expect(page.items).toHaveLength(2);
+    expect(page.items[0]?.tickets).toHaveLength(1);
+    expect(page.items[0]?.event?.title).toBe('After the Rain');
+    expect(page.items[0]?.event?.venueName).toBe('Tokyo Dome');
+    expect(mocks.orders.findByCustomerRef).toHaveBeenCalledWith('customer-1', 10, 0);
   });
 
   it('rejects a hold when the event is not on sale', async () => {

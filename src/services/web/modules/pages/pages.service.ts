@@ -3,6 +3,7 @@ import { UpstreamError } from '@/services/web/clients/http.client.js';
 import { TicketingClient } from '@/services/web/clients/ticketing.client.js';
 import { canSeeOrder, isStaff } from '@/services/web/modules/session/session.helpers.js';
 import type {
+  CustomerOrder,
   EventDto,
   OrderDetail,
   PublicEventCard,
@@ -10,6 +11,7 @@ import type {
   PublicTierDto,
   SessionUser,
 } from '@/services/web/typedefs/api.typedefs.js';
+import type { Page } from '@/services/web/clients/http.client.js';
 import { HttpError } from '@/shared/errors/http-error.js';
 
 export interface PublicEventsResult {
@@ -44,6 +46,10 @@ export class PagesService {
 
   eventDetail(id: string): Promise<EventDetailResult> {
     return this.ticketing.getPublicEvent(id);
+  }
+
+  listOrders(token: string, limit: number, offset: number): Promise<Page<CustomerOrder>> {
+    return this.ticketing.listOrders(token, limit, offset);
   }
 
   async purchase(

@@ -135,6 +135,21 @@ export interface OrderDetail {
   tickets: TicketDto[];
 }
 
+export interface CustomerOrderEvent {
+  id: string;
+  title: string;
+  performerName: string;
+  venueName: string;
+  startsAt: string;
+  status: string;
+}
+
+export interface CustomerOrder {
+  order: OrderDto;
+  tickets: TicketDto[];
+  event: CustomerOrderEvent | null;
+}
+
 export interface AdminUserDto {
   id: string;
   email: string;

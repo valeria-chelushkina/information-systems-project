@@ -38,6 +38,16 @@ export class EventsRepository {
     });
   }
 
+  findByIds(ids: string[]): Promise<EventRow[]> {
+    if (ids.length === 0) {
+      return Promise.resolve([]);
+    }
+
+    return timedQuery('find_events_by_ids', () =>
+      this.db.select().from(events).where(inArray(events.id, ids)),
+    );
+  }
+
   findMany(filters: EventFilters): Promise<EventRow[]> {
     return timedQuery('list_events', () =>
       this.db

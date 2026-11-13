@@ -1,6 +1,7 @@
 import { call, callEmpty, callPage, type Page } from '@/services/web/clients/http.client.js';
 import { webConfig } from '@/services/web/config.js';
 import type {
+  CustomerOrder,
   EventDto,
   EventStatus,
   OrderDetail,
@@ -148,6 +149,13 @@ export class TicketingClient {
 
   getOrder(token: string, id: string): Promise<OrderDetail> {
     return call<OrderDetail>(webConfig.ticketingBaseUrl, `/api/orders/${id}`, { token });
+  }
+
+  listOrders(token: string, limit: number, offset: number): Promise<Page<CustomerOrder>> {
+    return callPage<CustomerOrder>(webConfig.ticketingBaseUrl, '/api/orders', {
+      token,
+      query: { limit, offset },
+    });
   }
 
   refundOrder(token: string, id: string, reason?: string): Promise<{ order: OrderDetail['order'] }> {
