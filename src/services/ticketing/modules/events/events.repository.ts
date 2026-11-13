@@ -1,9 +1,14 @@
-import { and, asc, count, eq, gte, lte, type SQL } from 'drizzle-orm';
+import { and, asc, count, eq, gte, ilike, inArray, lte, or, type SQL } from 'drizzle-orm';
 import { db as database, type Database } from '@/shared/db/client.js';
 import type { Executor } from '@/shared/db/executor.js';
 import { events } from '@/services/ticketing/db/schema/index.js';
 import { timedQuery } from '@/shared/db/timed-query.js';
-import type { EventFilters, EventRow, NewEventRow } from '@/services/ticketing/typedefs/event.typedefs.js';
+import type {
+  EventFilters,
+  EventRow,
+  EventStatus,
+  NewEventRow,
+} from '@/services/ticketing/typedefs/event.typedefs.js';
 
 export class EventsRepository {
   protected readonly db: Database = database;
@@ -56,6 +61,34 @@ export class EventsRepository {
     });
   }
 
+  findUpcoming(
+    statuses: readonly EventStatus[],
+    from: Date,
+    limit: number,
+    offset: number,
+  ): Promise<EventRow[]> {
+    return timedQuery('list_public_events', () =>
+      this.db
+        .select()
+        .from(events)
+        .where(this.buildUpcomingFilter(statuses, from))
+        .orderBy(asc(events.startsAt))
+        .limit(limit)
+        .offset(offset),
+    );
+  }
+
+  countUpcoming(statuses: readonly EventStatus[], from: Date): Promise<number> {
+    return timedQuery('count_public_events', async () => {
+      const [row] = await this.db
+        .select({ value: count() })
+        .from(events)
+        .where(this.buildUpcomingFilter(statuses, from));
+
+      return Number(row?.value ?? 0);
+    });
+  }
+
   updateById(
     id: string,
     values: Partial<NewEventRow>,
@@ -89,6 +122,21 @@ export class EventsRepository {
     if (filters.status) {
       conditions.push(eq(events.status, filters.status));
     }
+    if (filters.performerId) {
+      conditions.push(eq(events.performerId, filters.performerId));
+    }
+    if (filters.search) {
+      const escaped = filters.search.replace(/[\\%_]/g, '\\$&');
+      const term = `%${escaped}%`;
+
+      conditions.push(
+        or(
+          ilike(events.title, term),
+          ilike(events.performerName, term),
+          ilike(events.venueName, term),
+        ) as SQL,
+      );
+    }
     if (filters.from) {
       conditions.push(gte(events.startsAt, filters.from));
     }
@@ -97,5 +145,9 @@ export class EventsRepository {
     }
 
     return conditions.length > 0 ? and(...conditions) : undefined;
+  }
+
+  private buildUpcomingFilter(statuses: readonly EventStatus[], from: Date): SQL {
+    return and(inArray(events.status, [...statuses]), gte(events.startsAt, from)) as SQL;
   }
 }

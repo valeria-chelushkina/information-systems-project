@@ -38,6 +38,8 @@ export const updateEventSchema = z
 
 export const listEventsQuerySchema = z.object({
   status: eventStatusSchema.optional(),
+  search: z.string().trim().min(1).max(200).optional(),
+  performerId: z.uuid().optional(),
   from: dateSchema.optional(),
   to: dateSchema.optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),

@@ -53,6 +53,8 @@ export class EventsService {
   async listEvents(query: ListEventsQuery): Promise<EventPage> {
     const filters = {
       status: query.status,
+      search: query.search,
+      performerId: query.performerId,
       from: query.from,
       to: query.to,
       limit: query.limit,

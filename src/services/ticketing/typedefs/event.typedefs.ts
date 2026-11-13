@@ -16,6 +16,8 @@ export type NewEventRow = typeof events.$inferInsert;
 
 export interface EventFilters {
   status?: EventStatus;
+  search?: string;
+  performerId?: string;
   from?: Date;
   to?: Date;
   limit: number;
