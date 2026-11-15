@@ -20,23 +20,53 @@ export function PerformersPage() {
   );
   const [name, setName] = useState('');
   const [genre, setGenre] = useState('');
+  const [bio, setBio] = useState('');
   const [contactEmail, setContactEmail] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const resetForm = () => {
+    setName('');
+    setGenre('');
+    setBio('');
+    setContactEmail('');
+    setEditingId(null);
+  };
+
+  const startEdit = (performer: Performer) => {
+    setEditingId(performer.id);
+    setName(performer.name);
+    setGenre(performer.genre ?? '');
+    setBio(performer.bio ?? '');
+    setContactEmail(performer.contactEmail ?? '');
+  };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setBusy(true);
 
+    const payload = {
+      name,
+      genre: genre || null,
+      bio: bio || null,
+      contactEmail: contactEmail || null,
+    };
+
     try {
-      await api.post('/admin/performers', {
-        name,
-        ...(genre ? { genre } : {}),
-        ...(contactEmail ? { contactEmail } : {}),
-      });
-      push('Performer added.');
-      setName('');
-      setGenre('');
-      setContactEmail('');
+      if (editingId) {
+        await api.patch(`/admin/performers/${editingId}`, payload);
+        push('Performer updated.');
+      } else {
+        await api.post('/admin/performers', {
+          name,
+          ...(genre ? { genre } : {}),
+          ...(bio ? { bio } : {}),
+          ...(contactEmail ? { contactEmail } : {}),
+        });
+        push('Performer added.');
+      }
+
+      resetForm();
       reload();
     } catch (caught) {
       const code = caught instanceof ApiError ? caught.code : 'request_failed';
@@ -62,7 +92,7 @@ export function PerformersPage() {
       <div className="split">
         <div className="panel">
           <div className="panel__head">
-            <h2>Add performer</h2>
+            <h2>{editingId ? 'Edit performer' : 'Add performer'}</h2>
           </div>
           <form className="form" onSubmit={submit}>
             <label className="field">
@@ -79,10 +109,26 @@ export function PerformersPage() {
                 <input className="input" type="email" value={contactEmail} placeholder="booking@example.com" onChange={(event) => setContactEmail(event.target.value)} />
               </label>
             </div>
+            <label className="field">
+              <span className="field__label">Bio (optional)</span>
+              <textarea
+                className="input"
+                rows={3}
+                maxLength={2000}
+                value={bio}
+                placeholder="Short artist biography shown on the public event page"
+                onChange={(event) => setBio(event.target.value)}
+              />
+            </label>
             <div className="form-actions">
               <button className="btn btn--primary" type="submit" disabled={busy}>
-                Add
+                {editingId ? 'Save changes' : 'Add'}
               </button>
+              {editingId ? (
+                <button className="btn btn--ghost" type="button" onClick={resetForm}>
+                  Cancel
+                </button>
+              ) : null}
             </div>
           </form>
         </div>
@@ -104,6 +150,7 @@ export function PerformersPage() {
                       <th>Genre</th>
                       <th>Email</th>
                       <th>Added</th>
+                      <th />
                     </tr>
                   </thead>
                   <tbody>
@@ -115,6 +162,11 @@ export function PerformersPage() {
                         <td>{performer.genre ?? <span className="muted">вЂ”</span>}</td>
                         <td>{performer.contactEmail ?? <span className="muted">вЂ”</span>}</td>
                         <td className="muted nowrap">{dateTime(performer.createdAt)}</td>
+                        <td className="nowrap">
+                          <button className="btn btn--ghost btn--xs" type="button" onClick={() => startEdit(performer)}>
+                            Change
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

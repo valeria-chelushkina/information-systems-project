@@ -22,18 +22,41 @@ export function VenuesPage() {
   const [city, setCity] = useState('');
   const [timezone, setTimezone] = useState('Europe/Kyiv');
   const [capacity, setCapacity] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const resetForm = () => {
+    setName('');
+    setCity('');
+    setTimezone('Europe/Kyiv');
+    setCapacity('');
+    setEditingId(null);
+  };
+
+  const startEdit = (venue: Venue) => {
+    setEditingId(venue.id);
+    setName(venue.name);
+    setCity(venue.city);
+    setTimezone(venue.timezone);
+    setCapacity(String(venue.capacity));
+  };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setBusy(true);
 
+    const payload = { name, city, timezone, capacity: Number(capacity) };
+
     try {
-      await api.post('/admin/venues', { name, city, timezone, capacity: Number(capacity) });
-      push('Venue added.');
-      setName('');
-      setCity('');
-      setCapacity('');
+      if (editingId) {
+        await api.patch(`/admin/venues/${editingId}`, payload);
+        push('Venue updated.');
+      } else {
+        await api.post('/admin/venues', payload);
+        push('Venue added.');
+      }
+
+      resetForm();
       reload();
     } catch (caught) {
       const code = caught instanceof ApiError ? caught.code : 'request_failed';
@@ -59,7 +82,7 @@ export function VenuesPage() {
       <div className="split">
         <div className="panel">
           <div className="panel__head">
-            <h2>Add venue</h2>
+            <h2>{editingId ? 'Edit venue' : 'Add venue'}</h2>
           </div>
           <form className="form" onSubmit={submit}>
             <label className="field">
@@ -82,8 +105,13 @@ export function VenuesPage() {
             </label>
             <div className="form-actions">
               <button className="btn btn--primary" type="submit" disabled={busy}>
-                Add
+                {editingId ? 'Save changes' : 'Add'}
               </button>
+              {editingId ? (
+                <button className="btn btn--ghost" type="button" onClick={resetForm}>
+                  Cancel
+                </button>
+              ) : null}
             </div>
           </form>
         </div>
@@ -106,6 +134,7 @@ export function VenuesPage() {
                       <th>Time zone</th>
                       <th>Capacity</th>
                       <th>Added</th>
+                      <th />
                     </tr>
                   </thead>
                   <tbody>
@@ -118,6 +147,11 @@ export function VenuesPage() {
                         <td>{venue.timezone}</td>
                         <td>{venue.capacity}</td>
                         <td className="muted nowrap">{dateTime(venue.createdAt)}</td>
+                        <td className="nowrap">
+                          <button className="btn btn--ghost btn--xs" type="button" onClick={() => startEdit(venue)}>
+                            Change
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

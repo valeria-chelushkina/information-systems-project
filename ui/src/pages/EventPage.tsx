@@ -15,7 +15,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useApi } from '@/hooks/useApi';
 import { useToast } from '@/hooks/useToast';
-import type { PublicEventDetail } from '@/typedefs/catalog.typedefs';
+import type { PerformerProfile, PublicEventDetail } from '@/typedefs/catalog.typedefs';
 import type { PurchaseResult } from '@/typedefs/orders.typedefs';
 import type { TierRowProps } from '@/typedefs/ui.typedefs';
 
@@ -100,6 +100,9 @@ export function EventPage() {
   const { data, error, loading, reload } = useApi<PublicEventDetail>(
     id ? `/public/events/${id}` : null,
   );
+  const performerState = useApi<PerformerProfile>(
+    data ? `/public/performers/${data.event.performerId}` : null,
+  );
 
   if (loading) {
     return <PageLoader text="Loading event…" />;
@@ -166,6 +169,9 @@ export function EventPage() {
                 <Icon name="pin" className="inline-icon" />
                 {event.venueName}
               </p>
+              {performerState.data?.bio ? (
+                <p className="event-hero__bio">{performerState.data.bio}</p>
+              ) : null}
             </div>
           </div>
         </div>
