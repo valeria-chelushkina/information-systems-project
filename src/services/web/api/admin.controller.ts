@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { noContent, ok } from '@/services/web/api/respond.js';
 import {
+  adminCatalogListQuerySchema,
   accountCreateSchema,
   adminEventListQuerySchema,
   bookingDecisionSchema,
@@ -155,8 +156,13 @@ export class AdminController {
 
   performers = asyncHandler(async (req: Request, res: Response) => {
     const token = currentToken(res);
-    const query = validate(pageQuerySchema, req.query);
-    const page = await this.service.listPerformers(token, query.limit, query.offset);
+    const query = validate(adminCatalogListQuerySchema, req.query);
+    const page = await this.service.listPerformers(
+      token,
+      query.limit,
+      query.offset,
+      query.search,
+    );
 
     ok(res, page);
   });
@@ -180,8 +186,13 @@ export class AdminController {
 
   venues = asyncHandler(async (req: Request, res: Response) => {
     const token = currentToken(res);
-    const query = validate(pageQuerySchema, req.query);
-    const page = await this.service.listVenues(token, query.limit, query.offset);
+    const query = validate(adminCatalogListQuerySchema, req.query);
+    const page = await this.service.listVenues(
+      token,
+      query.limit,
+      query.offset,
+      query.search,
+    );
 
     ok(res, page);
   });

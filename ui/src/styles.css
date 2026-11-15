@@ -3206,3 +3206,195 @@ code {
   font-size: 0.92rem;
   line-height: 1.5;
 }
+
+.catalog-layout {
+  display: grid;
+  gap: 18px;
+}
+
+.filters--search {
+  grid-template-columns: minmax(220px, 1fr) auto;
+  margin-bottom: 16px;
+}
+
+.panel .filters--search {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.performer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.performer-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.performer-card h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.performer-card h2 a:hover {
+  color: var(--accent);
+}
+
+.performer-card__genre {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.performer-card__bio {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.performer-card__link {
+  margin-top: auto;
+}
+
+.performer-profile__bio {
+  max-width: 70ch;
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.performer-hero .eyebrow {
+  display: inline-block;
+}
+
+.performer-hero h1 {
+  margin-top: 6px;
+}
+
+.print-heading .eyebrow {
+  display: inline-block;
+}
+
+.print-heading h1 {
+  margin-top: 6px;
+}
+
+.event-card__performer a:hover,
+.event-hero__performer a:hover {
+  color: var(--accent);
+}
+
+.print-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.print-ticket {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.print-ticket__qr .ticket-qr__image,
+.print-ticket__qr .ticket-qr__placeholder {
+  width: 120px;
+  max-width: 120px;
+}
+
+.print-ticket__label {
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.print-ticket__body h2 {
+  margin: 2px 0 6px;
+  font-size: 1.1rem;
+}
+
+.print-ticket__meta {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.print-ticket__footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+@media print {
+  .site-header,
+  .site-footer,
+  .skip-link,
+  .print-actions {
+    display: none !important;
+  }
+
+  body,
+  .theme-public {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .print-page {
+    padding: 0 !important;
+  }
+
+  .print-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .print-ticket {
+    border: 1px solid #111111 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+  }
+
+  .print-ticket h2,
+  .print-ticket .mono,
+  .print-ticket__meta,
+  .print-ticket__label {
+    color: #000000 !important;
+  }
+
+  .print-ticket .badge {
+    border-color: #111111 !important;
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
+}

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Pagination } from '@/components/Pagination';
 import { EmptyState, ErrorBox, PageLoader } from '@/components/UI';
 import { useToast } from '@/hooks/useToast';
@@ -8,15 +8,24 @@ import { dateTime, errorMessage } from '@/helpers/format';
 import { useApi } from '@/hooks/useApi';
 import type { Paged } from '@/typedefs/common.typedefs';
 import type { Venue } from '@/typedefs/catalog.typedefs';
-import { ADMIN_PAGE_SIZE } from '@/constants/pagination.constants';
+import { CATALOG_PAGE_SIZE } from '@/constants/pagination.constants';
 
 export function VenuesPage() {
   const { push } = useToast();
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const parsedOffset = Number(params.get('offset') ?? '0');
   const offset = Number.isFinite(parsedOffset) && parsedOffset > 0 ? Math.floor(parsedOffset) : 0;
+  const search = params.get('search') ?? '';
+  const query = new URLSearchParams({
+    limit: String(CATALOG_PAGE_SIZE),
+    offset: String(offset),
+  });
+
+  if (search) query.set('search', search);
+
   const { data, error, loading, reload } = useApi<Paged<Venue>>(
-    `/admin/venues?limit=${ADMIN_PAGE_SIZE}&offset=${offset}`,
+    `/admin/venues?${query.toString()}`,
   );
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
@@ -31,6 +40,12 @@ export function VenuesPage() {
     setTimezone('Europe/Kyiv');
     setCapacity('');
     setEditingId(null);
+  };
+
+  const applySearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const value = String(new FormData(event.currentTarget).get('search') ?? '').trim();
+    navigate(value ? `/admin/venues?search=${encodeURIComponent(value)}` : '/admin/venues');
   };
 
   const startEdit = (venue: Venue) => {
@@ -79,7 +94,7 @@ export function VenuesPage() {
           </p>
         </div>
       </div>
-      <div className="split">
+      <div className="catalog-layout">
         <div className="panel">
           <div className="panel__head">
             <h2>{editingId ? 'Edit venue' : 'Add venue'}</h2>
@@ -119,6 +134,31 @@ export function VenuesPage() {
           <div className="panel__head">
             <h2>Total: {data?.total ?? 0}</h2>
           </div>
+          <form className="filters filters--search" onSubmit={applySearch}>
+            <label className="field">
+              <span className="field__label">Search</span>
+              <input
+                className="input"
+                name="search"
+                defaultValue={search}
+                placeholder="Search by name"
+              />
+            </label>
+            <div className="filters__actions">
+              <button className="btn btn--primary" type="submit">
+                Search
+              </button>
+              {search ? (
+                <button
+                  className="btn btn--ghost"
+                  type="button"
+                  onClick={() => navigate('/admin/venues')}
+                >
+                  Reset
+                </button>
+              ) : null}
+            </div>
+          </form>
           {loading ? (
             <PageLoader />
           ) : error ? (
@@ -162,6 +202,7 @@ export function VenuesPage() {
                 limit={data.limit}
                 offset={data.offset}
                 basePath="/admin/venues"
+                query={{ search }}
               />
             </>
           ) : (

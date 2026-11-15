@@ -26,8 +26,8 @@ export class VenuesService {
     offset: number;
   }> {
     const [items, total] = await Promise.all([
-      this.repository.findMany(query.limit, query.offset),
-      this.repository.count(),
+      this.repository.findMany(query.limit, query.offset, query.search),
+      this.repository.count(query.search),
     ]);
 
     return { items, total, limit: query.limit, offset: query.offset };

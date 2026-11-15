@@ -44,10 +44,10 @@ export interface BookingQuery {
 }
 
 export class CatalogClient {
-  listPerformers(token: string, limit = 100, offset = 0): Promise<Page<PerformerDto>> {
+  listPerformers(token: string, limit = 100, offset = 0, search?: string): Promise<Page<PerformerDto>> {
     return callPage<PerformerDto>(webConfig.catalogBaseUrl, '/api/performers', {
       token,
-      query: { limit, offset },
+      query: { limit, offset, search },
     });
   }
 
@@ -71,15 +71,15 @@ export class CatalogClient {
     });
   }
 
-  listVenues(token: string, limit = 100, offset = 0): Promise<Page<VenueDto>> {
+  listVenues(token: string, limit = 100, offset = 0, search?: string): Promise<Page<VenueDto>> {
     return callPage<VenueDto>(webConfig.catalogBaseUrl, '/api/venues', {
       token,
-      query: { limit, offset },
+      query: { limit, offset, search },
     });
   }
 
-  listPublicPerformers(limit = 100, offset = 0): Promise<Page<PerformerOption>> {
-    return callPage<PerformerOption>(webConfig.catalogBaseUrl, '/public/performers', {
+  listPublicPerformers(limit = 100, offset = 0): Promise<Page<PerformerProfileDto>> {
+    return callPage<PerformerProfileDto>(webConfig.catalogBaseUrl, '/public/performers', {
       query: { limit, offset },
     });
   }

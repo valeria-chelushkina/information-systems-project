@@ -129,6 +129,10 @@ export const accountOrdersQuerySchema = pageQuerySchema.extend({
   performerId: z.uuid().optional(),
 });
 
+export const adminCatalogListQuerySchema = pageQuerySchema.extend({
+  search: z.string().trim().max(160).optional(),
+});
+
 export const reportsQuerySchema = z.object({
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),

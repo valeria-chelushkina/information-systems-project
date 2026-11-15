@@ -1,4 +1,4 @@
-import { asc, count, eq } from 'drizzle-orm';
+import { asc, count, eq, ilike } from 'drizzle-orm';
 import { db as database, type Database } from '@/shared/db/client.js';
 import { timedQuery } from '@/shared/db/timed-query.js';
 import { venues } from '@/services/catalog/db/schema/index.js';
@@ -38,15 +38,25 @@ export class VenuesRepository {
     });
   }
 
-  findMany(limit: number, offset: number): Promise<VenueRow[]> {
+  findMany(limit: number, offset: number, search?: string): Promise<VenueRow[]> {
+    const where = search ? ilike(venues.name, `%${search}%`) : undefined;
+
     return timedQuery('list_venues', () =>
-      this.db.select().from(venues).orderBy(asc(venues.name)).limit(limit).offset(offset),
+      this.db
+        .select()
+        .from(venues)
+        .where(where)
+        .orderBy(asc(venues.name))
+        .limit(limit)
+        .offset(offset),
     );
   }
 
-  count(): Promise<number> {
+  count(search?: string): Promise<number> {
+    const where = search ? ilike(venues.name, `%${search}%`) : undefined;
+
     return timedQuery('count_venues', async () => {
-      const [row] = await this.db.select({ value: count() }).from(venues);
+      const [row] = await this.db.select({ value: count() }).from(venues).where(where);
       return Number(row?.value ?? 0);
     });
   }

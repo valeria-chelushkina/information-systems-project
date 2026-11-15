@@ -206,8 +206,8 @@ export class AdminService {
     return this.ticketing.deleteTier(token, tierId);
   }
 
-  async listPerformers(token: string, limit: number, offset: number) {
-    return this.catalog.listPerformers(token, limit, offset);
+  async listPerformers(token: string, limit: number, offset: number, search?: string) {
+    return this.catalog.listPerformers(token, limit, offset, search);
   }
 
   createPerformer(token: string, input: CreatePerformerInput): Promise<PerformerDto> {
@@ -222,8 +222,8 @@ export class AdminService {
     return this.catalog.updatePerformer(token, id, input);
   }
 
-  async listVenues(token: string, limit: number, offset: number) {
-    return this.catalog.listVenues(token, limit, offset);
+  async listVenues(token: string, limit: number, offset: number, search?: string) {
+    return this.catalog.listVenues(token, limit, offset, search);
   }
 
   createVenue(token: string, input: CreateVenueInput): Promise<VenueDto> {

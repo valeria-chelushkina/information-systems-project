@@ -1,4 +1,4 @@
-import { asc, count, eq } from 'drizzle-orm';
+import { asc, count, eq, ilike } from 'drizzle-orm';
 import { db as database, type Database } from '@/shared/db/client.js';
 import { timedQuery } from '@/shared/db/timed-query.js';
 import { performers } from '@/services/catalog/db/schema/index.js';
@@ -44,20 +44,25 @@ export class PerformersRepository {
     });
   }
 
-  findMany(limit: number, offset: number): Promise<PerformerRow[]> {
+  findMany(limit: number, offset: number, search?: string): Promise<PerformerRow[]> {
+    const where = search ? ilike(performers.name, `%${search}%`) : undefined;
+
     return timedQuery('list_performers', () =>
       this.db
         .select()
         .from(performers)
+        .where(where)
         .orderBy(asc(performers.name))
         .limit(limit)
         .offset(offset),
     );
   }
 
-  count(): Promise<number> {
+  count(search?: string): Promise<number> {
+    const where = search ? ilike(performers.name, `%${search}%`) : undefined;
+
     return timedQuery('count_performers', async () => {
-      const [row] = await this.db.select({ value: count() }).from(performers);
+      const [row] = await this.db.select({ value: count() }).from(performers).where(where);
       return Number(row?.value ?? 0);
     });
   }
