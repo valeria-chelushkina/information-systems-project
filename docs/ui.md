@@ -23,14 +23,14 @@ ui/src/
   App.tsx                  routes
   main.tsx                 entry point
   styles.css               design system and page styles
-  components/              layout, guards, cards, badges, icons
+  components/              layout, guards, cards, badges, icons, ticket QR
   constants/               links, navigation, filters, page sizes, status tones
   context/                 auth, theme and toast providers
   helpers/                 API client, formatting, user helpers
   hooks/                   useApi, useAuth, useTheme, useToast
   typedefs/                shared domain, API and component types
   pages/                   public screens
-  pages/admin/             admin screens
+  pages/admin/             admin screens, including door check-in
 src/services/web/
   api/                     BFF routes, controllers and schemas
   clients/                 auth, ticketing and catalog HTTP clients
@@ -46,12 +46,12 @@ Public:
 
 | Route | Screen |
 | --- | --- |
-| `/` | landing: personal tickets for signed-in users, intro for guests, then upcoming events |
+| `/` | landing: three latest personal tickets for signed-in users with a link to all orders, intro for guests, then upcoming events |
 | `/events` | paginated event catalogue with search, performer and date filters |
 | `/events/:id` | event details, tiers and purchase |
 | `/login` | sign-in and self-service registration (customer role) |
-| `/profile` | customer profile with account details, orders and tickets |
-| `/orders/:id` | order and tickets, refund |
+| `/profile` | customer profile with account details and paginated orders filtered by performer and date; the performer list contains only artists from the customer's own orders |
+| `/orders/:id` | order, QR tickets for the door, refund |
 
 Admin (staff and admin):
 
@@ -65,6 +65,7 @@ Admin (staff and admin):
 | `/admin/venues` | venue directory, paginated |
 | `/admin/bookings` | paginated booking requests, confirm or reject |
 | `/admin/orders` | order lookup and refund |
+| `/admin/scan` | door check-in: enter the code printed under the ticket QR, admit or report a used ticket |
 | `/admin/users` | Team: staff and admin accounts, creation (admin only) |
 
 ## Authentication flow

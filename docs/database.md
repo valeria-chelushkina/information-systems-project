@@ -82,6 +82,8 @@ erDiagram
         uuid customer_ref
         int unit_price_cents
         text status
+        text qr_token
+        timestamptz checked_in_at
         timestamptz issued_at
     }
 
@@ -120,6 +122,7 @@ erDiagram
 | one payment per order | unique `payments_order_id_key` |
 | one refund per order | unique `refunds_order_id_key` |
 | purchase replay protection | unique `orders_idempotency_key_key` |
+| one QR code per ticket | unique `tickets_qr_token_unique` |
 | one tier name per event | unique `price_tiers_event_name_key` |
 | fast hold expiry sweeps | partial index `holds_active_expiry_idx` on `expires_at` where status is `active` |
 

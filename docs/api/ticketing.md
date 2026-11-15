@@ -20,9 +20,11 @@ are read-only and do not require a token.
 | `POST` | `/api/holds` | reserve seats until `expires_at` |
 | `DELETE` | `/api/holds/:id` | release an active hold |
 | `POST` | `/api/purchases` | convert a hold into an order and tickets |
-| `GET` | `/api/orders` | list the caller's orders with tickets and event snapshots |
+| `GET` | `/api/orders` | list the caller's orders with tickets and event snapshots (`limit`, `offset`, `from`, `to`, `performerId`) |
+| `GET` | `/api/orders/performers` | performers the caller has bought tickets for |
 | `GET` | `/api/orders/:id` | fetch an order with tickets |
 | `POST` | `/api/orders/:id/refund` | refund a paid order in full |
+| `POST` | `/api/tickets/check-in` | admit one ticket by QR code (staff only) |
 | `GET` | `/public/events` | upcoming public events (`limit`, `offset`) |
 | `GET` | `/public/events/:id` | public event with tiers |
 | `GET` | `/public/events/:id/tiers` | public tier list |
@@ -136,6 +138,23 @@ Refunds are full and can happen once. Inventory is restored, tickets and
 payments become `refunded`, a refund row is inserted, and a sold-out event
 returns to `on_sale` when seats are available. A second attempt returns `409
 order_not_refundable`.
+
+## Door check-in
+
+```bash
+curl -X POST http://localhost:3002/api/tickets/check-in \
+  -H "authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' \
+  -d '{"qrToken":"<value from the ticket QR>"}'
+```
+
+Only staff and admins may call this route. The code can be the full QR value,
+its unique prefix (the eight-character code printed under the QR) or a ticket
+id prefix; ambiguous prefixes return `409 ticket_code_ambiguous`. A successful
+check-in flips the ticket from `issued` to `checked_in`, stores `checked_in_at`
+and returns the ticket with the event snapshot. Repeating the same code returns
+`409 ticket_already_checked_in`; refunded or void tickets return
+`409 ticket_not_admitted`; unknown codes return `404 ticket_not_found`.
 
 ## Concurrency guarantees
 

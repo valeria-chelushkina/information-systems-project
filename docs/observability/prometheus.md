@@ -12,7 +12,7 @@ In this project it is the only source of numeric data:
   `http_requests_in_flight`;
 - application database metrics: pool gauges, query duration;
 - business metrics: tickets, purchases, refunds, holds, revenue, bookings,
-  `hold_rejections_total`;
+  check-ins, `hold_rejections_total`;
 - PostgreSQL engine metrics from postgres_exporter;
 - RabbitMQ and exporter health;
 - target health: `up`, `pg_up`.

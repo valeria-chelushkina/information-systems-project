@@ -10,12 +10,13 @@ and a full observability stack.
   completed/cancelled`;
 - sell tickets through price tiers, temporary holds and purchases;
 - issue tickets and payments, refund paid orders and restore inventory;
+- issue a QR code per ticket and check tickets in at the door;
 - authenticate users with opaque session tokens and per-service introspection;
 - publish `purchase.completed` to RabbitMQ and consume it in `notify`;
 - expose metrics, structured logs, distributed traces and alerts;
 - serve an English-language React storefront with an admin panel backed by a cookie-based BFF;
 - let customers register, buy tickets and see their purchases in a profile;
-- show signed-in customers their upcoming tickets on the landing page;
+- show signed-in customers their three nearest upcoming tickets on the landing page, with the rest in paginated account orders;
 - manage the staff team separately from customer accounts;
 - search the public lineup and filter by performer or date;
 - drive repeatable demo traffic with scenario scripts.

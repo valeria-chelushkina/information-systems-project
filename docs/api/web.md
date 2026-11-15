@@ -43,7 +43,8 @@ events.
 | Method | Path | Body | Result |
 | --- | --- | --- | --- |
 | POST | `/api/events/:id/purchase` | `{ tierId, quantity }` | `{ orderId }` |
-| GET | `/api/orders` | `limit`, `offset` | current customer's orders, tickets and events |
+| GET | `/api/orders` | `limit`, `offset`, `from`, `to`, `performerId` | current customer's orders, tickets and events; `from`/`to` are Kyiv days, `performerId` filters by event performer |
+| GET | `/api/orders/performers` | - | performers from the customer's own orders, for the account filter |
 | GET | `/api/orders/:id` | - | `{ order, tickets, event, tierNames, canRefund }` |
 | POST | `/api/orders/:id/refund` | — | `{ orderId }` |
 
@@ -73,6 +74,7 @@ All admin routes require the `staff` or `admin` role.
 | POST | `/api/admin/bookings/:id/decision` | `{ status }` | decided booking |
 | GET | `/api/admin/orders/:id` | — | order details |
 | POST | `/api/admin/orders/:id/refund` | — | `{ orderId }` |
+| POST | `/api/admin/tickets/check-in` | `{ qrToken }` | admitted ticket and event, `staff` or `admin` only |
 | GET | `/api/admin/users` | `limit`, `offset` | team members only: `{ items, total, limit, offset }` (admin only) |
 | POST | `/api/admin/users` | `{ email, password, role }` where role is `staff` or `admin` | created team member (admin only) |
 
