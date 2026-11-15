@@ -8,3 +8,4 @@ const venuesController = new VenuesController();
 venuesRouter.post('/venues', venuesController.create);
 venuesRouter.get('/venues', venuesController.list);
 venuesRouter.get('/venues/:id', venuesController.getById);
+venuesRouter.patch('/venues/:id', venuesController.update);

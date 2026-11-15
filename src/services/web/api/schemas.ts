@@ -57,8 +57,20 @@ export const tierUpdateSchema = z.object({
 export const performerCreateSchema = z.object({
   name: z.string().trim().min(1).max(160),
   genre: z.string().trim().min(1).max(80).optional(),
+  bio: z.string().trim().max(2000).optional(),
   contactEmail: z.email().optional(),
 });
+
+export const performerUpdateSchema = z
+  .object({
+    name: z.string().trim().min(1).max(160).optional(),
+    genre: z.string().trim().min(1).max(80).nullable().optional(),
+    bio: z.string().trim().max(2000).nullable().optional(),
+    contactEmail: z.email().nullable().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'At least one field is required',
+  });
 
 export const venueCreateSchema = z.object({
   name: z.string().trim().min(1).max(160),
@@ -66,6 +78,17 @@ export const venueCreateSchema = z.object({
   timezone: z.string().trim().min(1).max(64).default('Europe/Kyiv'),
   capacity: z.number().int().positive().max(1_000_000),
 });
+
+export const venueUpdateSchema = z
+  .object({
+    name: z.string().trim().min(1).max(160).optional(),
+    city: z.string().trim().min(1).max(120).optional(),
+    timezone: z.string().trim().min(1).max(64).optional(),
+    capacity: z.number().int().positive().max(1_000_000).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'At least one field is required',
+  });
 
 export const bookingDecisionSchema = z.object({
   status: z.enum(['confirmed', 'rejected']),

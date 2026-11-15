@@ -1,0 +1,1 @@
+ALTER TABLE "performers" ADD COLUMN "bio" text;

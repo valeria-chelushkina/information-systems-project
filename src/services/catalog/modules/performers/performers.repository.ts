@@ -29,6 +29,21 @@ export class PerformersRepository {
     });
   }
 
+  updateById(
+    id: string,
+    changes: Partial<NewPerformerRow>,
+  ): Promise<PerformerRow | null> {
+    return timedQuery('update_performer', async () => {
+      const [row] = await this.db
+        .update(performers)
+        .set(changes)
+        .where(eq(performers.id, id))
+        .returning();
+
+      return row ?? null;
+    });
+  }
+
   findMany(limit: number, offset: number): Promise<PerformerRow[]> {
     return timedQuery('list_performers', () =>
       this.db

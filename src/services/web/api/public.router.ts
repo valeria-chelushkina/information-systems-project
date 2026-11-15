@@ -8,3 +8,4 @@ const controller = new PublicController();
 publicRouter.get('/public/events', controller.events);
 publicRouter.get('/public/events/:id', controller.event);
 publicRouter.get('/public/performers', controller.performers);
+publicRouter.get('/public/performers/:id', controller.performer);

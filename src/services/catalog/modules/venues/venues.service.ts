@@ -2,6 +2,7 @@ import { VenuesRepository } from '@/services/catalog/modules/venues/venues.repos
 import type {
   CreateVenueInput,
   ListVenuesQuery,
+  UpdateVenueInput,
 } from '@/services/catalog/modules/venues/venues.schemas.js';
 import type { VenueRow } from '@/services/catalog/typedefs/venue.typedefs.js';
 import { HttpError } from '@/shared/errors/http-error.js';
@@ -40,5 +41,15 @@ export class VenuesService {
     }
 
     return venue;
+  }
+
+  async updateVenue(id: string, input: UpdateVenueInput): Promise<VenueRow> {
+    const updated = await this.repository.updateById(id, input);
+
+    if (!updated) {
+      throw HttpError.notFound('venue_not_found', `Venue ${id} was not found`);
+    }
+
+    return updated;
   }
 }

@@ -43,4 +43,11 @@ export class PublicController {
 
     ok(res, page);
   });
+
+  performer = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = validate(idParamsSchema, req.params);
+    const performer = await this.service.performerProfile(id);
+
+    ok(res, performer);
+  });
 }

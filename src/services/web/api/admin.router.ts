@@ -22,9 +22,11 @@ adminRouter.delete('/tiers/:id', controller.deleteTier);
 
 adminRouter.get('/performers', controller.performers);
 adminRouter.post('/performers', controller.createPerformer);
+adminRouter.patch('/performers/:id', controller.updatePerformer);
 
 adminRouter.get('/venues', controller.venues);
 adminRouter.post('/venues', controller.createVenue);
+adminRouter.patch('/venues/:id', controller.updateVenue);
 
 adminRouter.get('/bookings', controller.bookings);
 adminRouter.post('/bookings/:id/decision', controller.decideBooking);

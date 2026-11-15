@@ -6,6 +6,7 @@ export const performers = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     name: text('name').notNull(),
     genre: text('genre'),
+    bio: text('bio'),
     contactEmail: text('contact_email'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

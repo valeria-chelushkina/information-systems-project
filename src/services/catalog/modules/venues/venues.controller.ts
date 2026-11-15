@@ -3,6 +3,7 @@ import { VenuesService } from '@/services/catalog/modules/venues/venues.service.
 import {
   createVenueSchema,
   listVenuesQuerySchema,
+  updateVenueSchema,
   venueIdParamsSchema,
 } from '@/services/catalog/modules/venues/venues.schemas.js';
 import { asyncHandler } from '@/shared/http/async-handler.js';
@@ -31,6 +32,14 @@ export class VenuesController {
   getById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = validate(venueIdParamsSchema, req.params);
     const venue = await this.service.getVenueById(id);
+
+    res.status(200).json({ data: venue });
+  });
+
+  update = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = validate(venueIdParamsSchema, req.params);
+    const body = validate(updateVenueSchema, req.body);
+    const venue = await this.service.updateVenue(id, body);
 
     res.status(200).json({ data: venue });
   });

@@ -26,6 +26,18 @@ export class VenuesRepository {
     });
   }
 
+  updateById(id: string, changes: Partial<NewVenueRow>): Promise<VenueRow | null> {
+    return timedQuery('update_venue', async () => {
+      const [row] = await this.db
+        .update(venues)
+        .set(changes)
+        .where(eq(venues.id, id))
+        .returning();
+
+      return row ?? null;
+    });
+  }
+
   findMany(limit: number, offset: number): Promise<VenueRow[]> {
     return timedQuery('list_venues', () =>
       this.db.select().from(venues).orderBy(asc(venues.name)).limit(limit).offset(offset),

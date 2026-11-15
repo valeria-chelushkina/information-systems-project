@@ -5,12 +5,14 @@ import type {
   BookingStatus,
   PerformerDto,
   PerformerOption,
+  PerformerProfileDto,
   VenueDto,
 } from '@/services/web/typedefs/api.typedefs.js';
 
 export interface CreatePerformerPayload {
   name: string;
   genre?: string;
+  bio?: string;
   contactEmail?: string;
 }
 
@@ -19,6 +21,20 @@ export interface CreateVenuePayload {
   city: string;
   timezone?: string;
   capacity: number;
+}
+
+export interface UpdatePerformerPayload {
+  name?: string;
+  genre?: string | null;
+  bio?: string | null;
+  contactEmail?: string | null;
+}
+
+export interface UpdateVenuePayload {
+  name?: string;
+  city?: string;
+  timezone?: string;
+  capacity?: number;
 }
 
 export interface BookingQuery {
@@ -43,6 +59,18 @@ export class CatalogClient {
     });
   }
 
+  updatePerformer(
+    token: string,
+    id: string,
+    payload: UpdatePerformerPayload,
+  ): Promise<PerformerDto> {
+    return call<PerformerDto>(webConfig.catalogBaseUrl, `/api/performers/${id}`, {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  }
+
   listVenues(token: string, limit = 100, offset = 0): Promise<Page<VenueDto>> {
     return callPage<VenueDto>(webConfig.catalogBaseUrl, '/api/venues', {
       token,
@@ -56,9 +84,21 @@ export class CatalogClient {
     });
   }
 
+  getPublicPerformer(id: string): Promise<PerformerProfileDto> {
+    return call<PerformerProfileDto>(webConfig.catalogBaseUrl, `/public/performers/${id}`);
+  }
+
   createVenue(token: string, payload: CreateVenuePayload): Promise<VenueDto> {
     return call<VenueDto>(webConfig.catalogBaseUrl, '/api/venues', {
       method: 'POST',
+      token,
+      body: payload,
+    });
+  }
+
+  updateVenue(token: string, id: string, payload: UpdateVenuePayload): Promise<VenueDto> {
+    return call<VenueDto>(webConfig.catalogBaseUrl, `/api/venues/${id}`, {
+      method: 'PATCH',
       token,
       body: payload,
     });

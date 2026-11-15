@@ -4,6 +4,7 @@ import {
   createPerformerSchema,
   listPerformersQuerySchema,
   performerIdParamsSchema,
+  updatePerformerSchema,
 } from '@/services/catalog/modules/performers/performers.schemas.js';
 import { asyncHandler } from '@/shared/http/async-handler.js';
 import { validate } from '@/shared/http/validate.js';
@@ -31,6 +32,14 @@ export class PerformersController {
   getById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = validate(performerIdParamsSchema, req.params);
     const performer = await this.service.getPerformerById(id);
+
+    res.status(200).json({ data: performer });
+  });
+
+  update = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = validate(performerIdParamsSchema, req.params);
+    const body = validate(updatePerformerSchema, req.body);
+    const performer = await this.service.updatePerformer(id, body);
 
     res.status(200).json({ data: performer });
   });

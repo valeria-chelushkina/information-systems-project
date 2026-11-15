@@ -8,6 +8,7 @@ import type {
   EventDto,
   OrderDetail,
   PerformerOption,
+  PerformerProfileDto,
   PublicEventCard,
   PublicEventDto,
   PublicTierDto,
@@ -50,6 +51,10 @@ export class PagesService {
 
   listPublicPerformers(): Promise<Page<PerformerOption>> {
     return this.catalog.listPublicPerformers(100, 0);
+  }
+
+  performerProfile(id: string): Promise<PerformerProfileDto> {
+    return this.catalog.getPublicPerformer(id);
   }
 
   eventDetail(id: string): Promise<EventDetailResult> {

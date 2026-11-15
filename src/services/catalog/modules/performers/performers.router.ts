@@ -8,3 +8,4 @@ const performersController = new PerformersController();
 performersRouter.post('/performers', performersController.create);
 performersRouter.get('/performers', performersController.list);
 performersRouter.get('/performers/:id', performersController.getById);
+performersRouter.patch('/performers/:id', performersController.update);

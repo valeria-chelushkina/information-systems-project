@@ -1,5 +1,9 @@
 import { AuthClient } from '@/services/web/clients/auth.client.js';
 import { CatalogClient } from '@/services/web/clients/catalog.client.js';
+import type {
+  UpdatePerformerPayload,
+  UpdateVenuePayload,
+} from '@/services/web/clients/catalog.client.js';
 import { probe } from '@/services/web/clients/http.client.js';
 import { TicketingClient } from '@/services/web/clients/ticketing.client.js';
 import { webConfig } from '@/services/web/config.js';
@@ -53,6 +57,7 @@ export interface UpdateTierInput {
 export interface CreatePerformerInput {
   name: string;
   genre?: string;
+  bio?: string;
   contactEmail?: string;
 }
 
@@ -209,12 +214,24 @@ export class AdminService {
     return this.catalog.createPerformer(token, input);
   }
 
+  updatePerformer(
+    token: string,
+    id: string,
+    input: UpdatePerformerPayload,
+  ): Promise<PerformerDto> {
+    return this.catalog.updatePerformer(token, id, input);
+  }
+
   async listVenues(token: string, limit: number, offset: number) {
     return this.catalog.listVenues(token, limit, offset);
   }
 
   createVenue(token: string, input: CreateVenueInput): Promise<VenueDto> {
     return this.catalog.createVenue(token, input);
+  }
+
+  updateVenue(token: string, id: string, input: UpdateVenuePayload): Promise<VenueDto> {
+    return this.catalog.updateVenue(token, id, input);
   }
 
   async listBookings(

@@ -10,11 +10,13 @@ import {
   idParamsSchema,
   pageQuerySchema,
   performerCreateSchema,
+  performerUpdateSchema,
   reportsQuerySchema,
   tierCreateSchema,
   tierUpdateSchema,
   ticketCheckInSchema,
   venueCreateSchema,
+  venueUpdateSchema,
 } from '@/services/web/api/schemas.js';
 import { AdminService } from '@/services/web/modules/admin/admin.service.js';
 import {
@@ -167,6 +169,15 @@ export class AdminController {
     ok(res, performer, 201);
   });
 
+  updatePerformer = asyncHandler(async (req: Request, res: Response) => {
+    const token = currentToken(res);
+    const { id } = validate(idParamsSchema, req.params);
+    const body = validate(performerUpdateSchema, req.body);
+    const performer = await this.service.updatePerformer(token, id, body);
+
+    ok(res, performer);
+  });
+
   venues = asyncHandler(async (req: Request, res: Response) => {
     const token = currentToken(res);
     const query = validate(pageQuerySchema, req.query);
@@ -181,6 +192,15 @@ export class AdminController {
     const venue = await this.service.createVenue(token, body);
 
     ok(res, venue, 201);
+  });
+
+  updateVenue = asyncHandler(async (req: Request, res: Response) => {
+    const token = currentToken(res);
+    const { id } = validate(idParamsSchema, req.params);
+    const body = validate(venueUpdateSchema, req.body);
+    const venue = await this.service.updateVenue(token, id, body);
+
+    ok(res, venue);
   });
 
   bookings = asyncHandler(async (req: Request, res: Response) => {

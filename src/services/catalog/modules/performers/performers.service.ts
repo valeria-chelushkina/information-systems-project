@@ -2,6 +2,7 @@ import { PerformersRepository } from '@/services/catalog/modules/performers/perf
 import type {
   CreatePerformerInput,
   ListPerformersQuery,
+  UpdatePerformerInput,
 } from '@/services/catalog/modules/performers/performers.schemas.js';
 import type { PerformerRow } from '@/services/catalog/typedefs/performer.typedefs.js';
 import { HttpError } from '@/shared/errors/http-error.js';
@@ -13,6 +14,7 @@ export class PerformersService {
     return this.repository.insertOne({
       name: input.name,
       genre: input.genre ?? null,
+      bio: input.bio ?? null,
       contactEmail: input.contactEmail ?? null,
     });
   }
@@ -39,5 +41,15 @@ export class PerformersService {
     }
 
     return performer;
+  }
+
+  async updatePerformer(id: string, input: UpdatePerformerInput): Promise<PerformerRow> {
+    const updated = await this.repository.updateById(id, input);
+
+    if (!updated) {
+      throw HttpError.notFound('performer_not_found', `Performer ${id} was not found`);
+    }
+
+    return updated;
   }
 }

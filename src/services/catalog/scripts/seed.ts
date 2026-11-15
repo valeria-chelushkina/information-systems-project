@@ -68,6 +68,11 @@ async function seed(reset: boolean): Promise<void> {
         PERFORMERS.map((name, index) => ({
           name,
           genre: ['Rock', 'Indie', 'Electronic', 'J-Pop'][index % 4],
+          bio: `${name} is a touring act known for a live set built around ${
+            ['big choruses', 'modular synths', 'tight rhythm sections', 'improvised bridges'][
+              index % 4
+            ]
+          }.`,
           contactEmail: `booking+${index + 1}@performers.example.com`,
         })),
       )

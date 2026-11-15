@@ -81,8 +81,16 @@ export interface PerformerDto {
   id: string;
   name: string;
   genre: string | null;
+  bio: string | null;
   contactEmail: string | null;
   createdAt: string;
+}
+
+export interface PerformerProfileDto {
+  id: string;
+  name: string;
+  genre: string | null;
+  bio: string | null;
 }
 
 export interface VenueDto {
