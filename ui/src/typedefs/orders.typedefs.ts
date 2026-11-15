@@ -23,6 +23,8 @@ export interface Ticket {
   customerRef: string;
   unitPriceCents: number;
   status: TicketStatus;
+  qrToken: string;
+  checkedInAt: string | null;
   issuedAt: string;
 }
 
@@ -51,4 +53,9 @@ export interface CustomerOrder {
 
 export interface PurchaseResult {
   orderId: string;
+}
+
+export interface CheckInResult {
+  ticket: Ticket;
+  event: EventRecord;
 }

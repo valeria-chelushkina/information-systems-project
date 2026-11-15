@@ -492,6 +492,11 @@ code {
   box-shadow: var(--shadow-sm);
 }
 
+.ticket-grid__more {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+}
+
 .my-ticket__date {
   display: flex;
   flex-direction: column;
@@ -2033,6 +2038,10 @@ code {
   background: var(--surface);
 }
 
+.filters--orders {
+  grid-template-columns: minmax(220px, 1fr) 150px 150px auto;
+}
+
 .filters__actions {
   display: flex;
   gap: 8px;
@@ -3021,5 +3030,111 @@ code {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+  }
+}
+
+.ticket-qr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.ticket-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.ticket-qr__image {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  aspect-ratio: 1;
+  padding: 6px;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.ticket-qr__placeholder {
+  width: 100%;
+  max-width: 180px;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.ticket-qr__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.ticket-qr__tier {
+  font-weight: 750;
+}
+
+.ticket-qr__code {
+  color: var(--muted-2);
+  font-size: 0.78rem;
+}
+
+.ticket-qr__price {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.scanner__hint {
+  margin: 10px 0 0;
+  color: var(--muted-2);
+  font-size: 0.8rem;
+}
+
+.scanner__form {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.scanner__form .field {
+  flex: 1;
+}
+
+.checkin-result {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border-color: var(--ok);
+}
+
+.checkin-result__icon {
+  display: inline-flex;
+  padding: 10px;
+  border-radius: 50%;
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.checkin-result h2 {
+  margin: 4px 0 6px;
+}
+
+.checkin-result__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+@media (max-width: 900px) {
+  .scanner__form {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

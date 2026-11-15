@@ -67,6 +67,18 @@ export interface EventFiltersProps {
   onReset: () => void;
 }
 
+export interface OrderFilterState {
+  performerId: string;
+  from: string;
+  to: string;
+}
+
+export interface OrderFiltersProps {
+  initial: OrderFilterState;
+  onSubmit: (filters: OrderFilterState) => void;
+  onReset: () => void;
+}
+
 export interface PaginationProps {
   total: number;
   limit: number;
@@ -96,6 +108,10 @@ export interface HeroTicketProps {
 
 export interface TicketCardProps {
   item: CustomerOrder;
+}
+
+export interface TicketQrProps {
+  token: string;
 }
 
 export type ToastTone = 'ok' | 'error';

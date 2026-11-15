@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
+import { TicketQr } from '@/components/TicketQr';
 import { EmptyState, ErrorBox, PageLoader, StatusBadge } from '@/components/UI';
 import { useToast } from '@/hooks/useToast';
 import { api, ApiError } from '@/helpers/api';
-import { dateTime, errorMessage, money, shortDateTime } from '@/helpers/format';
+import { dateTime, errorMessage, money } from '@/helpers/format';
 import { useApi } from '@/hooks/useApi';
 import type { OrderDetail } from '@/typedefs/orders.typedefs';
 
@@ -135,35 +136,22 @@ export function OrderPage() {
         <div className="panel">
           <div className="panel__head">
             <h2>Tickets</h2>
-            <span className="panel__note">{tickets.length} total</span>
+            <span className="panel__note">Show the QR code at the door</span>
           </div>
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Ticket</th>
-                  <th>Tier</th>
-                  <th>Price</th>
-                  <th>Status</th>
-                  <th>Issued</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tickets.map((ticket) => (
-                  <tr key={ticket.id}>
-                    <td>
-                      <span className="mono">{ticket.id.slice(0, 8)}…</span>
-                    </td>
-                    <td>{tierNames[ticket.tierId] ?? 'Tier'}</td>
-                    <td>{money(ticket.unitPriceCents)}</td>
-                    <td>
-                      <StatusBadge status={ticket.status} />
-                    </td>
-                    <td className="muted">{shortDateTime(ticket.issuedAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="ticket-qr-grid">
+            {tickets.map((ticket) => (
+              <article className="ticket-qr" key={ticket.id}>
+                <TicketQr token={ticket.qrToken} />
+                <div className="ticket-qr__meta">
+                  <span className="ticket-qr__tier">{tierNames[ticket.tierId] ?? 'Ticket'}</span>
+                  <span className="mono ticket-qr__code">
+                    Code {ticket.qrToken.slice(0, 8)}
+                  </span>
+                  <StatusBadge status={ticket.status} />
+                  <span className="ticket-qr__price">{money(ticket.unitPriceCents)}</span>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
 
