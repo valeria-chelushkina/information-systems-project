@@ -1,10 +1,12 @@
 import type { Request, Response } from 'express';
 import { ok } from '@/services/web/api/respond.js';
-import { idParamsSchema, pageQuerySchema, purchaseSchema } from '@/services/web/api/schemas.js';
+import { accountOrdersQuerySchema, idParamsSchema, purchaseSchema } from '@/services/web/api/schemas.js';
 import { PagesService } from '@/services/web/modules/pages/pages.service.js';
 import { currentToken, currentUser } from '@/services/web/modules/session/session.middleware.js';
+import { endOfKyivDay, startOfKyivDay } from '@/services/web/lib/time.js';
 import { asyncHandler } from '@/shared/http/async-handler.js';
 import { validate } from '@/shared/http/validate.js';
+import { HttpError } from '@/shared/errors/http-error.js';
 
 export class AccountController {
   protected readonly service = new PagesService();
@@ -30,10 +32,30 @@ export class AccountController {
 
   orders = asyncHandler(async (req: Request, res: Response) => {
     const token = currentToken(res);
-    const query = validate(pageQuerySchema, req.query);
-    const page = await this.service.listOrders(token, query.limit, query.offset);
+    const query = validate(accountOrdersQuerySchema, req.query);
+    const from = query.from ? startOfKyivDay(query.from) : null;
+    const to = query.to ? endOfKyivDay(query.to) : null;
+
+    if ((query.from && !from) || (query.to && !to)) {
+      throw HttpError.badRequest('validation_failed', 'Invalid date filter');
+    }
+
+    const page = await this.service.listOrders(token, {
+      limit: query.limit,
+      offset: query.offset,
+      performerId: query.performerId,
+      from: from?.toISOString(),
+      to: to?.toISOString(),
+    });
 
     ok(res, page);
+  });
+
+  orderPerformers = asyncHandler(async (_req: Request, res: Response) => {
+    const token = currentToken(res);
+    const performers = await this.service.listOrderPerformers(token);
+
+    ok(res, performers);
   });
 
   refund = asyncHandler(async (req: Request, res: Response) => {

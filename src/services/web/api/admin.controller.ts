@@ -12,6 +12,7 @@ import {
   performerCreateSchema,
   tierCreateSchema,
   tierUpdateSchema,
+  ticketCheckInSchema,
   venueCreateSchema,
 } from '@/services/web/api/schemas.js';
 import { AdminService } from '@/services/web/modules/admin/admin.service.js';
@@ -220,6 +221,14 @@ export class AdminController {
     const orderId = await this.service.refund(user, token, id);
 
     ok(res, { orderId });
+  });
+
+  checkIn = asyncHandler(async (req: Request, res: Response) => {
+    const token = currentToken(res);
+    const body = validate(ticketCheckInSchema, req.body);
+    const result = await this.service.checkIn(token, body.qrToken);
+
+    ok(res, result);
   });
 
   users = asyncHandler(async (req: Request, res: Response) => {

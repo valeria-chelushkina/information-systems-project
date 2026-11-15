@@ -57,3 +57,13 @@ export const refundedCentsTotal = new Counter({
   help: 'Refunded amount, in cents',
   registers: [registry],
 });
+
+export const ticketsCheckedInTotal = new Counter({
+  name: 'tickets_checked_in_total',
+  help: 'Tickets admitted at the door',
+  labelNames: ['result'] as const,
+  registers: [registry],
+});
+
+ticketsCheckedInTotal.inc({ result: 'ok' }, 0);
+ticketsCheckedInTotal.inc({ result: 'rejected' }, 0);

@@ -1,10 +1,12 @@
 import { call, callEmpty, callPage, type Page } from '@/services/web/clients/http.client.js';
 import { webConfig } from '@/services/web/config.js';
 import type {
+  CheckInResultDto,
   CustomerOrder,
   EventDto,
   EventStatus,
   OrderDetail,
+  PerformerOption,
   PublicEventDto,
   PublicTierDto,
   TierDto,
@@ -53,6 +55,14 @@ export interface PublicEventQuery {
   performerId?: string;
   from?: string;
   to?: string;
+}
+
+export interface OrderQuery {
+  limit: number;
+  offset: number;
+  from?: string;
+  to?: string;
+  performerId?: string;
 }
 
 export class TicketingClient {
@@ -156,14 +166,26 @@ export class TicketingClient {
     });
   }
 
+  listOrderPerformers(token: string): Promise<PerformerOption[]> {
+    return call<PerformerOption[]>(webConfig.ticketingBaseUrl, '/api/orders/performers', {
+      token,
+    });
+  }
+
   getOrder(token: string, id: string): Promise<OrderDetail> {
     return call<OrderDetail>(webConfig.ticketingBaseUrl, `/api/orders/${id}`, { token });
   }
 
-  listOrders(token: string, limit: number, offset: number): Promise<Page<CustomerOrder>> {
+  listOrders(token: string, query: OrderQuery): Promise<Page<CustomerOrder>> {
     return callPage<CustomerOrder>(webConfig.ticketingBaseUrl, '/api/orders', {
       token,
-      query: { limit, offset },
+      query: {
+        limit: query.limit,
+        offset: query.offset,
+        from: query.from,
+        to: query.to,
+        performerId: query.performerId,
+      },
     });
   }
 
@@ -197,5 +219,13 @@ export class TicketingClient {
       webConfig.ticketingBaseUrl,
       `/public/events/${id}`,
     );
+  }
+
+  checkIn(token: string, qrToken: string): Promise<CheckInResultDto> {
+    return call<CheckInResultDto>(webConfig.ticketingBaseUrl, '/api/tickets/check-in', {
+      method: 'POST',
+      token,
+      body: { qrToken },
+    });
   }
 }

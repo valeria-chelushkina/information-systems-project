@@ -20,6 +20,11 @@ export const tickets = pgTable(
     customerRef: uuid('customer_ref').notNull(),
     unitPriceCents: integer('unit_price_cents').notNull(),
     status: text('status').notNull().default('issued'),
+    qrToken: text('qr_token')
+      .notNull()
+      .unique()
+      .default(sql`replace(gen_random_uuid()::text, '-', '')`),
+    checkedInAt: timestamp('checked_in_at', { withTimezone: true }),
     issuedAt: timestamp('issued_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

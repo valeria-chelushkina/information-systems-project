@@ -21,7 +21,7 @@ import { TiersRepository } from '@/services/ticketing/modules/tiers/tiers.reposi
 import { PurchasePublisher } from '@/services/ticketing/messaging/purchase.publisher.js';
 import { HttpError } from '@/shared/errors/http-error.js';
 import type { HoldRow } from '@/services/ticketing/typedefs/hold.typedefs.js';
-import type { OrderRow } from '@/services/ticketing/typedefs/order.typedefs.js';
+import type { OrderFilters, OrderRow, PerformerOption } from '@/services/ticketing/typedefs/order.typedefs.js';
 import type { PurchaseResult, RefundResult } from '@/services/ticketing/typedefs/purchase.typedefs.js';
 import {
   toCustomerEvent,
@@ -335,14 +335,19 @@ export class PurchasesService {
     return result;
   }
 
+  async listOrderPerformers(customerRef: string): Promise<PerformerOption[]> {
+    return this.orders.findPerformerOptions(customerRef);
+  }
+
   async listOrders(
     customerRef: string,
     limit: number,
     offset: number,
+    filters: OrderFilters = {},
   ): Promise<CustomerOrderPage> {
     const [orders, total] = await Promise.all([
-      this.orders.findByCustomerRef(customerRef, limit, offset),
-      this.orders.countByCustomerRef(customerRef),
+      this.orders.findByCustomerRef(customerRef, limit, offset, filters),
+      this.orders.countByCustomerRef(customerRef, filters),
     ]);
 
     if (orders.length === 0) {

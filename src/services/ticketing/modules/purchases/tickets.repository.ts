@@ -1,4 +1,4 @@
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, like, sql } from 'drizzle-orm';
 import { db as database, type Database } from '@/shared/db/client.js';
 import type { Executor } from '@/shared/db/executor.js';
 import { tickets } from '@/services/ticketing/db/schema/index.js';
@@ -40,5 +40,44 @@ export class TicketsRepository {
         .where(eq(tickets.orderId, orderId))
         .returning(),
     );
+  }
+
+  findByQrToken(qrToken: string): Promise<TicketRow | null> {
+    return timedQuery('find_ticket_by_qr', async () => {
+      const [row] = await this.db.select().from(tickets).where(eq(tickets.qrToken, qrToken));
+      return row ?? null;
+    });
+  }
+
+  findByQrTokenPrefix(prefix: string): Promise<TicketRow[]> {
+    return timedQuery('find_ticket_by_qr_prefix', () =>
+      this.db
+        .select()
+        .from(tickets)
+        .where(like(tickets.qrToken, `${prefix}%`))
+        .limit(2),
+    );
+  }
+
+  findByIdPrefix(prefix: string): Promise<TicketRow[]> {
+    return timedQuery('find_ticket_by_id_prefix', () =>
+      this.db
+        .select()
+        .from(tickets)
+        .where(sql`${tickets.id}::text LIKE ${`${prefix}%`}`)
+        .limit(2),
+    );
+  }
+
+  checkIn(id: string): Promise<TicketRow | null> {
+    return timedQuery('check_in_ticket', async () => {
+      const [row] = await this.db
+        .update(tickets)
+        .set({ status: 'checked_in', checkedInAt: new Date() })
+        .where(and(eq(tickets.id, id), eq(tickets.status, 'issued')))
+        .returning();
+
+      return row ?? null;
+    });
   }
 }

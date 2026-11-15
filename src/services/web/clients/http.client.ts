@@ -3,12 +3,14 @@ import { webConfig } from '@/services/web/config.js';
 export class UpstreamError extends Error {
   readonly status: number;
   readonly code: string;
+  readonly details: unknown;
 
-  constructor(status: number, code: string, message: string) {
+  constructor(status: number, code: string, message: string, details?: unknown) {
     super(message);
     this.name = 'UpstreamError';
     this.status = status;
     this.code = code;
+    this.details = details;
   }
 }
 
@@ -22,7 +24,7 @@ interface PageEnvelope<T> {
 }
 
 interface ErrorEnvelope {
-  error?: { code?: string; message?: string };
+  error?: { code?: string; message?: string; details?: unknown };
 }
 
 export interface CallOptions {
@@ -98,6 +100,7 @@ async function unwrap<T>(baseUrl: string, path: string, options: CallOptions): P
       response.status,
       error?.code ?? 'upstream_error',
       error?.message ?? `${baseUrl}${path} responded with ${response.status}`,
+      error?.details,
     );
   }
 
@@ -122,6 +125,7 @@ export async function callPage<T>(
       response.status,
       error?.code ?? 'upstream_error',
       error?.message ?? `${baseUrl}${path} responded with ${response.status}`,
+      error?.details,
     );
   }
 
@@ -149,6 +153,7 @@ export async function callEmpty(
       response.status,
       error?.code ?? 'upstream_error',
       error?.message ?? `${baseUrl}${path} responded with ${response.status}`,
+      error?.details,
     );
   }
 }

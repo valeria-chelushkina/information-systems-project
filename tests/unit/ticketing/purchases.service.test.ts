@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
     updateStatus: vi.fn(),
     findByCustomerRef: vi.fn(),
     countByCustomerRef: vi.fn(),
+    findPerformerOptions: vi.fn(),
   },
   tickets: {
     insertMany: vi.fn(),
@@ -184,7 +185,37 @@ describe('PurchasesService', () => {
     expect(page.items[0]?.tickets).toHaveLength(1);
     expect(page.items[0]?.event?.title).toBe('After the Rain');
     expect(page.items[0]?.event?.venueName).toBe('Tokyo Dome');
-    expect(mocks.orders.findByCustomerRef).toHaveBeenCalledWith('customer-1', 10, 0);
+    expect(mocks.orders.findByCustomerRef).toHaveBeenCalledWith('customer-1', 10, 0, {});
+  });
+
+  it('forwards order filters to the repository', async () => {
+    const filters = {
+      performerId: 'performer-1',
+      from: new Date('2026-11-01T00:00:00Z'),
+      to: new Date('2026-11-30T23:59:59Z'),
+    };
+
+    mocks.orders.findByCustomerRef.mockResolvedValue([]);
+    mocks.orders.countByCustomerRef.mockResolvedValue(0);
+    mocks.tickets.findByOrderIds.mockResolvedValue([]);
+    mocks.events.findByIds.mockResolvedValue([]);
+
+    const page = await service.listOrders('customer-1', 6, 0, filters);
+
+    expect(page.total).toBe(0);
+    expect(mocks.orders.findByCustomerRef).toHaveBeenCalledWith('customer-1', 6, 0, filters);
+    expect(mocks.orders.countByCustomerRef).toHaveBeenCalledWith('customer-1', filters);
+  });
+
+  it('lists only performers from the customer orders', async () => {
+    mocks.orders.findPerformerOptions.mockResolvedValue([
+      { id: 'performer-1', name: 'Neon Harbor' },
+    ]);
+
+    const performers = await service.listOrderPerformers('customer-1');
+
+    expect(mocks.orders.findPerformerOptions).toHaveBeenCalledWith('customer-1');
+    expect(performers).toEqual([{ id: 'performer-1', name: 'Neon Harbor' }]);
   });
 
   it('rejects a hold when the event is not on sale', async () => {

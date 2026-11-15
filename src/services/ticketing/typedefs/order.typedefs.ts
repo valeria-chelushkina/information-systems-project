@@ -5,3 +5,14 @@ export const ORDER_STATUSES = ['pending', 'paid', 'failed', 'cancelled', 'refund
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 export type OrderRow = typeof orders.$inferSelect;
 export type NewOrderRow = typeof orders.$inferInsert;
+
+export interface OrderFilters {
+  from?: Date;
+  to?: Date;
+  performerId?: string;
+}
+
+export interface PerformerOption {
+  id: string;
+  name: string;
+}

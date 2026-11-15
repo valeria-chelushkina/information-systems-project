@@ -127,7 +127,14 @@ export interface TicketDto {
   customerRef: string;
   unitPriceCents: number;
   status: TicketStatus;
+  qrToken: string;
+  checkedInAt: string | null;
   issuedAt: string;
+}
+
+export interface CheckInResultDto {
+  ticket: TicketDto;
+  event: EventDto;
 }
 
 export interface OrderDetail {

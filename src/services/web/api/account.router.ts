@@ -8,5 +8,6 @@ const controller = new AccountController();
 
 accountRouter.post('/events/:id/purchase', requireUser(), controller.purchase);
 accountRouter.get('/orders', requireUser(), controller.orders);
+accountRouter.get('/orders/performers', requireUser(), controller.orderPerformers);
 accountRouter.get('/orders/:id', requireUser(), controller.order);
 accountRouter.post('/orders/:id/refund', requireUser(), controller.refund);

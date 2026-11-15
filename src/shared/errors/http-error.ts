@@ -19,7 +19,7 @@ export class HttpError extends Error {
     return new HttpError(404, code, message);
   }
 
-  static conflict(code: string, message: string): HttpError {
-    return new HttpError(409, code, message);
+  static conflict(code: string, message: string, details?: unknown): HttpError {
+    return new HttpError(409, code, message, details);
   }
 }

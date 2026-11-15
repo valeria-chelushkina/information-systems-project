@@ -100,6 +100,16 @@ export const pageQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 });
 
+export const accountOrdersQuerySchema = pageQuerySchema.extend({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  performerId: z.uuid().optional(),
+});
+
+export const ticketCheckInSchema = z.object({
+  qrToken: z.string().trim().min(6).max(64),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type PurchaseInput = z.infer<typeof purchaseSchema>;
 export type EventCreateInput = z.infer<typeof eventCreateSchema>;

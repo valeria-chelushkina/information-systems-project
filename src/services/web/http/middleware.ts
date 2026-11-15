@@ -92,7 +92,13 @@ export function errorHandler(
       logger.error({ err: error, path: req.path }, 'upstream request failed');
     }
 
-    res.status(status).json({ error: { code: error.code, message: error.message } });
+    res.status(status).json({
+      error: {
+        code: error.code,
+        message: error.message,
+        ...(error.details === undefined ? {} : { details: error.details }),
+      },
+    });
     return;
   }
 

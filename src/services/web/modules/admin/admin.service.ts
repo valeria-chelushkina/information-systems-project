@@ -266,6 +266,10 @@ export class AdminService {
     return this.pages.refund(user, token, id);
   }
 
+  checkIn(token: string, qrToken: string) {
+    return this.ticketing.checkIn(token, qrToken);
+  }
+
   listUsers(token: string, limit: number, offset: number) {
     return this.auth.listUsers(token, limit, offset, TEAM_ROLES);
   }

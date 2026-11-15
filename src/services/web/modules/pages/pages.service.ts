@@ -14,7 +14,7 @@ import type {
   SessionUser,
 } from '@/services/web/typedefs/api.typedefs.js';
 import type { Page } from '@/services/web/clients/http.client.js';
-import type { PublicEventQuery } from '@/services/web/clients/ticketing.client.js';
+import type { OrderQuery, PublicEventQuery } from '@/services/web/clients/ticketing.client.js';
 import { HttpError } from '@/shared/errors/http-error.js';
 
 export interface PublicEventsResult {
@@ -56,8 +56,12 @@ export class PagesService {
     return this.ticketing.getPublicEvent(id);
   }
 
-  listOrders(token: string, limit: number, offset: number): Promise<Page<CustomerOrder>> {
-    return this.ticketing.listOrders(token, limit, offset);
+  listOrders(token: string, query: OrderQuery): Promise<Page<CustomerOrder>> {
+    return this.ticketing.listOrders(token, query);
+  }
+
+  listOrderPerformers(token: string): Promise<PerformerOption[]> {
+    return this.ticketing.listOrderPerformers(token);
   }
 
   async purchase(

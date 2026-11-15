@@ -32,5 +32,7 @@ adminRouter.post('/bookings/:id/decision', controller.decideBooking);
 adminRouter.get('/orders/:id', controller.order);
 adminRouter.post('/orders/:id/refund', controller.refundOrder);
 
+adminRouter.post('/tickets/check-in', controller.checkIn);
+
 adminRouter.get('/users', requireAdmin(), controller.users);
 adminRouter.post('/users', requireAdmin(), controller.createUser);

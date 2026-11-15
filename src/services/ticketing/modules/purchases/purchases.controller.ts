@@ -53,12 +53,28 @@ export class PurchasesController {
       throw new HttpError(401, 'missing_token', 'Authorization header is required');
     }
 
-    const page = await this.service.listOrders(user.userId, query.limit, query.offset);
+    const page = await this.service.listOrders(user.userId, query.limit, query.offset, {
+      from: query.from,
+      to: query.to,
+      performerId: query.performerId,
+    });
 
     res.status(200).json({
       data: page.items,
       meta: { total: page.total, limit: page.limit, offset: page.offset },
     });
+  });
+
+  listOrderPerformers = asyncHandler(async (req: Request, res: Response) => {
+    const user = req.user;
+
+    if (!user) {
+      throw new HttpError(401, 'missing_token', 'Authorization header is required');
+    }
+
+    const performers = await this.service.listOrderPerformers(user.userId);
+
+    res.status(200).json({ data: performers });
   });
 
   refund = asyncHandler(async (req: Request, res: Response) => {

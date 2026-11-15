@@ -9,5 +9,6 @@ purchasesRouter.post('/holds', purchasesController.createHold);
 purchasesRouter.delete('/holds/:id', purchasesController.cancelHold);
 purchasesRouter.post('/purchases', purchasesController.purchase);
 purchasesRouter.get('/orders', purchasesController.listOrders);
+purchasesRouter.get('/orders/performers', purchasesController.listOrderPerformers);
 purchasesRouter.get('/orders/:id', purchasesController.getOrder);
 purchasesRouter.post('/orders/:id/refund', purchasesController.refund);
