@@ -2,20 +2,18 @@
 
 ## What it is for
 
-`notify` has three roles:
+`notify` has two roles:
 
 1. **Alertmanager webhook receiver** — accepts `POST /alerts`, validates the
-   payload, writes every alert to a structured log and, when SMTP is configured,
-   sends an email.
+   payload and writes every alert to a structured log.
 2. **RabbitMQ consumer** — reads the `notifications` queue and processes
    `purchase.completed` events from `ticketing`.
-3. **Email sender** — delivers firing and resolved alerts through SMTP.
 
 The alert path:
 
 ```
 Prometheus → Alertmanager → notify → stdout → Alloy → Loki → Grafana
-                                   └→ SMTP → email
+                         └→ SMTP → email
 ```
 
 The messaging path:
@@ -47,62 +45,15 @@ at `http://notify:3000`. Its clients are Alertmanager and RabbitMQ.
 The Alertmanager payload follows webhook v4: an `alerts` array with `status`,
 `labels`, `annotations`, `startsAt` and `endsAt`.
 
-## Email notifications
+## Alert email
 
-Email is optional. Alertmanager still calls `notify`; `notify` sends the email.
-This keeps SMTP credentials out of `infra/alertmanager/alertmanager.yml`.
+Email is sent by Alertmanager, not by `notify`; see
+[Alertmanager](alertmanager.md#email-notifications). Its receiver contains both
+the email integration and the webhook, so `notify` only logs the alert for Loki.
 
-| Variable | Example | Purpose |
-| --- | --- | --- |
-| `SMTP_HOST` | `smtp.gmail.com` | SMTP server |
-| `SMTP_PORT` | `587` | 587 for STARTTLS, 465 for implicit TLS |
-| `SMTP_SECURE` | `false` | `true` for port 465 |
-| `SMTP_USER` | `you@gmail.com` | SMTP login |
-| `SMTP_PASSWORD` | app password | SMTP password, never an account password |
-| `SMTP_FROM` | `you@gmail.com` | From address |
-| `ALERT_EMAIL_TO` | `you@gmail.com` | Recipients, comma-separated |
-| `ALERT_EMAIL_RETRY_MINUTES` | `15` | Pause after a failed delivery before trying SMTP again |
-
-Email is disabled unless `SMTP_HOST`, `SMTP_FROM` and `ALERT_EMAIL_TO` are set.
-The subject is `[Concert Ops] FIRING: …` or `[Concert Ops] RESOLVED: …`; the body
-lists status, severity, instance, summary, start/end time, the admin panel and
-Grafana.
-
-Example for Gmail (use an App Password, not the account password). Google shows
-it in four groups of four characters; paste it into `SMTP_PASSWORD` without the
-spaces, otherwise Gmail rejects the login and may lock the account temporarily.
-
-```env
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=you@gmail.com
-SMTP_PASSWORD=abcdefghijklmnop
-SMTP_FROM=you@gmail.com
-ALERT_EMAIL_TO=you@gmail.com
-```
-
-Either add these to the ignored `.env` and run:
-
-```powershell
-docker compose --env-file .env up -d --build notify
-```
-
-or export them in the current shell before `npm run demo`.
-
-Verify after triggering an alert:
-
-```powershell
-npm run demo:alerts
-docker logs concert-ops-notify --tail 50 | Select-String "alert email"
-```
-
-Successful delivery logs `alert email sent`. If SMTP fails, `notify` logs
-`alert email failed`, keeps returning `200` to Alertmanager and pauses delivery
-for `ALERT_EMAIL_RETRY_MINUTES`, logging `alert email skipped` meanwhile. The
-pause matters for providers such as Gmail, which lock the account after repeated
-failed logins and would be kept locked by a retry loop. When email is not
-configured the webhook also returns `200`.
+`notify` still contains an optional SMTP sender (`SMTP_*`, `ALERT_EMAIL_TO`,
+`ALERT_EMAIL_RETRY_MINUTES`) for standalone use, but Compose does not pass those
+variables to it. Enabling both paths would send two emails per alert.
 
 ## How to verify
 

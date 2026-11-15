@@ -7,12 +7,12 @@ group similar alerts, suppress duplicates, repeat notifications on a schedule
 and deliver them to a receiver.
 
 Prometheus evaluates 17 rules from `infra/prometheus/alerts.yml`. When a rule
-becomes `firing`, Alertmanager groups it and calls the `notify` webhook. On
-recovery it sends `resolved`, because `send_resolved: true`.
+becomes `firing`, Alertmanager groups it and sends the notification to the
+`gmail-receiver`, which contains both an email integration and the `notify`
+webhook. On recovery it also sends `resolved`, because `send_resolved: true`.
 
-`notify` optionally forwards both firing and resolved alerts to email; see
-[notify](notify.md#email-notifications). Alertmanager itself does not need SMTP
-configuration.
+Email is sent by Alertmanager itself; `notify` logs the same alert for Loki.
+SMTP credentials are injected at container start, so they never live in Git.
 
 | Rule | Condition |
 | --- | --- |
@@ -39,20 +39,84 @@ configuration.
 | Item | File |
 | --- | --- |
 | rules | `infra/prometheus/alerts.yml` |
-| routing | `infra/alertmanager/alertmanager.yml` |
+| routing and receiver | `infra/alertmanager/alertmanager.template.yml` |
+| startup renderer | `infra/alertmanager/entrypoint.sh` |
 | container | `concert-ops-alertmanager`, port `9093` |
-| receiver | `http://notify:3000/alerts` |
+| webhook receiver | `http://notify:3000/alerts` |
+| email receiver | `gmail-receiver`, one email per notification |
 
 Route settings:
 
 ```yaml
-group_wait: 0s
-group_interval: 1s
-repeat_interval: 4h
-group_by: ['alertname', 'severity']
+group_by: ['alertname']
+group_wait: 10s
+group_interval: 10m
+repeat_interval: 1h
+receiver: 'gmail-receiver'
 ```
 
-`group_wait: 0s` is deliberate for demos: the alert reaches `notify` quickly.
+## Email notifications
+
+Alertmanager reads SMTP settings from the environment and renders
+`alertmanager.template.yml` into `/tmp/alertmanager.yml` on start. Missing
+values fail the container immediately instead of silently dropping alerts.
+
+| Variable | Example | Purpose |
+| --- | --- | --- |
+| `SMTP_HOST` | `smtp.gmail.com` | SMTP server |
+| `SMTP_PORT` | `587` | STARTTLS port |
+| `SMTP_USER` | `you@gmail.com` | SMTP login |
+| `SMTP_PASSWORD` | 16-character App Password | SMTP password |
+| `SMTP_FROM` | `you@gmail.com` | From address |
+| `ALERT_EMAIL_TO` | `you@gmail.com` | Recipient |
+| `SMTP_REQUIRE_TLS` | `true` | STARTTLS is required |
+
+Gmail requires two-step verification and an App Password:
+
+1. Google Account → **Security** → enable **2-Step Verification**.
+2. Security → **App passwords** → create one for `Concert Ops`.
+3. Copy the 16-character password without the spaces and put it in
+   `SMTP_PASSWORD`. Your normal account password does not work.
+
+Then rebuild Alertmanager:
+
+```powershell
+docker compose --env-file .env up -d --build alertmanager
+docker logs concert-ops-alertmanager --tail 20
+```
+
+The rendered config is validated before startup:
+
+```powershell
+docker exec concert-ops-alertmanager amtool check-config /tmp/alertmanager.yml
+```
+
+Trigger one notification and follow it end to end:
+
+```powershell
+npm run demo:alerts
+docker logs concert-ops-alertmanager --tail 30
+docker logs concert-ops-notify --tail 10
+```
+
+A delivered alert logs `Notify for alerts complete` in Alertmanager and
+`alert received` in `notify`. A rejected login logs `Notify for alerts failed`
+with the SMTP response, usually `535 Authentication failed`; Gmail also returns
+`454 4.7.0 Too many login attempts` after repeated failures, which clears on its
+own after a pause.
+
+The receiver keeps both integrations in one place:
+
+```yaml
+receivers:
+  - name: 'gmail-receiver'
+    email_configs:
+      - to: '__ALERT_EMAIL_TO__'
+        send_resolved: true
+    webhook_configs:
+      - send_resolved: true
+        url: http://notify:3000/alerts
+```
 
 ## How to verify
 
@@ -83,7 +147,7 @@ Invoke-RestMethod http://localhost:9093/api/v2/alerts |
 5. Config is valid:
 
 ```powershell
-docker exec concert-ops-alertmanager amtool check-config /etc/alertmanager/alertmanager.yml
+docker exec concert-ops-alertmanager amtool check-config /tmp/alertmanager.yml
 ```
 
 6. Rules in Prometheus: `http://localhost:9090/rules` and
@@ -149,23 +213,21 @@ alerting:
         - targets: ['alertmanager:9093']
 ```
 
-Routing and receiver are in `infra/alertmanager/alertmanager.yml`:
+Routing and receiver are in `infra/alertmanager/alertmanager.template.yml`:
 
 ```yaml
 route:
-  receiver: notify-webhook
-  group_wait: 0s
-  group_interval: 1s
-  repeat_interval: 4h
-  group_by: ['alertname', 'severity']
-  routes:
-    - match:
-        severity: critical
-      receiver: notify-webhook
-      repeat_interval: 1h
+  receiver: 'gmail-receiver'
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10m
+  repeat_interval: 1h
 
 receivers:
-  - name: notify-webhook
+  - name: 'gmail-receiver'
+    email_configs:
+      - to: '__ALERT_EMAIL_TO__'
+        send_resolved: true
     webhook_configs:
       - send_resolved: true
         url: http://notify:3000/alerts
@@ -183,5 +245,6 @@ A rule that starts the chain (`infra/prometheus/alerts.yml`):
     summary: "Postgres exporter {{ $labels.instance }} cannot reach the database"
 ```
 
-After firing, Alertmanager sends `POST http://notify:3000/alerts` with an
-`alerts` array; on recovery it sends the same payload with `status: resolved`.
+After firing, Alertmanager emails the recipient and sends
+`POST http://notify:3000/alerts` with an `alerts` array; on recovery it sends the
+same payload with `status: resolved`.
