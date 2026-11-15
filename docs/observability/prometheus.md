@@ -29,8 +29,9 @@ Grafana does not store metrics; it queries Prometheus.
 | storage | `promdata` volume, `/prometheus` |
 | container | `concert-ops-prometheus`, port `9090` |
 
-There are eight targets: four application services (`ticketing`, `catalog`,
-`auth`, `notify`), two PostgreSQL exporters, RabbitMQ, and Prometheus itself.
+There are nine targets: five application services (`ticketing`, `catalog`,
+`auth`, `notify`, `web`), two PostgreSQL exporters, RabbitMQ, and Prometheus
+itself.
 
 Recording rules precompute per-service request rate, error percentage, p95/p99,
 global p95 and error percentage, PostgreSQL connection/cache percentages and the
@@ -54,7 +55,7 @@ Invoke-WebRequest -UseBasicParsing http://localhost:9090/-/ready |
 
 Expected: `Prometheus Server is Ready.`
 
-3. Targets: open `http://localhost:9090/targets`; all eight must be `UP`.
+3. Targets: open `http://localhost:9090/targets`; all nine must be `UP`.
    Or:
 
 ```powershell

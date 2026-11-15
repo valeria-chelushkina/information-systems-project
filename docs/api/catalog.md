@@ -10,6 +10,7 @@ All `/api` routes require `Authorization: Bearer <token>`.
 | `POST` | `/api/performers` | create a performer |
 | `GET` | `/api/performers` | list performers (`limit`, `offset`) |
 | `GET` | `/api/performers/:id` | fetch one performer |
+| `GET` | `/public/performers` | public performer list for filters (`limit`, `offset`) |
 | `POST` | `/api/venues` | create a venue |
 | `GET` | `/api/venues` | list venues (`limit`, `offset`) |
 | `GET` | `/api/venues/:id` | fetch one venue |

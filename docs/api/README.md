@@ -10,6 +10,9 @@ Base URLs:
 Inside Compose, services use `http://ticketing:3000`,
 `http://catalog:3000` and `http://auth:3000`.
 
+The web UI and its BFF run on `http://localhost:3008` in Compose and on
+`http://localhost:3009` when started with `npm run dev:web`.
+
 ## Authentication
 
 Every `/api` route on ticketing and catalog requires a bearer token.
@@ -85,5 +88,6 @@ Errors use a consistent envelope:
 | catalog | [catalog.md](catalog.md) | performers, venues, bookings |
 | auth | [auth.md](auth.md) | login, logout, introspect, me, users |
 | notify | [notify.md](notify.md) | Alertmanager webhook, health |
+| web (BFF) | [web.md](web.md) | session, public catalogue, account, admin |
 
 Each service also exposes `GET /health` and `GET /metrics`.

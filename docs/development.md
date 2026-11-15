@@ -17,6 +17,8 @@ Start services with hot reload:
 npm run dev            # ticketing on :3001
 npm run dev:catalog    # catalog on :3003
 npm run dev:auth       # auth on :3005
+npm run dev:web        # BFF on :3009
+npm run dev:ui         # Vite on :5173, proxies /api to :3009
 ```
 
 Then populate events from real catalog ids:
@@ -40,10 +42,14 @@ curl -s http://localhost:3005/health            # {"status":"ok"}
 | `npm run dev` | ticketing with hot reload |
 | `npm run dev:catalog` | catalog with hot reload |
 | `npm run dev:auth` | auth with hot reload |
-| `npm run build` | compile to `dist/` |
+| `npm run dev:web` | BFF with hot reload |
+| `npm run dev:ui` | Vite dev server for the React UI |
+| `npm run build` | compile the server and bundle the UI into `dist/web` |
+| `npm run build:ui` | bundle only the React UI |
 | `npm start` | run compiled ticketing |
 | `npm start:catalog` | run compiled catalog |
 | `npm start:auth` | run compiled auth |
+| `npm start:web` | run compiled BFF on :3009 |
 | `npm run typecheck` | type-check without emitting |
 | `npm run test` | run unit tests |
 | `npm run test:watch` | run tests in watch mode |
@@ -118,8 +124,9 @@ npm run test:watch
 ```
 
 They cover event state transitions, tier inventory, hold/purchase/refund rules,
-booking period and conflict handling, password/token primitives and RabbitMQ
-payload schemas. No database or Docker is needed.
+booking period and conflict handling, password/token primitives, RabbitMQ
+payload schemas, BFF request validation, role checks and Kyiv time conversion.
+No database or Docker is needed.
 
 ## Containerised stack
 

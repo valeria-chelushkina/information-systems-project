@@ -39,6 +39,7 @@ from the business services.
 
 | Service | Responsibility | Data |
 | --- | --- | --- |
+| `web` | React SPA + BFF: cookie session, admin panel, public catalogue | no database |
 | `ticketing` | events, price tiers, holds, orders, tickets, payments, refunds | `db_ticketing` (PostgreSQL) |
 | `catalog` | performers, venues, booking requests | `db_catalog` (PostgreSQL) |
 | `auth` | users, sessions, login attempts | `auth.db` (SQLite) |
@@ -67,6 +68,17 @@ client ──Bearer token──► ticketing/catalog
                               │
                               └──POST /auth/introspect──► auth
 ```
+
+The web client does not hold the token. It posts credentials to the BFF, which
+stores the token in an httpOnly cookie and proxies authenticated calls:
+
+```
+browser ──cookie──► web ──Bearer token──► ticketing/catalog
+                     └──POST /auth/introspect──► auth
+```
+
+This keeps the raw token out of JavaScript and makes role checks and origin
+checks enforceable on the server. See [Web UI](ui.md).
 
 Tokens are opaque. Only a SHA-256 hash is stored; the raw token is returned
 once. Introspection makes revocation immediate. `/health` and `/metrics` stay
@@ -137,6 +149,7 @@ network services reach each other by service name (`http://catalog:3000`,
 
 | Service | Host port | Container port |
 | --- | --- | --- |
+| web | 3008 | 3000 |
 | ticketing | 3002 | 3000 |
 | catalog | 3004 | 3000 |
 | auth | 3006 | 3000 |
@@ -164,6 +177,7 @@ Docker container logs use the `json-file` driver with rotation:
 | Decision | Reason |
 | --- | --- |
 | one package, one image, multiple entrypoints | shared code compiled once, small operational surface |
+| BFF with httpOnly cookie | token never reaches browser JavaScript, revocation stays server-side |
 | separate database per service | clear ownership, no cross-service joins |
 | integer cents for money | no floating-point rounding |
 | idempotency key on orders | safe purchase retries |
@@ -177,13 +191,14 @@ Docker container logs use the `json-file` driver with rotation:
 
 ```
 src/
-  services/        ticketing, catalog, auth, notify
+  services/        web, ticketing, catalog, auth, notify
   shared/          config, db, http, observability, messaging
   scripts/         demo, load scenarios
+ui/                React SPA sources and Vite entry point
 drizzle/           generated SQL migrations per service
 db/init/           PostgreSQL roles, databases, extensions
 infra/             prometheus, alertmanager, grafana, loki, tempo
-docs/              architecture, API, scenarios, observability guides
+docs/              architecture, API, UI, scenarios, observability guides
 ```
 
 Layering inside a module: router → controller → service → repository.

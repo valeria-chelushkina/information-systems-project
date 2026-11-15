@@ -1,13 +1,14 @@
 # Ticketing API
 
 Base URL: `http://localhost:3002` (Compose) or `http://localhost:3001` (local dev).
-All `/api` routes require `Authorization: Bearer <token>`.
+All `/api` routes require `Authorization: Bearer <token>`. The `/public` routes
+are read-only and do not require a token.
 
 ## Endpoints
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/events` | list events (`status`, `from`, `to`, `limit`, `offset`) |
+| `GET` | `/api/events` | list events (`status`, `search`, `performerId`, `from`, `to`, `limit`, `offset`) |
 | `POST` | `/api/events` | create an event |
 | `GET` | `/api/events/:id` | fetch one event |
 | `PATCH` | `/api/events/:id` | partial update, including status |
@@ -19,8 +20,28 @@ All `/api` routes require `Authorization: Bearer <token>`.
 | `POST` | `/api/holds` | reserve seats until `expires_at` |
 | `DELETE` | `/api/holds/:id` | release an active hold |
 | `POST` | `/api/purchases` | convert a hold into an order and tickets |
+| `GET` | `/api/orders` | list the caller's orders with tickets and event snapshots |
 | `GET` | `/api/orders/:id` | fetch an order with tickets |
 | `POST` | `/api/orders/:id/refund` | refund a paid order in full |
+| `GET` | `/public/events` | upcoming public events (`limit`, `offset`) |
+| `GET` | `/public/events/:id` | public event with tiers |
+| `GET` | `/public/events/:id/tiers` | public tier list |
+
+### Public catalogue
+
+The landing page uses three read-only routes that need no token:
+
+```bash
+curl http://localhost:3002/public/events?limit=6
+curl http://localhost:3002/public/events/<id>
+curl http://localhost:3002/public/performers
+```
+
+The list contains only `scheduled`, `on_sale` and `sold_out` events whose start
+time is in the future. It accepts `search` (title, performer, venue),
+`performerId`, `from`, `to`, `limit` and `offset`. Tiers expose
+`availableQty` and `totalQty` but not sales counters. Draft, completed and
+cancelled events return `404 event_not_found`.
 
 ## Events
 

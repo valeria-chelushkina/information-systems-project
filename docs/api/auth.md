@@ -10,10 +10,12 @@ answers introspection requests from ticketing and catalog.
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `POST` | `/auth/login` | exchange credentials for a token |
+| `POST` | `/auth/register` | create a self-service customer account |
 | `POST` | `/auth/logout` | revoke a token |
 | `POST` | `/auth/introspect` | validate a token (service-to-service) |
 | `GET` | `/auth/me` | current user |
 | `POST` | `/auth/users` | create a user |
+| `GET` | `/auth/users` | list users, admin only (`limit`, `offset`, `roles`) |
 | `GET` | `/health` | readiness, pings SQLite |
 | `GET` | `/metrics` | Prometheus exposition |
 
@@ -78,6 +80,20 @@ curl http://localhost:3006/auth/me \
   -H "authorization: Bearer $TOKEN"
 ```
 
+## Register
+
+Public self-service registration. It always creates an active `customer`; the
+caller cannot choose a role.
+
+```bash
+curl -X POST http://localhost:3006/auth/register \
+  -H 'content-type: application/json' \
+  -d '{"email":"new@example.com","password":"secret-123"}'
+```
+
+`201` returns the created user. Duplicate emails return `409 email_taken`, and
+passwords must be 8–200 characters.
+
 ## Create user
 
 ```bash
@@ -88,6 +104,11 @@ curl -X POST http://localhost:3006/auth/users \
 
 The first user can be created without authentication. Once any user exists,
 the endpoint requires an admin token (`403` otherwise).
+
+`GET /auth/users` requires an admin token and returns a page:
+`{ data, meta: { total, limit, offset } }`. `limit` defaults to 20 and is capped
+at 100. Optional `roles=admin,staff` filters the page; the web Team screen uses
+it to exclude customers.
 
 ## Failure metrics
 

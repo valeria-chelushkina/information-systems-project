@@ -13,6 +13,11 @@ and a full observability stack.
 - authenticate users with opaque session tokens and per-service introspection;
 - publish `purchase.completed` to RabbitMQ and consume it in `notify`;
 - expose metrics, structured logs, distributed traces and alerts;
+- serve an English-language React storefront with an admin panel backed by a cookie-based BFF;
+- let customers register, buy tickets and see their purchases in a profile;
+- show signed-in customers their upcoming tickets on the landing page;
+- manage the staff team separately from customer accounts;
+- search the public lineup and filter by performer or date;
 - drive repeatable demo traffic with scenario scripts.
 
 ## Stack
@@ -27,6 +32,7 @@ and a full observability stack.
 | logs | pino JSON logs, Alloy, Loki |
 | traces | OpenTelemetry SDK, OTel Collector, Tempo |
 | alerts | Prometheus rules, Alertmanager, `notify` webhook |
+| ui | React 19, React Router 7, Vite 7, Express BFF |
 | runtime | Docker Compose |
 
 ## Requirements
@@ -67,10 +73,15 @@ docker compose --env-file .env.example --profile demo up --build -d
 
 | Where | URL |
 | --- | --- |
+| Web UI | `http://localhost:3008` (`admin@example.com` / `admin-password`) |
 | Grafana | `http://localhost:3007` (`admin` / `admin-password`) |
 | Prometheus | `http://localhost:9090` |
 | Alertmanager | `http://localhost:9093` |
 | RabbitMQ | `http://localhost:15672` (`admin` / `admin`) |
+
+The UI has a public catalogue, customer checkout and an admin panel. Seeded
+accounts: `admin@example.com`, `staff@example.com`, `customer@example.com`;
+passwords are `<role>-password`.
 
 Watch the simulation:
 
@@ -113,9 +124,11 @@ migrations, seed scripts and the `npm run dev*` processes.
 | `npm run scenario -- --name=surge --seats=3 --buyers=10` | concurrency/inventory assertion |
 | `npm run seed -- --reset --from-catalog` | 200 events from real catalog ids |
 | `npm run load -- --concurrency=20` | quick concurrent purchase check |
-| `npm run typecheck` | TypeScript check |
+| `npm run typecheck` | TypeScript check for server and UI |
 | `npm run test` | unit tests with Vitest |
 | `npm run dev` | ticketing with hot reload (local development) |
+| `npm run dev:web` | BFF on port 3009 with hot reload |
+| `npm run dev:ui` | Vite dev server on port 5173 |
 
 `demo:alerts` intentionally stops PostgreSQL for a short controlled outage;
 run it when no load test is active. It restarts PostgreSQL before exiting.
@@ -159,6 +172,7 @@ per-service documents: [Prometheus](docs/observability/prometheus.md),
 
 | Document | Content |
 | --- | --- |
+| [Web UI](docs/ui.md) | React app, admin panel, auth flow, security, build |
 | [Architecture](docs/architecture.md) | services, data ownership, flows, deployment, design decisions |
 | [Database schema](docs/database.md) | Mermaid ER diagrams for ticketing, catalog and auth |
 | [API reference](docs/api/README.md) | auth, conventions and per-service endpoints |
