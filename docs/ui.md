@@ -65,6 +65,7 @@ Admin (staff and admin):
 | `/admin/venues` | venue directory, paginated |
 | `/admin/bookings` | paginated booking requests, confirm or reject |
 | `/admin/orders` | order lookup and refund |
+| `/admin/reports` | analytics: revenue, occupancy, top performers, refunds by day, CSV export |
 | `/admin/scan` | door check-in: enter the code printed under the ticket QR, admit or report a used ticket |
 | `/admin/users` | Team: staff and admin accounts, creation (admin only) |
 

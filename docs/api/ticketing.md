@@ -25,6 +25,7 @@ are read-only and do not require a token.
 | `GET` | `/api/orders/:id` | fetch an order with tickets |
 | `POST` | `/api/orders/:id/refund` | refund a paid order in full |
 | `POST` | `/api/tickets/check-in` | admit one ticket by QR code (staff only) |
+| `GET` | `/api/reports` | revenue, occupancy and refunds for a date range (staff only) |
 | `GET` | `/public/events` | upcoming public events (`limit`, `offset`) |
 | `GET` | `/public/events/:id` | public event with tiers |
 | `GET` | `/public/events/:id/tiers` | public tier list |
@@ -155,6 +156,23 @@ check-in flips the ticket from `issued` to `checked_in`, stores `checked_in_at`
 and returns the ticket with the event snapshot. Repeating the same code returns
 `409 ticket_already_checked_in`; refunded or void tickets return
 `409 ticket_not_admitted`; unknown codes return `404 ticket_not_found`.
+
+## Reports
+
+```bash
+curl "http://localhost:3002/api/reports?from=2026-11-01&to=2026-11-30" \
+  -H "authorization: Bearer $TOKEN"
+```
+
+Staff and admins only. `from` and `to` are optional ISO timestamps; without them
+the last 30 days are used. The response contains:
+
+- `totals`: revenue, refunds, orders, tickets sold and tickets checked in;
+- `byEvent`: up to ten events with tickets sold, revenue, capacity and occupancy;
+- `byPerformer`: up to ten performers with revenue, ticket count and events.
+
+Revenue counts tickets in `issued` or `checked_in` state, so refunded tickets are
+excluded.
 
 ## Concurrency guarantees
 

@@ -18,6 +18,7 @@ and a full observability stack.
 - let customers register, buy tickets and see their purchases in a profile;
 - show signed-in customers their three nearest upcoming tickets on the landing page, with the rest in paginated account orders;
 - manage the staff team separately from customer accounts;
+- review revenue, occupancy and refunds in an admin analytics page;
 - search the public lineup and filter by performer or date;
 - drive repeatable demo traffic with scenario scripts.
 
