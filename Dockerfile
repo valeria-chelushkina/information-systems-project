@@ -7,8 +7,9 @@ FROM node:24-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 COPY --from=deps /app/node_modules ./node_modules
-COPY tsconfig.json ./
+COPY tsconfig.json vite.config.ts ./
 COPY src ./src
+COPY ui ./ui
 RUN npm run build
 
 FROM node:24-alpine AS runtime
