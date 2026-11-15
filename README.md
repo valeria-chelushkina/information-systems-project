@@ -11,7 +11,8 @@ and a full observability stack.
 - sell tickets through price tiers, temporary holds and purchases;
 - issue tickets and payments, refund paid orders and restore inventory;
 - issue a QR code per ticket and check tickets in at the door;
-- show performer bios in the storefront;
+- print an order's tickets or save them as a PDF;
+- show performer bios in the storefront, with a public performer directory;
 - authenticate users with opaque session tokens and per-service introspection;
 - publish `purchase.completed` to RabbitMQ and consume it in `notify`;
 - expose metrics, structured logs, distributed traces and alerts;

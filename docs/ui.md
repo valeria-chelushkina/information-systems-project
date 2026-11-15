@@ -50,7 +50,10 @@ Public:
 | `/events` | paginated event catalogue with search, performer and date filters |
 | `/events/:id` | event details, performer bio, tiers and purchase |
 | `/login` | sign-in and self-service registration (customer role) |
+| `/performers` | performer directory with genre and biography |
+| `/performers/:id` | performer profile with biography and upcoming events |
 | `/profile` | customer profile with account details and paginated orders filtered by performer and date; the performer list contains only artists from the customer's own orders |
+| `/orders/:id/print` | printable sheet for one order's active tickets, with QR codes, tier names and print/PDF action |
 | `/orders/:id` | order, QR tickets for the door, refund |
 
 Admin (staff and admin):
@@ -61,8 +64,8 @@ Admin (staff and admin):
 | `/admin/events` | paginated event list with search, performer, date and status filters |
 | `/admin/events/new` | create event |
 | `/admin/events/:id` | event details, status transitions, tiers |
-| `/admin/performers` | performer directory with bios, paginated; Change edits a performer |
-| `/admin/venues` | venue directory, paginated; Change edits a venue |
+| `/admin/performers` | performer bios; create form above the searchable, paginated list with Change actions |
+| `/admin/venues` | create form above the searchable, paginated venue list with Change actions |
 | `/admin/bookings` | paginated booking requests, confirm or reject |
 | `/admin/orders` | order lookup and refund |
 | `/admin/reports` | analytics: revenue, occupancy, top performers, refunds by day, CSV export |

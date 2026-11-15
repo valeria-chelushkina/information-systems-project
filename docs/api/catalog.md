@@ -8,13 +8,13 @@ All `/api` routes require `Authorization: Bearer <token>`.
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/performers` | create a performer |
-| `GET` | `/api/performers` | list performers (`limit`, `offset`) |
+| `GET` | `/api/performers` | list performers (`search`, `limit`, `offset`) |
 | `GET` | `/api/performers/:id` | fetch one performer |
 | `PATCH` | `/api/performers/:id` | update name, genre, bio or contact email |
-| `GET` | `/public/performers` | public performer list for filters (`limit`, `offset`) |
+| `GET` | `/public/performers` | public performer list with name, genre and bio (`limit`, `offset`) |
 | `GET` | `/public/performers/:id` | public performer profile with genre and bio |
 | `POST` | `/api/venues` | create a venue |
-| `GET` | `/api/venues` | list venues (`limit`, `offset`) |
+| `GET` | `/api/venues` | list venues (`search`, `limit`, `offset`) |
 | `GET` | `/api/venues/:id` | fetch one venue |
 | `PATCH` | `/api/venues/:id` | update name, city, time zone or capacity |
 | `POST` | `/api/bookings` | request a venue for a period |

@@ -20,7 +20,7 @@ are read-only and do not require a token.
 | `POST` | `/api/holds` | reserve seats until `expires_at` |
 | `DELETE` | `/api/holds/:id` | release an active hold |
 | `POST` | `/api/purchases` | convert a hold into an order and tickets |
-| `GET` | `/api/orders` | list the caller's orders with tickets and event snapshots (`limit`, `offset`, `from`, `to`, `performerId`) |
+| `GET` | `/api/orders` | list the caller's orders with tickets, event snapshots and tier names (`limit`, `offset`, `from`, `to`, `performerId`) |
 | `GET` | `/api/orders/performers` | performers the caller has bought tickets for |
 | `GET` | `/api/orders/:id` | fetch an order with tickets |
 | `POST` | `/api/orders/:id/refund` | refund a paid order in full |

@@ -32,7 +32,7 @@ present and must come from the same origin. Authentication uses the
 | --- | --- | --- | --- |
 | GET | `/api/public/events` | `search`, `performerId`, `from`, `to`, `limit`, `offset` | `{ items, total, limit, offset }` |
 | GET | `/api/public/events/:id` | - | `{ event, tiers }` |
-| GET | `/api/public/performers` | `limit`, `offset` | performer options for filters |
+| GET | `/api/public/performers` | `limit`, `offset` | performer directory with genre and bio |
 | GET | `/api/public/performers/:id` | - | public performer profile with genre and bio |
 
 `items` contain eligible events plus `minPriceCents`. `from` and `to` are
@@ -44,7 +44,7 @@ events.
 | Method | Path | Body | Result |
 | --- | --- | --- | --- |
 | POST | `/api/events/:id/purchase` | `{ tierId, quantity }` | `{ orderId }` |
-| GET | `/api/orders` | `limit`, `offset`, `from`, `to`, `performerId` | current customer's orders, tickets and events; `from`/`to` are Kyiv days, `performerId` filters by event performer |
+| GET | `/api/orders` | `limit`, `offset`, `from`, `to`, `performerId` | current customer's orders, tickets, events and ticket tier names; `from`/`to` are Kyiv days, `performerId` filters by event performer |
 | GET | `/api/orders/performers` | - | performers from the customer's own orders, for the account filter |
 | GET | `/api/orders/:id` | - | `{ order, tickets, event, tierNames, canRefund }` |
 | POST | `/api/orders/:id/refund` | — | `{ orderId }` |
@@ -67,10 +67,10 @@ All admin routes require the `staff` or `admin` role.
 | POST | `/api/admin/events/:id/tiers` | `{ name, priceCents, totalQty }` | created tier |
 | PATCH | `/api/admin/tiers/:id` | `{ name, priceCents, totalQty }` | updated tier |
 | DELETE | `/api/admin/tiers/:id` | — | `204` |
-| GET | `/api/admin/performers` | `limit`, `offset` | `{ items, total, limit, offset }` |
+| GET | `/api/admin/performers` | `search`, `limit`, `offset` | `{ items, total, limit, offset }` |
 | POST | `/api/admin/performers` | `{ name, genre?, bio?, contactEmail? }` | created performer |
 | PATCH | `/api/admin/performers/:id` | `{ name?, genre?, bio?, contactEmail? }` | updated performer |
-| GET | `/api/admin/venues` | `limit`, `offset` | `{ items, total, limit, offset }` |
+| GET | `/api/admin/venues` | `search`, `limit`, `offset` | `{ items, total, limit, offset }` |
 | POST | `/api/admin/venues` | `{ name, city, timezone?, capacity }` | created venue |
 | PATCH | `/api/admin/venues/:id` | `{ name?, city?, timezone?, capacity? }` | updated venue |
 | GET | `/api/admin/bookings` | `status`, `limit`, `offset` | bookings, name maps and pagination |
