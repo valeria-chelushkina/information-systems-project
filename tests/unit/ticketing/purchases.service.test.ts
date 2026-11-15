@@ -32,6 +32,7 @@ const mocks = vi.hoisted(() => ({
   },
   tiers: {
     findById: vi.fn(),
+    findByIds: vi.fn(),
     reserve: vi.fn(),
     sellFromHold: vi.fn(),
     release: vi.fn(),
@@ -165,6 +166,7 @@ describe('PurchasesService', () => {
       ticket(),
       ticket({ id: 'ticket-2', orderId: 'order-2' }),
     ]);
+    mocks.tiers.findByIds.mockResolvedValue([{ id: 'tier-1', name: 'Floor GA' }]);
     mocks.events.findByIds.mockResolvedValue([
       {
         id: 'event-1',
@@ -185,6 +187,7 @@ describe('PurchasesService', () => {
     expect(page.items[0]?.tickets).toHaveLength(1);
     expect(page.items[0]?.event?.title).toBe('After the Rain');
     expect(page.items[0]?.event?.venueName).toBe('Tokyo Dome');
+    expect(page.items[0]?.tierNames).toEqual({ 'tier-1': 'Floor GA' });
     expect(mocks.orders.findByCustomerRef).toHaveBeenCalledWith('customer-1', 10, 0, {});
   });
 

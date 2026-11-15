@@ -356,8 +356,13 @@ export class PurchasesService {
 
     const tickets = await this.tickets.findByOrderIds(orders.map((order) => order.id));
     const eventIds = [...new Set(tickets.map((ticket) => ticket.eventId))];
-    const events = await this.events.findByIds(eventIds);
+    const tierIds = [...new Set(tickets.map((ticket) => ticket.tierId))];
+    const [events, tiers] = await Promise.all([
+      this.events.findByIds(eventIds),
+      this.tiers.findByIds(tierIds),
+    ]);
     const eventsById = new Map(events.map((event) => [event.id, event]));
+    const tierNames = Object.fromEntries(tiers.map((tier) => [tier.id, tier.name]));
 
     const items = orders.map((order) => {
       const orderTickets = tickets.filter((ticket) => ticket.orderId === order.id);
@@ -367,6 +372,7 @@ export class PurchasesService {
         order,
         tickets: orderTickets,
         event: event ? toCustomerEvent(event) : null,
+        tierNames,
       };
     });
 

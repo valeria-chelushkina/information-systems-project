@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { db as database, type Database } from '@/shared/db/client.js';
 import type { Executor } from '@/shared/db/executor.js';
 import { priceTiers } from '@/services/ticketing/db/schema/index.js';
@@ -40,6 +40,16 @@ export class TiersRepository {
         .from(priceTiers)
         .where(eq(priceTiers.eventId, eventId))
         .orderBy(asc(priceTiers.priceCents)),
+    );
+  }
+
+  findByIds(ids: string[]): Promise<PriceTierRow[]> {
+    if (ids.length === 0) {
+      return Promise.resolve([]);
+    }
+
+    return timedQuery('find_price_tiers_by_ids', () =>
+      this.db.select().from(priceTiers).where(inArray(priceTiers.id, ids)),
     );
   }
 

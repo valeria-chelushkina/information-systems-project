@@ -199,6 +199,7 @@ export interface CustomerOrder {
   order: OrderDto;
   tickets: TicketDto[];
   event: CustomerOrderEvent | null;
+  tierNames: Record<string, string>;
 }
 
 export interface PerformerOption {

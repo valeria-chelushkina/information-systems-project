@@ -49,6 +49,7 @@ export interface CustomerOrder {
   order: OrderRecord;
   tickets: Ticket[];
   event: CustomerOrderEvent | null;
+  tierNames: Record<string, string>;
 }
 
 export interface PurchaseResult {

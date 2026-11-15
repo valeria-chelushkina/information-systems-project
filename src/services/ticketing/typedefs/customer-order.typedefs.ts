@@ -15,6 +15,7 @@ export interface CustomerOrder {
   order: OrderRow;
   tickets: TicketRow[];
   event: CustomerOrderEvent | null;
+  tierNames: Record<string, string>;
 }
 
 export interface CustomerOrderPage {
