@@ -24,10 +24,12 @@ const TONES: Record<string, string> = {
   admin: 'brand',
 };
 
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, plain = false }: { status: string; plain?: boolean }) {
   const tone = TONES[status] ?? 'muted';
 
-  return <span className={`badge badge--${tone}`}>{label(status)}</span>;
+  return (
+    <span className={`badge badge--${tone}${plain ? ' badge--plain' : ''}`}>{label(status)}</span>
+  );
 }
 
 export function PageLoader({ text = 'Loading…' }: { text?: string }) {

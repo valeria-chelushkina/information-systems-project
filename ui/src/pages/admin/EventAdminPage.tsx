@@ -301,7 +301,6 @@ export function EventAdminPage() {
       <div className="page-head page-head--sub">
         <div>
           <h2>Ticket tiers</h2>
-          <p className="page-head__sub">Prices are stored in cents; the form uses dollars.</p>
         </div>
       </div>
 

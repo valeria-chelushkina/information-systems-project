@@ -54,7 +54,7 @@ export function EventsPage() {
         <div className="container">
           <span className="eyebrow">Events</span>
           <h1>Upcoming concerts</h1>
-          <p>Search events, filter by performer or pick a date range. Holds last 10 minutes.</p>
+          <p>Search events, filter by performer or pick a date range.</p>
         </div>
       </section>
       <section className="section section--tight">

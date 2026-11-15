@@ -208,13 +208,6 @@ code {
   color: var(--muted-2);
 }
 
-.chip__icon {
-  width: 14px;
-  height: 14px;
-  margin-right: 4px;
-  vertical-align: -2px;
-}
-
 .container {
   width: 100%;
   max-width: 1180px;
@@ -786,6 +779,14 @@ code {
   color: var(--muted);
 }
 
+.badge--plain {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 0.78rem;
+}
+
 .site-header {
   position: sticky;
   top: 0;
@@ -1136,8 +1137,17 @@ code {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
   margin-bottom: 12px;
+}
+
+.meta-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .event-card h3 {
@@ -1435,7 +1445,8 @@ code {
 .event-hero__badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 16px;
   margin-bottom: 12px;
 }
 
@@ -1595,6 +1606,15 @@ code {
   display: flex;
   align-items: flex-end;
   gap: 10px;
+}
+
+.tier__form .select,
+.tier__form .btn {
+  height: 40px;
+}
+
+.tier__form .btn {
+  padding-block: 0;
 }
 
 .tier__closed {
@@ -2016,6 +2036,16 @@ code {
 .filters__actions {
   display: flex;
   gap: 8px;
+}
+
+.filters .input,
+.filters .select,
+.filters .btn {
+  height: 48px;
+}
+
+.filters .btn {
+  padding-block: 0;
 }
 
 @media (max-width: 1080px) {
@@ -2454,21 +2484,8 @@ code {
 .stat {
   padding: 18px;
   border: 1px solid var(--line);
-  border-left: 3px solid var(--accent);
   border-radius: 12px;
   background: var(--surface);
-}
-
-.stat--ok {
-  border-left-color: var(--ok);
-}
-
-.stat--warn {
-  border-left-color: var(--warn);
-}
-
-.stat--info {
-  border-left-color: var(--info);
 }
 
 .stat__top {

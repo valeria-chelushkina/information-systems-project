@@ -157,9 +157,9 @@ export function EventPage() {
             </div>
             <div className="event-hero__copy">
               <div className="event-hero__badges">
-                <StatusBadge status={event.status} />
-                <span className="chip">
-                  <Icon name="clock" className="chip__icon" />
+                <StatusBadge status={event.status} plain />
+                <span className="meta-time">
+                  <Icon name="clock" className="icon icon--sm" />
                   {eventTime(event.startsAt)}
                 </span>
               </div>

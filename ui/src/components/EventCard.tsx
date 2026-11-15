@@ -16,11 +16,11 @@ export function EventCard({ event }: { event: PublicEventCard }) {
       </div>
       <div className="event-card__body">
         <div className="event-card__meta">
-          <span className="chip">
-            <Icon name="clock" className="chip__icon" />
+          <span className="meta-time">
+            <Icon name="clock" className="icon icon--sm" />
             {time}
           </span>
-          <StatusBadge status={event.status} />
+          <StatusBadge status={event.status} plain />
         </div>
         <h3>
           <Link to={`/events/${event.id}`}>{event.title}</Link>

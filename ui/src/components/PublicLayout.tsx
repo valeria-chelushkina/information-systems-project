@@ -4,7 +4,6 @@ import { Icon } from '@/components/Icon';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
-import { GRAFANA_URL, PROMETHEUS_URL } from '@/lib/links';
 
 const LINKS = [{ href: '/events', label: 'Events' }];
 
@@ -127,17 +126,9 @@ export function PublicLayout() {
           </div>
           <div className="site-footer__links">
             <Link to="/events">Events</Link>
-            <Link to="/admin">Control panel</Link>
-            <a href={GRAFANA_URL} target="_blank" rel="noreferrer">
-              Grafana <Icon name="external" className="icon icon--xs" />
-            </a>
-            <a href={PROMETHEUS_URL} target="_blank" rel="noreferrer">
-              Prometheus
-            </a>
           </div>
           <div className="site-footer__meta">
             <span>{new Date().getFullYear()} © Concert Ops</span>
-            <span>React · Node.js · PostgreSQL</span>
           </div>
         </div>
       </footer>

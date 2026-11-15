@@ -211,10 +211,6 @@ export function HomePage() {
         <section className="hero">
           <div className="container hero__inner">
             <div className="hero__copy">
-              <span className="eyebrow eyebrow--pill">
-                <Icon name="spark" className="icon icon--xs" />
-                Live events
-              </span>
               <h1>Concert Ops</h1>
               <p className="hero__lead">
                 Buy tickets to your favourite performers — browse upcoming shows, reserve a
