@@ -10,6 +10,7 @@ import {
 import { asyncHandler } from '@/shared/http/async-handler.js';
 import { validate } from '@/shared/http/validate.js';
 import { HttpError } from '@/shared/errors/http-error.js';
+import type { UserRole } from '@/services/auth/typedefs/user.typedefs.js';
 
 function optionalBearer(req: Request): string | undefined {
   const header = req.headers.authorization;
@@ -78,7 +79,13 @@ export class AuthController {
 
   listUsers = asyncHandler(async (req: Request, res: Response) => {
     const query = validate(listUsersQuerySchema, req.query);
-    const page = this.service.listUsers(optionalBearer(req), query.limit, query.offset);
+    const roles = query.roles
+      ? (query.roles
+          .split(',')
+          .map((role) => role.trim())
+          .filter(Boolean) as UserRole[])
+      : undefined;
+    const page = this.service.listUsers(optionalBearer(req), query.limit, query.offset, roles);
 
     res.status(200).json({
       data: page.items,

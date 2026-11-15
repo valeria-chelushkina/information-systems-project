@@ -24,6 +24,18 @@ export const createUserSchema = z.object({
 export const listUsersQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),
+  roles: z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (value) =>
+        !value ||
+        value
+          .split(',')
+          .every((role) => USER_ROLES.includes(role.trim() as (typeof USER_ROLES)[number])),
+      { message: 'Unknown role in roles filter' },
+    ),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

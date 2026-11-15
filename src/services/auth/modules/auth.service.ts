@@ -12,6 +12,7 @@ import { createToken, hashToken } from '@/services/auth/security/token.js';
 import type {
   AdminUserDto,
   UserDto,
+  UserRole,
   UserRow,
 } from '@/services/auth/typedefs/user.typedefs.js';
 import { optionalEnv } from '@/shared/config/env.js';
@@ -151,14 +152,23 @@ export class AuthService {
     return toDto(user);
   }
 
-  listUsers(actorToken?: string, limit = 20, offset = 0): AdminUserPage {
+  listUsers(
+    actorToken?: string,
+    limit = 20,
+    offset = 0,
+    roles?: readonly UserRole[],
+  ): AdminUserPage {
     this.assertAdmin(actorToken);
 
     const all = this.users.findAll();
+    const filtered =
+      roles && roles.length > 0
+        ? all.filter((user) => roles.includes(user.role))
+        : all;
 
     return {
-      items: all.slice(offset, offset + limit).map(toAdminDto),
-      total: all.length,
+      items: filtered.slice(offset, offset + limit).map(toAdminDto),
+      total: filtered.length,
       limit,
       offset,
     };
