@@ -1,5 +1,6 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
+import { OrderFilters } from '@/components/OrderFilters';
 import { Pagination } from '@/components/Pagination';
 import { EmptyState, ErrorBox, PageLoader, StatusBadge } from '@/components/UI';
 import { PROFILE_PAGE_SIZE } from '@/constants/pagination.constants';
@@ -8,15 +9,42 @@ import { useAuth } from '@/hooks/useAuth';
 import { useApi } from '@/hooks/useApi';
 import type { Paged } from '@/typedefs/common.typedefs';
 import type { CustomerOrder } from '@/typedefs/orders.typedefs';
+import type { OrderFilterState } from '@/typedefs/ui.typedefs';
 
 export function ProfilePage() {
   const { user } = useAuth();
   const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const performerId = params.get('performerId') ?? '';
+  const from = params.get('from') ?? '';
+  const to = params.get('to') ?? '';
   const parsedOffset = Number(params.get('offset') ?? '0');
   const offset = Number.isFinite(parsedOffset) && parsedOffset > 0 ? Math.floor(parsedOffset) : 0;
+  const query = new URLSearchParams({
+    limit: String(PROFILE_PAGE_SIZE),
+    offset: String(offset),
+  });
+
+  if (performerId) query.set('performerId', performerId);
+  if (from) query.set('from', from);
+  if (to) query.set('to', to);
+
   const { data, error, loading, reload } = useApi<Paged<CustomerOrder>>(
-    `/orders?limit=${PROFILE_PAGE_SIZE}&offset=${offset}`,
+    `/orders?${query.toString()}`,
   );
+  const filters: OrderFilterState = { performerId, from, to };
+  const hasFilters = Boolean(performerId || from || to);
+
+  const applyFilters = (next: OrderFilterState) => {
+    const value = new URLSearchParams();
+
+    if (next.performerId) value.set('performerId', next.performerId);
+    if (next.from) value.set('from', next.from);
+    if (next.to) value.set('to', next.to);
+
+    const suffix = value.toString() ? `?${value.toString()}` : '';
+    navigate(`/profile${suffix}`);
+  };
 
   if (!user) {
     return null;
@@ -56,7 +84,9 @@ export function ProfilePage() {
               <h2>Your orders</h2>
               <p className="page-head__sub">
                 {data
-                  ? `${data.total} ${data.total === 1 ? 'order' : 'orders'} in total.`
+                  ? hasFilters
+                    ? `${data.total} matching ${data.total === 1 ? 'order' : 'orders'}.`
+                    : `${data.total} ${data.total === 1 ? 'order' : 'orders'} in total.`
                   : 'Loading your orders…'}
               </p>
             </div>
@@ -65,6 +95,12 @@ export function ProfilePage() {
               <Icon name="arrow" className="icon icon--sm" />
             </Link>
           </div>
+
+          <OrderFilters
+            initial={filters}
+            onSubmit={applyFilters}
+            onReset={() => navigate('/profile')}
+          />
 
           {loading ? (
             <PageLoader text="Loading your tickets…" />
@@ -126,8 +162,20 @@ export function ProfilePage() {
                 limit={data.limit}
                 offset={data.offset}
                 basePath="/profile"
+                query={{ performerId, from, to }}
               />
             </>
+          ) : hasFilters ? (
+            <EmptyState
+              iconName="search"
+              title="No matching orders"
+              text="Try another performer or a wider date range."
+              action={
+                <button className="btn btn--ghost" type="button" onClick={() => navigate('/profile')}>
+                  Clear filters
+                </button>
+              }
+            />
           ) : (
             <EmptyState
               iconName="ticket"

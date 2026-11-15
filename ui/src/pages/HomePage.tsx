@@ -4,7 +4,7 @@ import { EventCard } from '@/components/EventCard';
 import { EventFilters } from '@/components/EventFilters';
 import { Icon } from '@/components/Icon';
 import { EmptyState, ErrorBox, PageLoader, SectionHead } from '@/components/UI';
-import { HOME_EVENTS_LIMIT } from '@/constants/pagination.constants';
+import { HOME_EVENTS_LIMIT, HOME_TICKETS_LIMIT } from '@/constants/pagination.constants';
 import { errorMessage, eventDate, eventDay, eventMonth, money } from '@/helpers/format';
 import { useAuth } from '@/hooks/useAuth';
 import { useApi } from '@/hooks/useApi';
@@ -200,11 +200,21 @@ export function HomePage() {
                 onRetry={ordersState.reload}
               />
             ) : upcomingTickets.length > 0 ? (
-              <div className="ticket-grid">
-                {upcomingTickets.map((item) => (
-                  <TicketCard key={item.order.id} item={item} />
-                ))}
-              </div>
+              <>
+                <div className="ticket-grid">
+                  {upcomingTickets.slice(0, HOME_TICKETS_LIMIT).map((item) => (
+                    <TicketCard key={item.order.id} item={item} />
+                  ))}
+                </div>
+                {upcomingTickets.length > HOME_TICKETS_LIMIT ? (
+                  <p className="ticket-grid__more">
+                    <Link className="link" to="/profile">
+                      View all {upcomingTickets.length} upcoming tickets
+                      <Icon name="arrow" className="icon icon--sm" />
+                    </Link>
+                  </p>
+                ) : null}
+              </>
             ) : (
               <div className="panel no-tickets">
                 <Icon name="ticket" />
