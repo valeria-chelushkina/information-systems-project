@@ -136,7 +136,9 @@ export function OrderPage() {
         <div className="panel">
           <div className="panel__head">
             <h2>Tickets</h2>
-            <span className="panel__note">Show the QR code at the door</span>
+            <Link className="link" to={`/orders/${order.id}/print`}>
+              Print / Save as PDF
+            </Link>
           </div>
           <div className="ticket-qr-grid">
             {tickets.map((ticket) => (

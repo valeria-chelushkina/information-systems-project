@@ -10,6 +10,7 @@ import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { OrderPage } from '@/pages/OrderPage';
+import { OrderPrintPage } from '@/pages/OrderPrintPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { BookingsPage } from '@/pages/admin/BookingsPage';
 import { DashboardPage } from '@/pages/admin/DashboardPage';
@@ -39,6 +40,14 @@ export function App() {
                 element={
                   <RequireAuth>
                     <OrderPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="orders/:id/print"
+                element={
+                  <RequireAuth>
+                    <OrderPrintPage />
                   </RequireAuth>
                 }
               />
