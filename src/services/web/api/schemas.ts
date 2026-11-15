@@ -74,7 +74,7 @@ export const bookingDecisionSchema = z.object({
 export const accountCreateSchema = z.object({
   email: z.email(),
   password: z.string().min(8).max(200),
-  role: z.enum(['customer', 'staff', 'admin']).default('customer'),
+  role: z.enum(['staff', 'admin']).default('staff'),
 });
 
 export const adminEventListQuerySchema = z.object({

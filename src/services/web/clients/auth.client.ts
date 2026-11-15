@@ -57,10 +57,15 @@ export class AuthClient {
     });
   }
 
-  listUsers(token: string, limit = 20, offset = 0): Promise<Page<AdminUserDto>> {
+  listUsers(
+    token: string,
+    limit = 20,
+    offset = 0,
+    roles?: readonly UserRole[],
+  ): Promise<Page<AdminUserDto>> {
     return callPage<AdminUserDto>(webConfig.authBaseUrl, '/auth/users', {
       token,
-      query: { limit, offset },
+      query: { limit, offset, roles: roles?.join(',') },
     });
   }
 

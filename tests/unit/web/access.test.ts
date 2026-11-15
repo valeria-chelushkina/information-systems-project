@@ -66,13 +66,21 @@ describe('request validation', () => {
     expect(tierCreateSchema.safeParse({ name: 'VIP', priceCents: -1, totalQty: 10 }).success).toBe(false);
   });
 
-  it('defaults new accounts to the customer role', () => {
+  it('defaults team accounts to staff and rejects the customer role', () => {
     const result = accountCreateSchema.safeParse({ email: 'new@example.com', password: 'password-123' });
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.role).toBe('customer');
+      expect(result.data.role).toBe('staff');
     }
+
+    expect(
+      accountCreateSchema.safeParse({
+        email: 'new@example.com',
+        password: 'password-123',
+        role: 'customer',
+      }).success,
+    ).toBe(false);
   });
 
   it('validates public registration input', () => {

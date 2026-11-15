@@ -26,6 +26,8 @@ const ALLOWED_TRANSITIONS: Record<EventStatus, readonly EventStatus[]> = {
   cancelled: [],
 };
 
+const TEAM_ROLES: readonly UserRole[] = ['admin', 'staff'];
+
 export interface CreateEventInput {
   title: string;
   performerId: string;
@@ -115,7 +117,7 @@ export class AdminService {
         this.catalog.listBookings(token, { status: 'requested', limit: 1 }).catch(() => null),
         this.catalog.listPerformers(token, 1).catch(() => null),
         this.catalog.listVenues(token, 1).catch(() => null),
-        this.auth.listUsers(token, 1, 0).catch(() => null),
+        this.auth.listUsers(token, 1, 0, TEAM_ROLES).catch(() => null),
         probe(webConfig.authBaseUrl),
         probe(webConfig.ticketingBaseUrl),
         probe(webConfig.catalogBaseUrl),
@@ -265,7 +267,7 @@ export class AdminService {
   }
 
   listUsers(token: string, limit: number, offset: number) {
-    return this.auth.listUsers(token, limit, offset);
+    return this.auth.listUsers(token, limit, offset, TEAM_ROLES);
   }
 
   createUser(token: string, input: CreateAccountInput): Promise<AdminUserDto> {
