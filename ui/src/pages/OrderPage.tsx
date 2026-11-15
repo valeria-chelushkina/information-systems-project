@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { EmptyState, ErrorBox, PageLoader, StatusBadge } from '@/components/UI';
-import { useToast } from '@/context/ToastContext';
-import { api, ApiError } from '@/lib/api';
-import { dateTime, errorMessage, money, shortDateTime } from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { OrderDetail } from '@/lib/types';
+import { useToast } from '@/hooks/useToast';
+import { api, ApiError } from '@/helpers/api';
+import { dateTime, errorMessage, money, shortDateTime } from '@/helpers/format';
+import { useApi } from '@/hooks/useApi';
+import type { OrderDetail } from '@/typedefs/orders.typedefs';
 
 export function OrderPage() {
   const { id } = useParams();

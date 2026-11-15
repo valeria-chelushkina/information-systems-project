@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ApiError, api } from '@/lib/api';
+import { ApiError, api } from '@/helpers/api';
 
 export function useApi<T>(path: string | null) {
   const [data, setData] = useState<T | null>(null);

@@ -1,28 +1,15 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useCallback, useMemo, useState } from 'react';
 import { Icon } from '@/components/Icon';
+import type {
+  ChildrenProps,
+  Toast,
+  ToastTone,
+  ToastValue,
+} from '@/typedefs/ui.typedefs';
 
-type Tone = 'ok' | 'error';
+export const ToastContext = createContext<ToastValue | null>(null);
 
-interface Toast {
-  id: number;
-  message: string;
-  tone: Tone;
-}
-
-interface ToastValue {
-  push: (message: string, tone?: Tone) => void;
-}
-
-const ToastContext = createContext<ToastValue | null>(null);
-
-export function ToastProvider({ children }: { children: ReactNode }) {
+export function ToastProvider({ children }: ChildrenProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const remove = useCallback((id: number) => {
@@ -30,7 +17,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const push = useCallback(
-    (message: string, tone: Tone = 'ok') => {
+    (message: string, tone: ToastTone = 'ok') => {
       const id = Date.now() + Math.random();
 
       setToasts((items) => [...items, { id, message, tone }]);
@@ -65,14 +52,4 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       </div>
     </ToastContext.Provider>
   );
-}
-
-export function useToast(): ToastValue {
-  const context = useContext(ToastContext);
-
-  if (!context) {
-    throw new Error('useToast must be used inside ToastProvider');
-  }
-
-  return context;
 }

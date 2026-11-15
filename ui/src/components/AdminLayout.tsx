@@ -2,22 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/context/ToastContext';
-import { GRAFANA_URL, PROMETHEUS_URL, RABBITMQ_URL, TRACES_URL } from '@/lib/links';
-
-const LINKS = [
-  { to: '/admin', label: 'Overview', iconName: 'chart', end: true },
-  { to: '/admin/events', label: 'Events', iconName: 'calendar' },
-  { to: '/admin/performers', label: 'Performers', iconName: 'mic' },
-  { to: '/admin/venues', label: 'Venues', iconName: 'pin' },
-  { to: '/admin/bookings', label: 'Bookings', iconName: 'ticket' },
-  { to: '/admin/orders', label: 'Orders', iconName: 'cart' },
-];
-
-function initials(email: string): string {
-  return email.slice(0, 1).toUpperCase();
-}
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
+import { ADMIN_NAV_LINKS } from '@/constants/navigation.constants';
+import { GRAFANA_URL, PROMETHEUS_URL, RABBITMQ_URL, TRACES_URL } from '@/constants/links.constants';
+import { initials } from '@/helpers/user';
 
 export function AdminLayout() {
   const { user, logout } = useAuth();
@@ -52,7 +41,7 @@ export function AdminLayout() {
           </Link>
           <p className="sidebar__label">Management</p>
           <nav className="side-nav">
-            {LINKS.map((link) => (
+            {ADMIN_NAV_LINKS.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}

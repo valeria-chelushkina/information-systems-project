@@ -2,13 +2,13 @@ import { useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Pagination } from '@/components/Pagination';
 import { EmptyState, ErrorBox, PageLoader } from '@/components/UI';
-import { useToast } from '@/context/ToastContext';
-import { api, ApiError } from '@/lib/api';
-import { dateTime, errorMessage } from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { Paged, Venue } from '@/lib/types';
-
-const PAGE_SIZE = 20;
+import { useToast } from '@/hooks/useToast';
+import { api, ApiError } from '@/helpers/api';
+import { dateTime, errorMessage } from '@/helpers/format';
+import { useApi } from '@/hooks/useApi';
+import type { Paged } from '@/typedefs/common.typedefs';
+import type { Venue } from '@/typedefs/catalog.typedefs';
+import { ADMIN_PAGE_SIZE } from '@/constants/pagination.constants';
 
 export function VenuesPage() {
   const { push } = useToast();
@@ -16,7 +16,7 @@ export function VenuesPage() {
   const parsedOffset = Number(params.get('offset') ?? '0');
   const offset = Number.isFinite(parsedOffset) && parsedOffset > 0 ? Math.floor(parsedOffset) : 0;
   const { data, error, loading, reload } = useApi<Paged<Venue>>(
-    `/admin/venues?limit=${PAGE_SIZE}&offset=${offset}`,
+    `/admin/venues?limit=${ADMIN_PAGE_SIZE}&offset=${offset}`,
   );
   const [name, setName] = useState('');
   const [city, setCity] = useState('');

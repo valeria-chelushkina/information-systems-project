@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { StatusBadge } from '@/components/UI';
-import { eventDate, eventDay, eventMonth, money } from '@/lib/format';
-import type { PublicEventCard } from '@/lib/types';
+import { eventDate, eventDay, eventMonth, money } from '@/helpers/format';
+import type { EventCardProps } from '@/typedefs/ui.typedefs';
 
-export function EventCard({ event }: { event: PublicEventCard }) {
+export function EventCard({ event }: EventCardProps) {
   const price = event.minPriceCents === null ? 'Prices TBA' : `from ${money(event.minPriceCents)}`;
   const time = eventDate(event.startsAt).split(', ').slice(1).join(', ');
 

@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { ErrorBox, PageLoader, StatCard, StatusBadge } from '@/components/UI';
-import { useAuth } from '@/context/AuthContext';
-import { eventDate, errorMessage } from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { Dashboard } from '@/lib/types';
+import { useAuth } from '@/hooks/useAuth';
+import { eventDate, errorMessage } from '@/helpers/format';
+import { useApi } from '@/hooks/useApi';
+import type { Dashboard } from '@/typedefs/admin.typedefs';
 
 export function DashboardPage() {
   const { data, error, loading, reload } = useApi<Dashboard>('/admin/dashboard');

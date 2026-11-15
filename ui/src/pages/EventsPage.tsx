@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { EventCard } from '@/components/EventCard';
-import { EventFilters, type PublicFilterState } from '@/components/EventFilters';
+import { EventFilters } from '@/components/EventFilters';
 import { Pagination } from '@/components/Pagination';
 import { EmptyState, ErrorBox } from '@/components/UI';
-import { errorMessage } from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { PublicEventsPage } from '@/lib/types';
-
-const PAGE_SIZE = 9;
+import { EVENTS_PAGE_SIZE } from '@/constants/pagination.constants';
+import { errorMessage } from '@/helpers/format';
+import { useApi } from '@/hooks/useApi';
+import type { PublicEventsPage } from '@/typedefs/catalog.typedefs';
+import type { PublicFilterState } from '@/typedefs/ui.typedefs';
 
 export function EventsPage() {
   const [params, setParams] = useSearchParams();
@@ -21,7 +21,7 @@ export function EventsPage() {
 
   const apiParams = useMemo(() => {
     const value = new URLSearchParams({
-      limit: String(PAGE_SIZE),
+      limit: String(EVENTS_PAGE_SIZE),
       offset: String(offset),
     });
 

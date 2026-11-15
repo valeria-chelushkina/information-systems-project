@@ -1,5 +1,5 @@
 import { Icon } from '@/components/Icon';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme } from '@/hooks/useTheme';
 
 export function ThemeToggle() {
   const { theme, toggle } = useTheme();

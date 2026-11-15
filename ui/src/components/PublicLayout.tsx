@@ -2,14 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/context/ToastContext';
-
-const LINKS = [{ href: '/events', label: 'Events' }];
-
-function initials(email: string): string {
-  return email.slice(0, 1).toUpperCase();
-}
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
+import { PUBLIC_NAV_LINKS } from '@/constants/navigation.constants';
+import { initials } from '@/helpers/user';
 
 export function PublicLayout() {
   const { user, logout } = useAuth();
@@ -52,7 +48,7 @@ export function PublicLayout() {
           </span>
         </Link>
         <nav className="site-nav" id="site-nav">
-          {LINKS.map((link) =>
+          {PUBLIC_NAV_LINKS.map((link) =>
             link.href.startsWith('/#') ? (
               <a key={link.href} className="nav-link" href={link.href}>
                 {link.label}

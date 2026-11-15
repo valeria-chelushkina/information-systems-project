@@ -1,28 +1,11 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
-import { api } from '@/lib/api';
-import type { SessionResponse, SessionUser } from '@/lib/types';
-import { ApiError } from '@/lib/api';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import { ApiError, api } from '@/helpers/api';
+import type { AuthValue, SessionResponse, SessionUser } from '@/typedefs/auth.typedefs';
+import type { ChildrenProps } from '@/typedefs/ui.typedefs';
 
-interface AuthValue {
-  user: SessionUser | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<SessionUser>;
-  register: (email: string, password: string) => Promise<SessionUser>;
-  logout: () => Promise<void>;
-  refresh: () => Promise<void>;
-}
+export const AuthContext = createContext<AuthValue | null>(null);
 
-const AuthContext = createContext<AuthValue | null>(null);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: ChildrenProps) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -77,18 +60,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthValue {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error('useAuth must be used inside AuthProvider');
-  }
-
-  return context;
-}
-
-export function isStaff(user: SessionUser | null): boolean {
-  return user?.role === 'admin' || user?.role === 'staff';
 }

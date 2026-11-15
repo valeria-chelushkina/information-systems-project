@@ -3,21 +3,13 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { Pagination } from '@/components/Pagination';
 import { EmptyState, ErrorBox, PageLoader, StatusBadge } from '@/components/UI';
-import { eventDate, errorMessage } from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { EventsPage, Paged, Performer } from '@/lib/types';
-
-const PAGE_SIZE = 20;
-
-const FILTERS = [
-  { key: '', label: 'All' },
-  { key: 'draft', label: 'Drafts' },
-  { key: 'scheduled', label: 'Scheduled' },
-  { key: 'on_sale', label: 'On sale' },
-  { key: 'sold_out', label: 'Sold out' },
-  { key: 'completed', label: 'Completed' },
-  { key: 'cancelled', label: 'Cancelled' },
-];
+import { EVENT_FILTERS } from '@/constants/filters.constants';
+import { ADMIN_PAGE_SIZE } from '@/constants/pagination.constants';
+import { eventDate, errorMessage } from '@/helpers/format';
+import { useApi } from '@/hooks/useApi';
+import type { EventsPage } from '@/typedefs/admin.typedefs';
+import type { Performer } from '@/typedefs/catalog.typedefs';
+import type { Paged } from '@/typedefs/common.typedefs';
 
 export function EventsAdminPage() {
   const [params, setParams] = useSearchParams();
@@ -41,7 +33,7 @@ export function EventsAdminPage() {
     setToInput(to);
   }, [search, performerId, from, to]);
 
-  const apiParams = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) });
+  const apiParams = new URLSearchParams({ limit: String(ADMIN_PAGE_SIZE), offset: String(offset) });
 
   if (status) apiParams.set('status', status);
   if (search) apiParams.set('search', search);
@@ -99,7 +91,7 @@ export function EventsAdminPage() {
           <span className="eyebrow">Events</span>
           <h1>Manage events</h1>
           <p className="page-head__sub">
-            {data ? `${data.total} events match the current filters.` : 'Loading events…'}
+            {data ? `${data.total} events match the current filters.` : 'Loading eventsРІР‚В¦'}
           </p>
         </div>
         <Link className="btn btn--primary" to="/admin/events/new">
@@ -165,7 +157,7 @@ export function EventsAdminPage() {
       </form>
 
       <div className="chips">
-        {FILTERS.map((filter) => (
+        {EVENT_FILTERS.map((filter) => (
           <Link
             key={filter.key || 'all'}
             className={`chip chip--link${status === filter.key ? ' is-active' : ''}`}
@@ -177,7 +169,7 @@ export function EventsAdminPage() {
       </div>
 
       {loading ? (
-        <PageLoader text="Loading events…" />
+        <PageLoader text="Loading eventsРІР‚В¦" />
       ) : error ? (
         <ErrorBox message={errorMessage(error.code)} onRetry={reload} />
       ) : data && data.items.length > 0 ? (

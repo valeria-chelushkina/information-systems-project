@@ -1,19 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
+import type { PaginationProps } from '@/typedefs/ui.typedefs';
 
-export function Pagination({
-  total,
-  limit,
-  offset,
-  basePath,
-  query,
-}: {
-  total: number;
-  limit: number;
-  offset: number;
-  basePath: string;
-  query?: Record<string, string | undefined>;
-}) {
+export function Pagination({ total, limit, offset, basePath, query }: PaginationProps) {
   if (total <= limit) {
     return null;
   }

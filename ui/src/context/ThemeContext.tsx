@@ -1,23 +1,9 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import { THEME_COLORS, THEME_STORAGE_KEY } from '@/constants/theme.constants';
+import type { Theme, ThemeValue } from '@/typedefs/theme.typedefs';
+import type { ChildrenProps } from '@/typedefs/ui.typedefs';
 
-type Theme = 'light' | 'dark';
-
-const STORAGE_KEY = 'concert-theme';
-
-interface ThemeValue {
-  theme: Theme;
-  toggle: () => void;
-}
-
-const ThemeContext = createContext<ThemeValue | null>(null);
+export const ThemeContext = createContext<ThemeValue | null>(null);
 
 function initialTheme(): Theme {
   if (typeof document === 'undefined') {
@@ -33,17 +19,17 @@ function initialTheme(): Theme {
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
+export function ThemeProvider({ children }: ChildrenProps) {
   const [theme, setTheme] = useState<Theme>(initialTheme);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    localStorage.setItem(STORAGE_KEY, theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
 
     const meta = document.querySelector('meta[name="theme-color"]');
 
     if (meta) {
-      meta.setAttribute('content', theme === 'light' ? '#fbfafc' : '#0d0a11');
+      meta.setAttribute('content', THEME_COLORS[theme]);
     }
   }, [theme]);
 
@@ -54,14 +40,4 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ThemeValue>(() => ({ theme, toggle }), [theme, toggle]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-}
-
-export function useTheme(): ThemeValue {
-  const context = useContext(ThemeContext);
-
-  if (!context) {
-    throw new Error('useTheme must be used inside ThemeProvider');
-  }
-
-  return context;
 }

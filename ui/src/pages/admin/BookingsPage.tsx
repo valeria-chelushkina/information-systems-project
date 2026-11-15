@@ -1,21 +1,13 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { Pagination } from '@/components/Pagination';
 import { EmptyState, ErrorBox, PageLoader, StatusBadge } from '@/components/UI';
-import { useToast } from '@/context/ToastContext';
-import { api, ApiError } from '@/lib/api';
-import { errorMessage, shortDateTime } from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { BookingsPage } from '@/lib/types';
-
-const PAGE_SIZE = 20;
-
-const FILTERS = [
-  { key: '', label: 'All' },
-  { key: 'requested', label: 'Requests' },
-  { key: 'confirmed', label: 'Confirmed' },
-  { key: 'rejected', label: 'Rejected' },
-  { key: 'cancelled', label: 'Cancelled' },
-];
+import { BOOKING_FILTERS } from '@/constants/filters.constants';
+import { ADMIN_PAGE_SIZE } from '@/constants/pagination.constants';
+import { api, ApiError } from '@/helpers/api';
+import { errorMessage, shortDateTime } from '@/helpers/format';
+import { useApi } from '@/hooks/useApi';
+import { useToast } from '@/hooks/useToast';
+import type { BookingsPage } from '@/typedefs/admin.typedefs';
 
 export function BookingsPage() {
   const [params] = useSearchParams();
@@ -24,7 +16,7 @@ export function BookingsPage() {
   const offset = Number.isFinite(parsedOffset) && parsedOffset > 0 ? Math.floor(parsedOffset) : 0;
 
   const apiParams = new URLSearchParams({
-    limit: String(PAGE_SIZE),
+    limit: String(ADMIN_PAGE_SIZE),
     offset: String(offset),
   });
 
@@ -55,13 +47,13 @@ export function BookingsPage() {
           <span className="eyebrow">Catalogue</span>
           <h1>Venue bookings</h1>
           <p className="page-head__sub">
-            Confirmation is enforced by an exclusion constraint — two bookings cannot overlap.
+            Confirmation is enforced by an exclusion constraint вЂ” two bookings cannot overlap.
           </p>
         </div>
       </div>
 
       <div className="chips">
-        {FILTERS.map((filter) => {
+        {BOOKING_FILTERS.map((filter) => {
           const href = filter.key ? `/admin/bookings?status=${filter.key}` : '/admin/bookings';
 
           return (
@@ -77,7 +69,7 @@ export function BookingsPage() {
       </div>
 
       {loading ? (
-        <PageLoader text="Loading bookings…" />
+        <PageLoader text="Loading bookingsвЂ¦" />
       ) : error ? (
         <ErrorBox message={errorMessage(error.code)} onRetry={reload} />
       ) : data && rows.length > 0 ? (
@@ -120,7 +112,7 @@ export function BookingsPage() {
                             </button>
                           </div>
                         ) : (
-                          <span className="muted">—</span>
+                          <span className="muted">вЂ”</span>
                         )}
                       </td>
                     </tr>

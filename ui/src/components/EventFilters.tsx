@@ -1,24 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Icon } from '@/components/Icon';
-import { useApi } from '@/lib/useApi';
-import type { Paged, PerformerOption } from '@/lib/types';
+import { useApi } from '@/hooks/useApi';
+import type { Paged } from '@/typedefs/common.typedefs';
+import type { PerformerOption } from '@/typedefs/catalog.typedefs';
+import type { EventFiltersProps } from '@/typedefs/ui.typedefs';
 
-export interface PublicFilterState {
-  search: string;
-  performerId: string;
-  from: string;
-  to: string;
-}
-
-export function EventFilters({
-  initial,
-  onSubmit,
-  onReset,
-}: {
-  initial: PublicFilterState;
-  onSubmit: (filters: PublicFilterState) => void;
-  onReset: () => void;
-}) {
+export function EventFilters({ initial, onSubmit, onReset }: EventFiltersProps) {
   const [search, setSearch] = useState(initial.search);
   const [performerId, setPerformerId] = useState(initial.performerId);
   const [from, setFrom] = useState(initial.from);

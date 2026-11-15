@@ -1,17 +1,23 @@
 import { useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { EventCard } from '@/components/EventCard';
-import { EventFilters, type PublicFilterState } from '@/components/EventFilters';
+import { EventFilters } from '@/components/EventFilters';
 import { Icon } from '@/components/Icon';
 import { EmptyState, ErrorBox, PageLoader, SectionHead } from '@/components/UI';
-import { useAuth } from '@/context/AuthContext';
-import { errorMessage, eventDate, eventDay, eventMonth, money } from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { CustomerOrder, Paged, PublicEventsPage } from '@/lib/types';
+import { HOME_EVENTS_LIMIT } from '@/constants/pagination.constants';
+import { errorMessage, eventDate, eventDay, eventMonth, money } from '@/helpers/format';
+import { useAuth } from '@/hooks/useAuth';
+import { useApi } from '@/hooks/useApi';
+import type { PublicEventsPage } from '@/typedefs/catalog.typedefs';
+import type { Paged } from '@/typedefs/common.typedefs';
+import type { CustomerOrder } from '@/typedefs/orders.typedefs';
+import type {
+  HeroTicketProps,
+  PublicFilterState,
+  TicketCardProps,
+} from '@/typedefs/ui.typedefs';
 
-const HOME_EVENTS = 9;
-
-function HeroTicket({ event }: { event: PublicEventsPage['items'][number] | undefined }) {
+function HeroTicket({ event }: HeroTicketProps) {
   if (!event) {
     return (
       <div className="hero-ticket">
@@ -67,7 +73,7 @@ function HeroTicket({ event }: { event: PublicEventsPage['items'][number] | unde
   );
 }
 
-function TicketCard({ item }: { item: CustomerOrder }) {
+function TicketCard({ item }: TicketCardProps) {
   const event = item.event;
 
   if (!event) {
@@ -117,7 +123,7 @@ export function HomePage() {
   const from = params.get('from') ?? '';
   const to = params.get('to') ?? '';
 
-  const query = new URLSearchParams({ limit: String(HOME_EVENTS) });
+  const query = new URLSearchParams({ limit: String(HOME_EVENTS_LIMIT) });
 
   if (search) query.set('search', search);
   if (performerId) query.set('performerId', performerId);

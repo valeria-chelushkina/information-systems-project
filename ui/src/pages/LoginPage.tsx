@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
-import { isStaff, useAuth } from '@/context/AuthContext';
-import { useToast } from '@/context/ToastContext';
-import { ApiError } from '@/lib/api';
-import { errorMessage } from '@/lib/format';
-
-type Mode = 'login' | 'register';
+import { ApiError } from '@/helpers/api';
+import { errorMessage } from '@/helpers/format';
+import { isStaff } from '@/helpers/user';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
+import type { LoginMode } from '@/typedefs/auth.typedefs';
 
 function safeNext(value: string | null): string | undefined {
   if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) {
@@ -21,7 +21,7 @@ export function LoginPage() {
   const { push } = useToast();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const [mode, setMode] = useState<Mode>(params.get('mode') === 'register' ? 'register' : 'login');
+  const [mode, setMode] = useState<LoginMode>(params.get('mode') === 'register' ? 'register' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -33,7 +33,7 @@ export function LoginPage() {
     return <Navigate to={next ?? (isStaff(user) ? '/admin' : '/')} replace />;
   }
 
-  const switchMode = (nextMode: Mode) => {
+  const switchMode = (nextMode: LoginMode) => {
     setMode(nextMode);
     setError(null);
     setPassword('');

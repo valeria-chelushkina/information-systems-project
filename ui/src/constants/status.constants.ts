@@ -1,0 +1,30 @@
+export const STATUS_TONES: Record<string, string> = {
+  on_sale: 'ok',
+  paid: 'ok',
+  confirmed: 'ok',
+  issued: 'ok',
+  checked_in: 'ok',
+  scheduled: 'info',
+  completed: 'info',
+  staff: 'info',
+  requested: 'warn',
+  pending: 'warn',
+  draft: 'muted',
+  cancelled: 'muted',
+  refunded: 'muted',
+  void: 'muted',
+  customer: 'muted',
+  rejected: 'danger',
+  failed: 'danger',
+  sold_out: 'brand',
+  admin: 'brand',
+};
+
+export const EVENT_TRANSITION_LABELS: Record<string, string> = {
+  draft: 'Back to draft',
+  scheduled: 'Schedule',
+  on_sale: 'Start sales',
+  sold_out: 'Mark sold out',
+  completed: 'Complete',
+  cancelled: 'Cancel',
+};

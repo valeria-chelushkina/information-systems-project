@@ -1,38 +1,24 @@
-import type { ReactNode } from 'react';
 import { Icon } from '@/components/Icon';
-import { label } from '@/lib/format';
+import { STATUS_TONES } from '@/constants/status.constants';
+import { label } from '@/helpers/format';
+import type {
+  ErrorBoxProps,
+  EmptyStateProps,
+  PageLoaderProps,
+  SectionHeadProps,
+  StatCardProps,
+  StatusBadgeProps,
+} from '@/typedefs/ui.typedefs';
 
-const TONES: Record<string, string> = {
-  on_sale: 'ok',
-  paid: 'ok',
-  confirmed: 'ok',
-  issued: 'ok',
-  checked_in: 'ok',
-  scheduled: 'info',
-  completed: 'info',
-  staff: 'info',
-  requested: 'warn',
-  pending: 'warn',
-  draft: 'muted',
-  cancelled: 'muted',
-  refunded: 'muted',
-  void: 'muted',
-  customer: 'muted',
-  rejected: 'danger',
-  failed: 'danger',
-  sold_out: 'brand',
-  admin: 'brand',
-};
-
-export function StatusBadge({ status, plain = false }: { status: string; plain?: boolean }) {
-  const tone = TONES[status] ?? 'muted';
+export function StatusBadge({ status, plain = false }: StatusBadgeProps) {
+  const tone = STATUS_TONES[status] ?? 'muted';
 
   return (
     <span className={`badge badge--${tone}${plain ? ' badge--plain' : ''}`}>{label(status)}</span>
   );
 }
 
-export function PageLoader({ text = 'Loading…' }: { text?: string }) {
+export function PageLoader({ text = 'Loading…' }: PageLoaderProps) {
   return (
     <div className="page-loader">
       <span className="spinner" />
@@ -45,11 +31,7 @@ export function ErrorBox({
   title = 'Could not load data',
   message,
   onRetry,
-}: {
-  title?: string;
-  message: string;
-  onRetry?: () => void;
-}) {
+}: ErrorBoxProps) {
   return (
     <div className="error-box" role="alert">
       <Icon name="bell" className="error-box__icon" />
@@ -71,12 +53,7 @@ export function EmptyState({
   title,
   text,
   action,
-}: {
-  iconName?: string;
-  title: string;
-  text: string;
-  action?: ReactNode;
-}) {
+}: EmptyStateProps) {
   return (
     <div className="empty">
       <Icon name={iconName} className="empty__icon" />
@@ -92,12 +69,7 @@ export function SectionHead({
   title,
   text,
   action,
-}: {
-  eyebrow: string;
-  title: string;
-  text?: string;
-  action?: ReactNode;
-}) {
+}: SectionHeadProps) {
   return (
     <div className={`section-head${action ? ' section-head--row' : ''}`}>
       <div>
@@ -116,13 +88,7 @@ export function StatCard({
   hint,
   iconName,
   tone = 'brand',
-}: {
-  labelText: string;
-  value: number | string;
-  hint: string;
-  iconName: string;
-  tone?: 'brand' | 'ok' | 'warn' | 'info';
-}) {
+}: StatCardProps) {
   return (
     <article className={`stat stat--${tone}`}>
       <div className="stat__top">

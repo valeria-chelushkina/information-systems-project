@@ -1,3 +1,5 @@
+import type { ApiRequestOptions, ErrorEnvelope } from '@/typedefs/api.typedefs';
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
@@ -10,14 +12,7 @@ export class ApiError extends Error {
   }
 }
 
-interface ErrorEnvelope {
-  error?: { code?: string; message?: string };
-}
-
-async function request<T>(
-  path: string,
-  options: { method?: string; body?: unknown } = {},
-): Promise<T> {
+async function request<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
   let response: Response;
 
   try {

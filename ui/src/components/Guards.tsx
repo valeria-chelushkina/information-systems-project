@@ -1,10 +1,11 @@
-import type { ReactNode } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { PageLoader } from '@/components/UI';
-import { isStaff, useAuth } from '@/context/AuthContext';
+import { isStaff } from '@/helpers/user';
+import { useAuth } from '@/hooks/useAuth';
+import type { ChildrenProps, ForbiddenProps } from '@/typedefs/ui.typedefs';
 
-export function RequireAuth({ children }: { children: ReactNode }) {
+export function RequireAuth({ children }: ChildrenProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -20,7 +21,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-export function RequireStaff({ children }: { children: ReactNode }) {
+export function RequireStaff({ children }: ChildrenProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -40,7 +41,7 @@ export function RequireStaff({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-export function RequireAdmin({ children }: { children: ReactNode }) {
+export function RequireAdmin({ children }: ChildrenProps) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -58,7 +59,7 @@ export function RequireAdmin({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-export function Forbidden({ standalone = false }: { standalone?: boolean }) {
+export function Forbidden({ standalone = false }: ForbiddenProps) {
   return (
     <div className={`forbidden${standalone ? ' forbidden--standalone theme-public' : ''}`}>
       <section className="section section--top">

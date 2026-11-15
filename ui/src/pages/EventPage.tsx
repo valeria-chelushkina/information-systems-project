@@ -2,9 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { EmptyState, ErrorBox, PageLoader, StatusBadge } from '@/components/UI';
-import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/context/ToastContext';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError } from '@/helpers/api';
 import {
   dateTime,
   errorMessage,
@@ -13,19 +11,15 @@ import {
   eventTime,
   money,
   percent,
-} from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { PublicEventDetail, PublicTier } from '@/lib/types';
+} from '@/helpers/format';
+import { useAuth } from '@/hooks/useAuth';
+import { useApi } from '@/hooks/useApi';
+import { useToast } from '@/hooks/useToast';
+import type { PublicEventDetail } from '@/typedefs/catalog.typedefs';
+import type { PurchaseResult } from '@/typedefs/orders.typedefs';
+import type { TierRowProps } from '@/typedefs/ui.typedefs';
 
-function TierRow({
-  tier,
-  eventId,
-  eventStatus,
-}: {
-  tier: PublicTier;
-  eventId: string;
-  eventStatus: string;
-}) {
+function TierRow({ tier, eventId, eventStatus }: TierRowProps) {
   const { user } = useAuth();
   const { push } = useToast();
   const navigate = useNavigate();
@@ -43,7 +37,7 @@ function TierRow({
     setBusy(true);
 
     try {
-      const result = await api.post<{ orderId: string }>(`/events/${eventId}/purchase`, {
+      const result = await api.post<PurchaseResult>(`/events/${eventId}/purchase`, {
         tierId: tier.id,
         quantity,
       });

@@ -2,13 +2,13 @@ import { useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Pagination } from '@/components/Pagination';
 import { EmptyState, ErrorBox, PageLoader } from '@/components/UI';
-import { useToast } from '@/context/ToastContext';
-import { api, ApiError } from '@/lib/api';
-import { dateTime, errorMessage } from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { Paged, Performer } from '@/lib/types';
-
-const PAGE_SIZE = 20;
+import { useToast } from '@/hooks/useToast';
+import { api, ApiError } from '@/helpers/api';
+import { dateTime, errorMessage } from '@/helpers/format';
+import { useApi } from '@/hooks/useApi';
+import type { Paged } from '@/typedefs/common.typedefs';
+import type { Performer } from '@/typedefs/catalog.typedefs';
+import { ADMIN_PAGE_SIZE } from '@/constants/pagination.constants';
 
 export function PerformersPage() {
   const { push } = useToast();
@@ -16,7 +16,7 @@ export function PerformersPage() {
   const parsedOffset = Number(params.get('offset') ?? '0');
   const offset = Number.isFinite(parsedOffset) && parsedOffset > 0 ? Math.floor(parsedOffset) : 0;
   const { data, error, loading, reload } = useApi<Paged<Performer>>(
-    `/admin/performers?limit=${PAGE_SIZE}&offset=${offset}`,
+    `/admin/performers?limit=${ADMIN_PAGE_SIZE}&offset=${offset}`,
   );
   const [name, setName] = useState('');
   const [genre, setGenre] = useState('');
@@ -112,8 +112,8 @@ export function PerformersPage() {
                         <td>
                           <strong>{performer.name}</strong>
                         </td>
-                        <td>{performer.genre ?? <span className="muted">—</span>}</td>
-                        <td>{performer.contactEmail ?? <span className="muted">—</span>}</td>
+                        <td>{performer.genre ?? <span className="muted">вЂ”</span>}</td>
+                        <td>{performer.contactEmail ?? <span className="muted">вЂ”</span>}</td>
                         <td className="muted nowrap">{dateTime(performer.createdAt)}</td>
                       </tr>
                     ))}

@@ -24,8 +24,11 @@ ui/src/
   main.tsx                 entry point
   styles.css               design system and page styles
   components/              layout, guards, cards, badges, icons
-  context/                 auth and toast providers
-  lib/                     API client, types, formatting, useApi hook
+  constants/               links, navigation, filters, page sizes, status tones
+  context/                 auth, theme and toast providers
+  helpers/                 API client, formatting, user helpers
+  hooks/                   useApi, useAuth, useTheme, useToast
+  typedefs/                shared domain, API and component types
   pages/                   public screens
   pages/admin/             admin screens
 src/services/web/

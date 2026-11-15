@@ -2,11 +2,12 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { ErrorBox, PageLoader } from '@/components/UI';
-import { useToast } from '@/context/ToastContext';
-import { api, ApiError } from '@/lib/api';
-import { errorMessage } from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { EventRecord, Paged, Performer, Venue } from '@/lib/types';
+import { useToast } from '@/hooks/useToast';
+import { api, ApiError } from '@/helpers/api';
+import { errorMessage } from '@/helpers/format';
+import { useApi } from '@/hooks/useApi';
+import type { EventRecord, Performer, Venue } from '@/typedefs/catalog.typedefs';
+import type { Paged } from '@/typedefs/common.typedefs';
 
 export function NewEventPage() {
   const navigate = useNavigate();

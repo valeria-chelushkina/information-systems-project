@@ -2,12 +2,12 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { Pagination } from '@/components/Pagination';
 import { EmptyState, ErrorBox, PageLoader, StatusBadge } from '@/components/UI';
-import { useAuth } from '@/context/AuthContext';
-import { dateTime, errorMessage, money, shortDateTime } from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { CustomerOrder, Paged } from '@/lib/types';
-
-const PAGE_SIZE = 10;
+import { PROFILE_PAGE_SIZE } from '@/constants/pagination.constants';
+import { dateTime, errorMessage, money, shortDateTime } from '@/helpers/format';
+import { useAuth } from '@/hooks/useAuth';
+import { useApi } from '@/hooks/useApi';
+import type { Paged } from '@/typedefs/common.typedefs';
+import type { CustomerOrder } from '@/typedefs/orders.typedefs';
 
 export function ProfilePage() {
   const { user } = useAuth();
@@ -15,7 +15,7 @@ export function ProfilePage() {
   const parsedOffset = Number(params.get('offset') ?? '0');
   const offset = Number.isFinite(parsedOffset) && parsedOffset > 0 ? Math.floor(parsedOffset) : 0;
   const { data, error, loading, reload } = useApi<Paged<CustomerOrder>>(
-    `/orders?limit=${PAGE_SIZE}&offset=${offset}`,
+    `/orders?limit=${PROFILE_PAGE_SIZE}&offset=${offset}`,
   );
 
   if (!user) {

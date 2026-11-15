@@ -2,15 +2,13 @@ import { useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Pagination } from '@/components/Pagination';
 import { ErrorBox, PageLoader, StatusBadge } from '@/components/UI';
-import { useToast } from '@/context/ToastContext';
-import { api, ApiError } from '@/lib/api';
-import { errorMessage, shortDateTime } from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { AdminUser, Paged } from '@/lib/types';
-
-const PAGE_SIZE = 20;
-
-type TeamRole = 'staff' | 'admin';
+import { useToast } from '@/hooks/useToast';
+import { api, ApiError } from '@/helpers/api';
+import { errorMessage, shortDateTime } from '@/helpers/format';
+import { useApi } from '@/hooks/useApi';
+import type { AdminUser, TeamRole } from '@/typedefs/admin.typedefs';
+import type { Paged } from '@/typedefs/common.typedefs';
+import { ADMIN_PAGE_SIZE } from '@/constants/pagination.constants';
 
 export function UsersPage() {
   const { push } = useToast();
@@ -18,7 +16,7 @@ export function UsersPage() {
   const parsedOffset = Number(params.get('offset') ?? '0');
   const offset = Number.isFinite(parsedOffset) && parsedOffset > 0 ? Math.floor(parsedOffset) : 0;
   const { data, error, loading, reload } = useApi<Paged<AdminUser>>(
-    `/admin/users?limit=${PAGE_SIZE}&offset=${offset}`,
+    `/admin/users?limit=${ADMIN_PAGE_SIZE}&offset=${offset}`,
   );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

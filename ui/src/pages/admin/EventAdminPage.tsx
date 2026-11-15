@@ -2,8 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '@/components/Icon';
 import { ErrorBox, PageLoader, StatusBadge } from '@/components/UI';
-import { useToast } from '@/context/ToastContext';
-import { api, ApiError } from '@/lib/api';
+import { EVENT_TRANSITION_LABELS } from '@/constants/status.constants';
+import { api, ApiError } from '@/helpers/api';
 import {
   dateTime,
   dollarsToCents,
@@ -11,20 +11,13 @@ import {
   money,
   percent,
   toDollars,
-} from '@/lib/format';
-import { useApi } from '@/lib/useApi';
-import type { EventDetail, Tier } from '@/lib/types';
+} from '@/helpers/format';
+import { useApi } from '@/hooks/useApi';
+import { useToast } from '@/hooks/useToast';
+import type { EventDetail } from '@/typedefs/admin.typedefs';
+import type { TierEditorProps } from '@/typedefs/ui.typedefs';
 
-const TRANSITION_LABELS: Record<string, string> = {
-  draft: 'Back to draft',
-  scheduled: 'Schedule',
-  on_sale: 'Start sales',
-  sold_out: 'Mark sold out',
-  completed: 'Complete',
-  cancelled: 'Cancel',
-};
-
-function TierEditor({ tier, onChanged }: { tier: Tier; onChanged: () => void }) {
+function TierEditor({ tier, onChanged }: TierEditorProps) {
   const { push } = useToast();
   const [name, setName] = useState(tier.name);
   const [price, setPrice] = useState(toDollars(tier.priceCents));
@@ -144,7 +137,7 @@ export function EventAdminPage() {
   const deletable = ['draft', 'scheduled', 'cancelled'].includes(event.status);
 
   const changeStatus = async (status: string) => {
-    if ((status === 'cancelled' || status === 'completed') && !window.confirm(`Change the status to "${TRANSITION_LABELS[status]}"?`)) {
+    if ((status === 'cancelled' || status === 'completed') && !window.confirm(`Change the status to "${EVENT_TRANSITION_LABELS[status]}"?`)) {
       return;
     }
 
@@ -281,7 +274,7 @@ export function EventAdminPage() {
                     onClick={() => changeStatus(status)}
                     disabled={busy}
                   >
-                    {TRANSITION_LABELS[status] ?? status}
+                    {EVENT_TRANSITION_LABELS[status] ?? status}
                   </button>
                 ))
             ) : (
