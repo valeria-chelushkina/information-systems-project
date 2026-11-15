@@ -1,6 +1,9 @@
 import type { AdminNavItem, PublicNavItem } from '@/typedefs/navigation.typedefs';
 
-export const PUBLIC_NAV_LINKS: PublicNavItem[] = [{ href: '/events', label: 'Events' }];
+export const PUBLIC_NAV_LINKS: PublicNavItem[] = [
+  { href: '/events', label: 'Events' },
+  { href: '/performers', label: 'Performers' },
+];
 
 export const ADMIN_NAV_LINKS: AdminNavItem[] = [
   { to: '/admin', label: 'Overview', iconName: 'chart', end: true },

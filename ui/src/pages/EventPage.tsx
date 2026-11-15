@@ -163,7 +163,7 @@ export function EventPage() {
               <h1>{event.title}</h1>
               <p className="event-hero__performer">
                 <Icon name="mic" className="inline-icon" />
-                {event.performerName}
+                <Link to={`/performers/${event.performerId}`}>{event.performerName}</Link>
               </p>
               <p className="event-hero__venue">
                 <Icon name="pin" className="inline-icon" />

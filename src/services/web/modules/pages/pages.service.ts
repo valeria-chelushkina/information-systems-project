@@ -49,7 +49,7 @@ export class PagesService {
     return { items, total: page.total, limit: page.limit, offset: page.offset };
   }
 
-  listPublicPerformers(): Promise<Page<PerformerOption>> {
+  listPublicPerformers(): Promise<Page<PerformerProfileDto>> {
     return this.catalog.listPublicPerformers(100, 0);
   }
 

@@ -27,7 +27,7 @@ export function EventCard({ event }: EventCardProps) {
         </h3>
         <p className="event-card__performer">
           <Icon name="mic" className="inline-icon" />
-          {event.performerName}
+          <Link to={`/performers/${event.performerId}`}>{event.performerName}</Link>
         </p>
         <p className="event-card__venue">
           <Icon name="pin" className="inline-icon" />

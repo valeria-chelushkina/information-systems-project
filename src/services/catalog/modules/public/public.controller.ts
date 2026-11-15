@@ -13,7 +13,12 @@ export class PublicCatalogController {
     const page = await this.performers.listPerformers(query);
 
     res.status(200).json({
-      data: page.items.map((performer) => ({ id: performer.id, name: performer.name })),
+      data: page.items.map((performer) => ({
+        id: performer.id,
+        name: performer.name,
+        genre: performer.genre,
+        bio: performer.bio,
+      })),
       meta: { total: page.total, limit: page.limit, offset: page.offset },
     });
   });

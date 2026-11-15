@@ -11,6 +11,8 @@ import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { OrderPage } from '@/pages/OrderPage';
 import { OrderPrintPage } from '@/pages/OrderPrintPage';
+import { PerformerPage } from '@/pages/PerformerPage';
+import { PerformersDirectoryPage } from '@/pages/PerformersDirectoryPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { BookingsPage } from '@/pages/admin/BookingsPage';
 import { DashboardPage } from '@/pages/admin/DashboardPage';
@@ -34,6 +36,8 @@ export function App() {
               <Route index element={<HomePage />} />
               <Route path="events" element={<EventsPage />} />
               <Route path="events/:id" element={<EventPage />} />
+              <Route path="performers" element={<PerformersDirectoryPage />} />
+              <Route path="performers/:id" element={<PerformerPage />} />
               <Route path="login" element={<LoginPage />} />
               <Route
                 path="orders/:id"
