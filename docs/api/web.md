@@ -33,6 +33,7 @@ present and must come from the same origin. Authentication uses the
 | GET | `/api/public/events` | `search`, `performerId`, `from`, `to`, `limit`, `offset` | `{ items, total, limit, offset }` |
 | GET | `/api/public/events/:id` | - | `{ event, tiers }` |
 | GET | `/api/public/performers` | `limit`, `offset` | performer options for filters |
+| GET | `/api/public/performers/:id` | - | public performer profile with genre and bio |
 
 `items` contain eligible events plus `minPriceCents`. `from` and `to` are
 `YYYY-MM-DD` dates interpreted as Kyiv days; the list never includes past
@@ -67,9 +68,11 @@ All admin routes require the `staff` or `admin` role.
 | PATCH | `/api/admin/tiers/:id` | `{ name, priceCents, totalQty }` | updated tier |
 | DELETE | `/api/admin/tiers/:id` | — | `204` |
 | GET | `/api/admin/performers` | `limit`, `offset` | `{ items, total, limit, offset }` |
-| POST | `/api/admin/performers` | `{ name, genre?, contactEmail? }` | created performer |
+| POST | `/api/admin/performers` | `{ name, genre?, bio?, contactEmail? }` | created performer |
+| PATCH | `/api/admin/performers/:id` | `{ name?, genre?, bio?, contactEmail? }` | updated performer |
 | GET | `/api/admin/venues` | `limit`, `offset` | `{ items, total, limit, offset }` |
 | POST | `/api/admin/venues` | `{ name, city, timezone?, capacity }` | created venue |
+| PATCH | `/api/admin/venues/:id` | `{ name?, city?, timezone?, capacity? }` | updated venue |
 | GET | `/api/admin/bookings` | `status`, `limit`, `offset` | bookings, name maps and pagination |
 | POST | `/api/admin/bookings/:id/decision` | `{ status }` | decided booking |
 | GET | `/api/admin/orders/:id` | — | order details |

@@ -48,7 +48,7 @@ Public:
 | --- | --- |
 | `/` | landing: three latest personal tickets for signed-in users with a link to all orders, intro for guests, then upcoming events |
 | `/events` | paginated event catalogue with search, performer and date filters |
-| `/events/:id` | event details, tiers and purchase |
+| `/events/:id` | event details, performer bio, tiers and purchase |
 | `/login` | sign-in and self-service registration (customer role) |
 | `/profile` | customer profile with account details and paginated orders filtered by performer and date; the performer list contains only artists from the customer's own orders |
 | `/orders/:id` | order, QR tickets for the door, refund |
@@ -61,8 +61,8 @@ Admin (staff and admin):
 | `/admin/events` | paginated event list with search, performer, date and status filters |
 | `/admin/events/new` | create event |
 | `/admin/events/:id` | event details, status transitions, tiers |
-| `/admin/performers` | performer directory, paginated |
-| `/admin/venues` | venue directory, paginated |
+| `/admin/performers` | performer directory with bios, paginated; Change edits a performer |
+| `/admin/venues` | venue directory, paginated; Change edits a venue |
 | `/admin/bookings` | paginated booking requests, confirm or reject |
 | `/admin/orders` | order lookup and refund |
 | `/admin/reports` | analytics: revenue, occupancy, top performers, refunds by day, CSV export |

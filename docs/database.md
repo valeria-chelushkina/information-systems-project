@@ -154,6 +154,7 @@ erDiagram
         uuid id PK
         text name UK
         text genre
+        text bio
         text contact_email
         timestamptz created_at
     }
