@@ -18,6 +18,7 @@ import { EventsAdminPage } from '@/pages/admin/EventsAdminPage';
 import { NewEventPage } from '@/pages/admin/NewEventPage';
 import { OrdersPage } from '@/pages/admin/OrdersPage';
 import { PerformersPage } from '@/pages/admin/PerformersPage';
+import { ReportsPage } from '@/pages/admin/ReportsPage';
 import { ScanPage } from '@/pages/admin/ScanPage';
 import { UsersPage } from '@/pages/admin/UsersPage';
 import { VenuesPage } from '@/pages/admin/VenuesPage';
@@ -68,6 +69,7 @@ export function App() {
               <Route path="venues" element={<VenuesPage />} />
               <Route path="bookings" element={<BookingsPage />} />
               <Route path="orders" element={<OrdersPage />} />
+              <Route path="reports" element={<ReportsPage />} />
               <Route path="scan" element={<ScanPage />} />
               <Route
                 path="users"

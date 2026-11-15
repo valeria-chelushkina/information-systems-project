@@ -9,5 +9,6 @@ export const ADMIN_NAV_LINKS: AdminNavItem[] = [
   { to: '/admin/venues', label: 'Venues', iconName: 'pin' },
   { to: '/admin/bookings', label: 'Bookings', iconName: 'ticket' },
   { to: '/admin/orders', label: 'Orders', iconName: 'cart' },
+  { to: '/admin/reports', label: 'Reports', iconName: 'report' },
   { to: '/admin/scan', label: 'Scan', iconName: 'scan' },
 ];

@@ -30,4 +30,6 @@ export const ICON_PATHS: Record<string, string> = {
   code: '<path d="m8 7-5 5 5 5M16 7l5 5-5 5"/>',
   seat: '<path d="M6 10V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4"/><path d="M4 10h16v7H4z"/><path d="M7 17v3M17 17v3"/>',
   scan: '<path d="M4 9V5a1 1 0 0 1 1-1h4"/><path d="M15 4h4a1 1 0 0 1 1 1v4"/><path d="M20 15v4a1 1 0 0 1-1 1h-4"/><path d="M9 20H5a1 1 0 0 1-1-1v-4"/><path d="M4 12h16"/>',
+  report:
+    '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h6M10 16h6"/>',
 };

@@ -3138,3 +3138,63 @@ code {
     align-items: stretch;
   }
 }
+
+.filters--reports {
+  grid-template-columns: 170px 170px auto;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.report-name {
+  display: block;
+  font-weight: 700;
+}
+
+.report-meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted-2);
+  font-size: 0.76rem;
+}
+
+.report-bar {
+  display: block;
+  width: 100%;
+  max-width: 180px;
+  height: 6px;
+  margin-bottom: 4px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.report-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent);
+}
+
+.report-bars {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.report-bars li {
+  display: grid;
+  gap: 4px;
+}
+
+@media (max-width: 1080px) {
+  .report-grid {
+    grid-template-columns: 1fr;
+  }
+}
