@@ -9,6 +9,7 @@ import type {
   PerformerOption,
   PublicEventDto,
   PublicTierDto,
+  ReportsDto,
   TierDto,
 } from '@/services/web/typedefs/api.typedefs.js';
 
@@ -63,6 +64,11 @@ export interface OrderQuery {
   from?: string;
   to?: string;
   performerId?: string;
+}
+
+export interface ReportQuery {
+  from?: string;
+  to?: string;
 }
 
 export class TicketingClient {
@@ -226,6 +232,13 @@ export class TicketingClient {
       method: 'POST',
       token,
       body: { qrToken },
+    });
+  }
+
+  reports(token: string, query: ReportQuery = {}): Promise<ReportsDto> {
+    return call<ReportsDto>(webConfig.ticketingBaseUrl, '/api/reports', {
+      token,
+      query: { from: query.from, to: query.to },
     });
   }
 }

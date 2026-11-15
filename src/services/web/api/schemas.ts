@@ -106,6 +106,11 @@ export const accountOrdersQuerySchema = pageQuerySchema.extend({
   performerId: z.uuid().optional(),
 });
 
+export const reportsQuerySchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});
+
 export const ticketCheckInSchema = z.object({
   qrToken: z.string().trim().min(6).max(64),
 });

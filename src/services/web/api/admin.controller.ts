@@ -10,6 +10,7 @@ import {
   idParamsSchema,
   pageQuerySchema,
   performerCreateSchema,
+  reportsQuerySchema,
   tierCreateSchema,
   tierUpdateSchema,
   ticketCheckInSchema,
@@ -229,6 +230,21 @@ export class AdminController {
     const result = await this.service.checkIn(token, body.qrToken);
 
     ok(res, result);
+  });
+
+  reports = asyncHandler(async (req: Request, res: Response) => {
+    const token = currentToken(res);
+    const query = validate(reportsQuerySchema, req.query);
+    const from = query.from ? startOfKyivDay(query.from) : null;
+    const to = query.to ? endOfKyivDay(query.to) : null;
+
+    if ((query.from && !from) || (query.to && !to)) {
+      throw HttpError.badRequest('validation_failed', 'Invalid date filter');
+    }
+
+    const report = await this.service.reports(token, from?.toISOString(), to?.toISOString());
+
+    ok(res, report);
   });
 
   users = asyncHandler(async (req: Request, res: Response) => {

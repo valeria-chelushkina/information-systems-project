@@ -34,5 +34,7 @@ adminRouter.post('/orders/:id/refund', controller.refundOrder);
 
 adminRouter.post('/tickets/check-in', controller.checkIn);
 
+adminRouter.get('/reports', controller.reports);
+
 adminRouter.get('/users', requireAdmin(), controller.users);
 adminRouter.post('/users', requireAdmin(), controller.createUser);

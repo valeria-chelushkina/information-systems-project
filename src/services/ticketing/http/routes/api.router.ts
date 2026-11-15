@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { analyticsRouter } from '@/services/ticketing/modules/analytics/analytics.router.js';
 import { checkInRouter } from '@/services/ticketing/modules/check-in/check-in.router.js';
 import { eventsRouter } from '@/services/ticketing/modules/events/events.router.js';
 import { purchasesRouter } from '@/services/ticketing/modules/purchases/purchases.router.js';
@@ -10,3 +11,4 @@ apiRouter.use(eventsRouter);
 apiRouter.use(tiersRouter);
 apiRouter.use(purchasesRouter);
 apiRouter.use(checkInRouter);
+apiRouter.use(analyticsRouter);

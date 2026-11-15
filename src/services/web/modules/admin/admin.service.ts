@@ -270,6 +270,10 @@ export class AdminService {
     return this.ticketing.checkIn(token, qrToken);
   }
 
+  reports(token: string, from?: string, to?: string) {
+    return this.ticketing.reports(token, { from, to });
+  }
+
   listUsers(token: string, limit: number, offset: number) {
     return this.auth.listUsers(token, limit, offset, TEAM_ROLES);
   }

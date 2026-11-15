@@ -137,6 +137,42 @@ export interface CheckInResultDto {
   event: EventDto;
 }
 
+export interface ReportTotalsDto {
+  revenueCents: number;
+  refundedCents: number;
+  orders: number;
+  ticketsSold: number;
+  ticketsCheckedIn: number;
+}
+
+export interface EventReportDto {
+  id: string;
+  title: string;
+  performerName: string;
+  startsAt: string;
+  status: string;
+  ticketsSold: number;
+  revenueCents: number;
+  capacity: number;
+  soldQty: number;
+  occupancyPct: number;
+}
+
+export interface PerformerReportDto {
+  performerId: string;
+  performerName: string;
+  events: number;
+  ticketsSold: number;
+  revenueCents: number;
+}
+
+export interface ReportsDto {
+  range: { from: string; to: string };
+  totals: ReportTotalsDto;
+  byEvent: EventReportDto[];
+  byPerformer: PerformerReportDto[];
+}
+
 export interface OrderDetail {
   order: OrderDto;
   tickets: TicketDto[];
