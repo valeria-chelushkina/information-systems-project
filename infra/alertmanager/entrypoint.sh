@@ -12,6 +12,7 @@ fi
 
 SMTP_PORT="${SMTP_PORT:-587}"
 SMTP_REQUIRE_TLS="${SMTP_REQUIRE_TLS:-true}"
+ALERTMANAGER_EXTERNAL_URL="${ALERTMANAGER_EXTERNAL_URL:-http://localhost:9093}"
 
 escape() {
   printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'
@@ -29,4 +30,6 @@ sed \
 
 exec /bin/alertmanager \
   --config.file=/tmp/alertmanager.yml \
-  --storage.path=/alertmanager
+  --storage.path=/alertmanager \
+  --web.external-url="$ALERTMANAGER_EXTERNAL_URL" \
+  --web.route-prefix=/

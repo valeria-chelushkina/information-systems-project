@@ -70,6 +70,13 @@ values fail the container immediately instead of silently dropping alerts.
 | `SMTP_FROM` | `you@gmail.com` | From address |
 | `ALERT_EMAIL_TO` | `you@gmail.com` | Recipient |
 | `SMTP_REQUIRE_TLS` | `true` | STARTTLS is required |
+| `ALERTMANAGER_EXTERNAL_URL` | `http://localhost:9093` | Base URL used in email links |
+
+`ALERTMANAGER_EXTERNAL_URL` defaults to `http://localhost:<ALERTMANAGER_HOST_PORT>`.
+Without it Alertmanager advertises its container hostname (for example
+`http://8e4fc7b18237:9093`), so the "View in Alertmanager" link in emails cannot
+be opened. Set it to the address your browser uses when the stack runs on
+another host.
 
 Gmail requires two-step verification and an App Password:
 
@@ -181,18 +188,45 @@ With the stack running:
 npm run demo:alerts
 ```
 
-The script:
+The script runs three scenarios by default:
+
+| Scenario | Trigger | Alerts |
+| --- | --- | --- |
+| `database` | stops PostgreSQL, sends requests, restarts it | `ServiceError`, `PostgresDown` |
+| `purchase` | keeps sending failed purchase attempts until the rule fires | `PurchaseFailures` |
+| `synthetic` | injects alerts with distinct reasons into Alertmanager | `HighLatency`, `PostgresDeadlocks`, `RefundRateHigh`, `RabbitmqQueueBacklog` |
+
+Choose scenarios explicitly:
+
+```bash
+npm run demo:alerts -- --scenario=database
+npm run demo:alerts -- --scenario=synthetic
+npm run demo:alerts -- --scenario=database,purchase,synthetic
+```
+
+Two optional long-running scenarios:
+
+- `broker` stops RabbitMQ for more than two minutes to fire `RabbitmqDown`;
+- `auth` sends failed logins for five minutes to fire `AuthFailureSpike`.
+
+Each distinct `alertname` becomes its own notification, so one run produces one
+email per alert. The script:
 
 1. checks auth, ticketing, Prometheus and Alertmanager;
-2. stops PostgreSQL for a short controlled outage;
-3. generates 5xx responses so `ServiceError` fires;
-4. waits for Prometheus `firing` and Alertmanager `active`;
-5. prints the matching `notify` log line;
-6. restarts PostgreSQL in a `finally` block;
-7. waits for `ServiceError` to clear and prints the `resolved` notification.
+2. runs the selected scenarios and waits for Prometheus `firing`;
+3. prints the matching `notify` webhook line and records whether delivery was
+   seen;
+4. restores PostgreSQL and RabbitMQ in `finally` blocks;
+5. resolves synthetic alerts and prints a summary table.
 
-It exits `0` when the alert fires and clears, otherwise `1`. The command is
-safe for data but should not run at the same time as a load scenario.
+Synthetic alerts exist because several rules need ten minutes or specific data
+(cache hit, deadlocks, refund rate) that are not practical to provoke in a short
+demo. They are sent straight to Alertmanager with a `demo` instance label and a
+"Simulated…" description, so they are clearly distinguishable from real alerts.
+Their resolution email follows on the next group interval (10 minutes).
+
+It exits `0` when every selected alert fired, otherwise `1`. The command is safe
+for data but should not run at the same time as a load scenario.
 
 Open `http://localhost:9090/alerts` and `http://localhost:9093` while it runs.
 

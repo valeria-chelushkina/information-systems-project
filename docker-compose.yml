@@ -319,6 +319,7 @@ services:
       SMTP_FROM: ${SMTP_FROM:-}
       ALERT_EMAIL_TO: ${ALERT_EMAIL_TO:-}
       SMTP_REQUIRE_TLS: ${SMTP_REQUIRE_TLS:-true}
+      ALERTMANAGER_EXTERNAL_URL: ${ALERTMANAGER_EXTERNAL_URL:-http://localhost:${ALERTMANAGER_HOST_PORT:-9093}}
     volumes:
       - ./infra/alertmanager/alertmanager.template.yml:/etc/alertmanager/alertmanager.template.yml:ro
       - ./infra/alertmanager/entrypoint.sh:/etc/alertmanager/entrypoint.sh:ro

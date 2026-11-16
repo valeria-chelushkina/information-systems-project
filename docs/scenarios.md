@@ -65,3 +65,18 @@ every panel.
 
 `npm run demo` runs the `mixed` scenario for five minutes after seeding. See
 the main [README](../README.md#one-command-demo).
+
+## Alert demo
+
+`npm run demo:alerts` exercises the alert path and email delivery. It runs three
+scenarios by default: a PostgreSQL outage (`ServiceError`, `PostgresDown`),
+repeated failed purchases (`PurchaseFailures`) and four injected alerts with
+different reasons (`HighLatency`, `PostgresDeadlocks`, `RefundRateHigh`,
+`RabbitmqQueueBacklog`). Select scenarios with `--scenario=name[,name]`;
+`broker` and `auth` are optional longer runs. See
+[Alertmanager](observability/alertmanager.md#run-the-alert-demo).
+
+Synthetic alerts go straight to Alertmanager with a `demo` instance label, so
+they do not pretend to be real Prometheus findings; they exist to show different
+email reasons without waiting for ten-minute thresholds.
+

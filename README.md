@@ -123,7 +123,8 @@ migrations, seed scripts and the `npm run dev*` processes.
 | Command | Purpose |
 | --- | --- |
 | `npm run demo` | one-command Docker demo (build, migrate, seed, mixed scenario) |
-| `npm run demo:alerts` | triggers `ServiceError` and `PostgresDown`, checks Alertmanager and `notify`, then restores PostgreSQL |
+| `npm run demo:alerts` | runs the `database`, `purchase` and `synthetic` alert scenarios, checks `notify`, then restores PostgreSQL |
+| `npm run demo:alerts -- --scenario=synthetic` | injects four alerts with different reasons for a quick email demo |
 | `npm run scenario -- --name=mixed --duration=300 --rate=3` | five-minute load simulation against running services |
 | `npm run scenario -- --name=surge --seats=3 --buyers=10` | concurrency/inventory assertion |
 | `npm run seed -- --reset --from-catalog` | 200 events from real catalog ids |
@@ -134,8 +135,8 @@ migrations, seed scripts and the `npm run dev*` processes.
 | `npm run dev:web` | BFF on port 3009 with hot reload |
 | `npm run dev:ui` | Vite dev server on port 5173 |
 
-`demo:alerts` intentionally stops PostgreSQL for a short controlled outage;
-run it when no load test is active. It restarts PostgreSQL before exiting.
+`demo:alerts` stops PostgreSQL and RabbitMQ only inside the selected scenarios;
+run it when no load test is active. It restarts them before exiting.
 
 Scenario commands use local-dev ports by default (ticketing `3001`, catalog
 `3003`, auth `3005`). Against Compose, add
