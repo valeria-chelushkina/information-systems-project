@@ -15,6 +15,8 @@ In this project it is the only source of numeric data:
   check-ins, `hold_rejections_total`;
 - PostgreSQL engine metrics from postgres_exporter;
 - RabbitMQ and exporter health;
+- host CPU, memory, swap, filesystem, disk I/O and network metrics from
+  node_exporter;
 - target health: `up`, `pg_up`.
 
 Grafana does not store metrics; it queries Prometheus.
@@ -35,14 +37,15 @@ by default, `http://localhost:<PROMETHEUS_HOST_PORT>`. This URL becomes the
 in alert emails. Without it the button points at the container hostname and
 cannot be opened from a browser.
 
-There are nine targets: five application services (`ticketing`, `catalog`,
-`auth`, `notify`, `web`), two PostgreSQL exporters, RabbitMQ, and Prometheus
-itself.
+There are ten targets: five application services (`ticketing`, `catalog`,
+`auth`, `notify`, `web`), two PostgreSQL exporters, RabbitMQ, node_exporter and
+Prometheus itself.
 
 Recording rules precompute per-service request rate, error percentage, p95/p99,
-global p95 and error percentage, PostgreSQL connection/cache percentages and the
-RabbitMQ backlog. The percentile rules use a 15-minute window so values survive
-short idle periods between demo runs.
+global p95 and error percentage, PostgreSQL connection/cache percentages, the
+RabbitMQ backlog and the host CPU, memory, swap, disk and network rates. The
+percentile rules use a 15-minute window so values survive short idle periods
+between demo runs.
 
 ## How to verify
 
@@ -61,7 +64,7 @@ Invoke-WebRequest -UseBasicParsing http://localhost:9090/-/ready |
 
 Expected: `Prometheus Server is Ready.`
 
-3. Targets: open `http://localhost:9090/targets`; all nine must be `UP`.
+3. Targets: open `http://localhost:9090/targets`; all ten must be `UP`.
    Or:
 
 ```powershell
@@ -69,8 +72,8 @@ Expected: `Prometheus Server is Ready.`
   Select-Object @{ n = 'job'; e = { $_.labels.job } }, health
 ```
 
-4. Rules: `http://localhost:9090/rules` contains the `default` group with 17
-   alerts and the `concert-ops` group with 10 recording rules.
+4. Rules: `http://localhost:9090/rules` contains the `default` group with 21
+   alerts and the `concert-ops` group with 18 recording rules.
 
 5. Current alerts: `http://localhost:9090/alerts`.
 
@@ -84,6 +87,9 @@ sum by (status) (rate(purchases_total[5m]))
 pg_up
 rabbitmq_queue_messages_ready
 events_total{status="on_sale"}
+host:cpu_usage:percent
+host:memory_usage:percent
+host:disk_usage:percent
 ```
 
 7. Check configuration without restarting:

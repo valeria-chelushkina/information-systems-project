@@ -83,6 +83,15 @@ scrape_configs:
           instance_type: broker
           team: platform
 
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          instance_group: concert-ops
+          instance_env: lab
+          instance_type: host
+          team: platform
+
 rule_files:
   - /etc/prometheus/alerts.yml
   - /etc/prometheus/recording-rules.yml

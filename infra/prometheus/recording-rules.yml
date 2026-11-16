@@ -31,3 +31,27 @@ groups:
 
       - record: rabbitmq:queue_backlog
         expr: rabbitmq_queue_messages_ready
+
+      - record: host:cpu_usage:percent
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+      - record: host:memory_usage:percent
+        expr: 100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+
+      - record: host:swap_usage:percent
+        expr: 100 * (node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes) / node_memory_SwapTotal_bytes
+
+      - record: host:disk_usage:percent
+        expr: max((100 * (1 - node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) or (100 * (1 - node_filesystem_avail_bytes{mountpoint="/var/lib"} / node_filesystem_size_bytes{mountpoint="/var/lib"})))
+
+      - record: host:disk_read:rate5m
+        expr: sum by (instance) (rate(node_disk_read_bytes_total{device!~"loop.*|ram.*|sr.*"}[5m]))
+
+      - record: host:disk_write:rate5m
+        expr: sum by (instance) (rate(node_disk_written_bytes_total{device!~"loop.*|ram.*|sr.*"}[5m]))
+
+      - record: host:network_receive:rate5m
+        expr: sum by (instance) (rate(node_network_receive_bytes_total{device!~"lo|veth.*|docker.*|br-.*"}[5m]))
+
+      - record: host:network_transmit:rate5m
+        expr: sum by (instance) (rate(node_network_transmit_bytes_total{device!~"lo|veth.*|docker.*|br-.*"}[5m]))

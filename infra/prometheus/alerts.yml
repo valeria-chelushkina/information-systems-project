@@ -134,3 +134,35 @@ groups:
           severity: warning
         annotations:
           summary: "Service {{ $labels.service }} is seeing more than one authentication failure per second"
+
+      - alert: HostDown
+        expr: up{instance_type='host'} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node exporter {{ $labels.instance }} has been down for more than 5 minutes"
+
+      - alert: HostHighCpu
+        expr: host:cpu_usage:percent > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host CPU usage is above 85% for more than 10 minutes"
+
+      - alert: HostHighMemory
+        expr: host:memory_usage:percent > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host memory usage is above 90% for more than 10 minutes"
+
+      - alert: HostLowDisk
+        expr: host:disk_usage:percent > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host disk usage is above 85% for more than 10 minutes"

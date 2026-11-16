@@ -36,19 +36,21 @@ Alloy ──► Loki ──► Grafana
 | Tempo | 3200 | trace storage | [tempo.md](tempo.md) |
 | otel-collector | 4317 / 4318 | receives OTLP and forwards traces to Tempo | [otel-collector.md](otel-collector.md) |
 | postgres_exporter | 9187 / 9188 | PostgreSQL engine metrics | [postgres-exporter.md](postgres-exporter.md) |
+| node_exporter | 9100 | host CPU, memory, swap, disk and network metrics | [node-exporter.md](node-exporter.md) |
 | RabbitMQ | 5672 / 15672 / 15692 | message broker, management UI, built-in metrics | [rabbitmq.md](rabbitmq.md) |
 | Alertmanager | 9093 | alert routing | [alertmanager.md](alertmanager.md) |
 | notify | internal | alert webhook and RabbitMQ consumer | [notify.md](notify.md) |
 
 ## Dashboards
 
-Grafana contains eight provisioned dashboards, grouped by the `concert-ops` tag:
+Grafana contains nine provisioned dashboards, grouped by the `concert-ops` tag:
 
 | Dashboard | UID | Focus |
 | --- | --- | --- |
 | Concert Ops Overview | `concert-ops-overview` | availability, errors, latency, business, saturation |
 | API Monitoring | `concert-ops-api` | percentiles, routes, failures, route and status tables |
-| Service Detail | `concert-ops-service` | one service: routes, latency heatmap, DB queries, pool |
+| Service Detail | `concert-ops-service` | one service: golden signals, routes, latency heatmap, DB queries, pool |
+| Infrastructure | `concert-ops-infrastructure` | host CPU, memory, swap, disk I/O, network and per-service process usage |
 | Postgres | `concert-ops-postgres` | connections, transactions, cache, locks, slow statements |
 | Messaging | `concert-ops-messaging` | queue depth, throughput, consumers, failures |
 | Business | `concert-ops-business` | sales outcomes, revenue, funnel, event portfolio, unit economics |
@@ -69,6 +71,7 @@ Invoke-WebRequest -UseBasicParsing http://localhost:9093/-/ready | Select-Object
 (Invoke-WebRequest -UseBasicParsing http://localhost:9187/metrics).StatusCode
 (Invoke-WebRequest -UseBasicParsing http://localhost:9188/metrics).StatusCode
 (Invoke-WebRequest -UseBasicParsing http://localhost:15692/metrics).StatusCode
+(Invoke-WebRequest -UseBasicParsing http://localhost:9100/metrics).StatusCode
 ```
 
 Expected:
@@ -82,14 +85,17 @@ OK
 200
 200
 200
+200
 ```
 
-Tempo may return `503` during its first 20–30 seconds after start.
+Tempo may return `503` during its first 20-30 seconds after start.
 
 ## How the pieces connect
 
 - **Metrics**: services expose `/metrics`; Prometheus scrapes every 10 seconds;
   Grafana queries Prometheus; Alertmanager receives firing rules.
+- **Host metrics**: node_exporter reads the host `/proc` and `/sys` and exposes
+  CPU, memory, swap, filesystem, disk I/O and network series to Prometheus.
 - **Logs**: Alloy reads container stdout through the Docker socket and sends it
   to Loki; Grafana shows it in Explore.
 - **Traces**: services export OTLP to otel-collector, which batches and forwards

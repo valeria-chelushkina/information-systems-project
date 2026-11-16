@@ -11,9 +11,9 @@ itself; it queries three provisioned datasources:
 | Loki | `loki` | `http://loki:3100` |
 | Tempo | `tempo` | `http://tempo:3200` |
 
-It is the main demo surface: eight dashboards cover the golden signals, API
-latency, one service in detail, PostgreSQL, messaging, the business view, logs
-and traces.
+It is the main demo surface: nine dashboards cover the golden signals, API
+latency, one service in detail, the host, PostgreSQL, messaging, the business
+view, logs and traces.
 
 ## Configuration
 
@@ -35,9 +35,10 @@ GRAFANA_ADMIN_PASSWORD=admin-password
 
 | Dashboard | UID | Focus |
 | --- | --- | --- |
-| Concert Ops Overview | `concert-ops-overview` | 14 panels: availability, errors, p95, business, saturation |
-| API Monitoring | `concert-ops-api` | p90/p95/p99, slow routes, request columns, failure bars, tables |
-| Service Detail | `concert-ops-service` | one service: routes, latency heatmap, DB query table, pool |
+| Concert Ops Overview | `concert-ops-overview` | 18 panels: availability, errors, p95, business, queue and host saturation |
+| API Monitoring | `concert-ops-api` | p50/p95/p99, 4xx/5xx ratios, slow routes, request columns, tables |
+| Service Detail | `concert-ops-service` | one service: golden signals, routes, latency heatmap, DB query table, pool |
+| Infrastructure | `concert-ops-infrastructure` | host CPU, memory, swap, disk usage and I/O, network, per-service process CPU and memory |
 | Postgres | `concert-ops-postgres` | connections, transactions, cache, locks, slow statements |
 | Messaging | `concert-ops-messaging` | queue depth, throughput, consumers, failures |
 | Business | `concert-ops-business` | sales outcomes, revenue, funnel, event portfolio, unit economics |
@@ -76,13 +77,16 @@ Expected: `database: ok`, `version: 11.2.0`.
 /d/concert-ops-overview
 /d/concert-ops-api
 /d/concert-ops-service
+/d/concert-ops-infrastructure
 /d/concert-ops-postgres
 /d/concert-ops-messaging
 /d/concert-ops-business
 ```
 
 Health signs: **App services available** = `100%`, **5xx error ratio** = `0%`,
-p95 and p99 populated, **RabbitMQ consumers** = `1`.
+p95 and p99 populated, **RabbitMQ consumers** = `1`. On **Infrastructure**,
+host CPU, memory, disk and network series must be populated and no panel should
+show `No data`.
 
 4. Datasources: **Connections → Data sources**; all three should be `working`.
    For Tempo, **Save & test** may return 404 in Grafana 11.2 even though the

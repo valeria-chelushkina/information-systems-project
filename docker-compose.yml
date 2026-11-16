@@ -84,6 +84,19 @@ services:
     restart: unless-stopped
     logging: *default-logging
 
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: concert-ops-node-exporter
+    command:
+      - '--path.rootfs=/host'
+      - '--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run|var/lib/docker/.+|var/lib/containers/.+)($$|/)'
+    volumes:
+      - /:/host:ro
+    ports:
+      - "${NODE_EXPORTER_HOST_PORT:-9100}:9100"
+    restart: unless-stopped
+    logging: *default-logging
+
   auth:
     build:
       context: .

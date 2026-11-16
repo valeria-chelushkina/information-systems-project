@@ -32,7 +32,7 @@ and a full observability stack.
 | databases | PostgreSQL 17 + Drizzle ORM; SQLite for auth |
 | messaging | RabbitMQ 4 + `amqplib` |
 | auth | scrypt password hashing, opaque tokens, SHA-256 hashes |
-| metrics | `prom-client`, Prometheus, Grafana, postgres exporters |
+| metrics | `prom-client`, Prometheus, Grafana, postgres and node exporters |
 | logs | pino JSON logs, Alloy, Loki |
 | traces | OpenTelemetry SDK, OTel Collector, Tempo |
 | alerts | Prometheus rules, Alertmanager, `notify` webhook |
@@ -80,6 +80,7 @@ docker compose --env-file .env.example --profile demo up --build -d
 | Web UI | `http://localhost:3008` (`admin@example.com` / `admin-password`) |
 | Grafana | `http://localhost:3007` (`admin` / `admin-password`) |
 | Prometheus | `http://localhost:9090` |
+| node_exporter | `http://localhost:9100/metrics` |
 | Alertmanager | `http://localhost:9093` |
 | RabbitMQ | `http://localhost:15672` (`admin` / `admin`) |
 
@@ -148,10 +149,10 @@ More commands: [development](docs/development.md). More scenarios:
 
 ## Observability
 
-Grafana contains eight provisioned dashboards: Overview, API Monitoring,
-Service Detail, Postgres, Messaging, Business, Logs and Traces. The stack
-exposes metrics, logs and traces out of the box. Alertmanager can also email
-alerts when `SMTP_*` and `ALERT_EMAIL_TO` are set.
+Grafana contains nine provisioned dashboards: Overview, API Monitoring,
+Service Detail, Infrastructure, Postgres, Messaging, Business, Logs and Traces.
+The stack exposes metrics, logs and traces out of the box. Alertmanager can also
+email alerts when `SMTP_*` and `ALERT_EMAIL_TO` are set.
 
 | Where | What |
 | --- | --- |
@@ -169,6 +170,7 @@ per-service documents: [Prometheus](docs/observability/prometheus.md),
 [Tempo](docs/observability/tempo.md),
 [OTel Collector](docs/observability/otel-collector.md),
 [postgres_exporter](docs/observability/postgres-exporter.md),
+[node_exporter](docs/observability/node-exporter.md),
 [Alertmanager](docs/observability/alertmanager.md),
 [RabbitMQ](docs/observability/rabbitmq.md) and
 [notify](docs/observability/notify.md).
