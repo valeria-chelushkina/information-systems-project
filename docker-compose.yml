@@ -295,6 +295,7 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.route-prefix=/'
+      - '--web.external-url=${PROMETHEUS_EXTERNAL_URL:-http://localhost:${PROMETHEUS_HOST_PORT:-9090}}'
     ports:
       - "${PROMETHEUS_HOST_PORT}:9090"
     depends_on:

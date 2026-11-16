@@ -29,6 +29,12 @@ Grafana does not store metrics; it queries Prometheus.
 | storage | `promdata` volume, `/prometheus` |
 | container | `concert-ops-prometheus`, port `9090` |
 
+Prometheus runs with `--web.external-url` set from `PROMETHEUS_EXTERNAL_URL` or,
+by default, `http://localhost:<PROMETHEUS_HOST_PORT>`. This URL becomes the
+`generatorURL` on every alert, which Alertmanager uses for the **Source** button
+in alert emails. Without it the button points at the container hostname and
+cannot be opened from a browser.
+
 There are nine targets: five application services (`ticketing`, `catalog`,
 `auth`, `notify`, `web`), two PostgreSQL exporters, RabbitMQ, and Prometheus
 itself.
