@@ -26,8 +26,8 @@ SMTP credentials are injected at container start, so they never live in Git.
 | `PostgresLowCacheHit` | cache hit below 90% for 10m |
 | `PostgresDeadlocks` | any deadlock in the last 5m |
 | `RabbitmqDown` | `up{instance_type="broker"} == 0` for 2m |
-| `RabbitmqQueueBacklog` | more than 100 ready messages for 5m |
-| `RabbitmqNoConsumers` | no active consumers for 5m |
+| `RabbitmqQueueBacklog` | `notifications` queue has more than 100 ready messages for 5m |
+| `RabbitmqNoConsumers` | `notifications` queue has no active consumers for 5m |
 | `RabbitmqPublishFailures` | any failed publish in the last 5m |
 | `RabbitmqDlqNotEmpty` | any message in `notifications.dlq` for 5m |
 | `TicketEmailRetries` | more than 3 ticket email retries in 10m |

@@ -51,6 +51,7 @@
       "id": 1,
       "type": "timeseries",
       "title": "Log volume by container",
+      "description": "Docker log lines per container, excluding /metrics scrape requests",
       "datasource": { "type": "loki", "uid": "loki" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "fieldConfig": {
@@ -67,7 +68,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (container) (count_over_time({job=\"docker\"}[$__interval]))",
+          "expr": "sum by (container) (count_over_time({job=\"docker\"} != `\"path\":\"/metrics\"` [$__interval]))",
           "legendFormat": "{{container}}"
         }
       ]
@@ -148,6 +149,7 @@
       "id": 5,
       "type": "timeseries",
       "title": "HTTP status from request logs",
+      "description": "Statuses from request completed logs, excluding /metrics scrape requests",
       "datasource": { "type": "loki", "uid": "loki" },
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 28 },
       "fieldConfig": {
@@ -164,7 +166,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (status) (count_over_time({container=~\"concert-ops-.*\"} | json | msg=\"request completed\" [$__interval]))",
+          "expr": "sum by (status) (count_over_time({container=~\"concert-ops-.*\"} != `\"path\":\"/metrics\"` | json | msg=\"request completed\" [$__interval]))",
           "legendFormat": "{{status}}"
         }
       ]

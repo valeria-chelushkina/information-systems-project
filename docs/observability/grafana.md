@@ -35,7 +35,7 @@ GRAFANA_ADMIN_PASSWORD=admin-password
 
 | Dashboard | UID | Focus |
 | --- | --- | --- |
-| Concert Ops Overview | `concert-ops-overview` | 14 panels: availability, errors, p95, queue and host saturation |
+| Concert Ops Overview | `concert-ops-overview` | 10 panels: availability, errors, p95, queue and host saturation |
 | API Monitoring | `concert-ops-api` | p50/p95/p99, 4xx/5xx ratios, slow routes, request columns, tables |
 | Service Detail | `concert-ops-service` | one service: golden signals, routes, latency heatmap, DB query table, pool |
 | Infrastructure | `concert-ops-infrastructure` | host CPU, memory, swap, disk usage and I/O, network, per-service process CPU and memory |
@@ -73,9 +73,9 @@ Expected: `database: ok`, `version: 11.2.0`.
 ```
 
 Health signs: **App services available** = `100%`, **5xx error ratio** = `0%`,
-p95 and p99 populated, **RabbitMQ consumers** = `1`. On **Infrastructure**,
-host CPU, memory, disk and network series must be populated and no panel should
-show `No data`.
+p95 and p99 populated, and **Consumers** = `1` on **Messaging**. On
+**Infrastructure**, host CPU, memory, disk and network series must be populated
+and no panel should show `No data`.
 
 4. Datasources: **Connections → Data sources**; all three should be `working`.
    For Tempo, **Save & test** may return 404 in Grafana 11.2 even though the

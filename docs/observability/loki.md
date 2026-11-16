@@ -36,7 +36,9 @@ Invoke-WebRequest -UseBasicParsing http://localhost:3100/ready |
 Expected: `ready`.
 
 2. Logs in Grafana: the **Logs** dashboard (`concert-ops-logs`) shows volume,
-   errors and a request-id search, or use **Explore → Loki → Code**:
+   errors and a request-id search, or use **Explore → Loki → Code**. The volume
+   and HTTP-status panels exclude `/metrics` scrape lines, so the graph reflects
+   real traffic rather than the 10-second Prometheus scrape:
 
 ```logql
 {container="concert-ops-ticketing"}

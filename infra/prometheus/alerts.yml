@@ -80,20 +80,20 @@ groups:
           summary: "RabbitMQ {{ $labels.instance }} has been down for more than 2 minutes"
 
       - alert: RabbitmqQueueBacklog
-        expr: rabbitmq:queue_backlog > 100
+        expr: rabbitmq:queue_backlog{queue="notifications"} > 100
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "RabbitMQ has more than 100 ready messages"
+          summary: "RabbitMQ notifications queue has more than 100 ready messages"
 
       - alert: RabbitmqNoConsumers
-        expr: rabbitmq_queue_consumers == 0
+        expr: rabbitmq_queue_consumers{queue="notifications"} == 0
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "RabbitMQ has no active consumers"
+          summary: "RabbitMQ notifications queue has no active consumers"
 
       - alert: RabbitmqPublishFailures
         expr: increase(rabbitmq_publish_failures_total[5m]) > 0

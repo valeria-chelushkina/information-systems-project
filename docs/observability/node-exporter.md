@@ -47,7 +47,7 @@ native Linux host the same configuration reports the real machine.
 | host mount | `/:/host:ro` |
 | root filesystem flag | `--path.rootfs=/host` |
 | scrape job | `node` in `infra/prometheus/prometheus.yml` |
-| target label | `instance_type: host`, `team: platform` |
+| target label | `instance_type: host` |
 | recording rules | `infra/prometheus/recording-rules.yml` |
 | alert rules | `infra/prometheus/alerts.yml` |
 | dashboard | `infra/grafana/dashboards/infrastructure.json` |
@@ -97,14 +97,14 @@ Four alerts use these series:
 
 ## Dashboard
 
-The **Infrastructure** dashboard (`concert-ops-infrastructure`) has 18 panels:
+The **Infrastructure** dashboard (`concert-ops-infrastructure`) has 14 panels:
 
-- six stats: CPU, memory, swap, disk usage, CPU cores, uptime;
+- four stats: CPU, memory, swap and disk usage;
 - CPU usage by mode and load average;
-- memory used vs available and swap used vs free;
+- memory used vs available;
 - disk throughput and disk operations;
 - filesystem usage by device;
-- network throughput, packets, errors and drops;
+- network throughput plus errors and drops;
 - process CPU and resident memory per application service, from
   `prom-client`.
 
@@ -139,7 +139,7 @@ Invoke-RestMethod "http://localhost:9090/api/v1/query?query=host:disk_usage:perc
 ```
 
 4. Rules: `http://localhost:9090/rules` shows the `concert-ops` group with 18
-   recording rules and the `default` group with 19 alerts.
+   recording rules and the `default` group with 21 alerts.
 
 5. Dashboard: `http://localhost:3007/d/concert-ops-infrastructure`.
 

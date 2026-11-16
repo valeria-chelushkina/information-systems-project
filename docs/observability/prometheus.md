@@ -127,10 +127,7 @@ Targets are declared in `infra/prometheus/prometheus.yml`:
   static_configs:
     - targets: ['ticketing:3000']
       labels:
-        instance_group: concert-ops
-        instance_env: lab
         instance_type: service
-        team: backend
 ```
 
 Alert rules live in `infra/prometheus/alerts.yml`:

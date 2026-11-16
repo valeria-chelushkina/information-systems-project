@@ -195,10 +195,10 @@ rabbitmq_queue_consumers{queue="notifications"}
 ```
 
 12. Grafana: **Queue depth**, **Throughput**, **Consumers**, **Publish
-    failures**, **Message bytes**, **Dead-letter queue**, **Ticket email
-    deliveries**, **Dead-lettered (range)** and **Retry queue ready** on the
-    Messaging dashboard. The admin panel adds a **Notifications** page with the
-    same delivery state.
+    failures**, **Dead-letter queue**, **Ticket email deliveries**,
+    **Dead-lettered (range)** and **Retry queue ready** on the Messaging
+    dashboard. The admin panel adds a **Notifications** page with the same
+    delivery state.
 
 ## Failure behaviour
 

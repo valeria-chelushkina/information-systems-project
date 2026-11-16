@@ -95,7 +95,7 @@
       "type": "stat",
       "title": "Consumers",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -125,7 +125,7 @@
       "type": "stat",
       "title": "Publish failures (range)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 8 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -155,37 +155,14 @@
         }
       ]
     },
-    {
-      "id": 5,
-      "type": "stat",
-      "title": "Message bytes",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes",
-          "color": { "mode": "fixed", "fixedColor": "blue" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "max(rabbitmq_queue_messages_bytes) or vector(0)", "instant": true, "range": false }
-      ]
-    },
+    
     {
       "id": 6,
       "type": "stat",
       "title": "Dead-letter queue",
       "description": "Messages rejected by the consumer and routed to notifications.dlq",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
       "fieldConfig": {
         "defaults": {
           "unit": "short",

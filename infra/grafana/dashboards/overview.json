@@ -228,79 +228,14 @@
         { "refId": "A", "expr": "1000 * service:http_request_duration_p95:15m", "legendFormat": "{{service}}" }
       ]
     },
-    {
-      "id": 11,
-      "type": "stat",
-      "title": "DB connections used",
-      "description": "worst database, percent of max_connections",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 12 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "min": 0,
-          "max": 100,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 60 },
-              { "color": "red", "value": 80 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "max(postgres:connections:percent)", "instant": true, "range": false }
-      ]
-    },
-    {
-      "id": 12,
-      "type": "stat",
-      "title": "Postgres cache hit",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 12 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "min": 0,
-          "max": 100,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "orange", "value": 90 },
-              { "color": "green", "value": 99 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "postgres:cache_hit:percent5m or vector(100)", "instant": true, "range": false }
-      ]
-    },
+    
+    
     {
       "id": 13,
       "type": "stat",
       "title": "DB pool waiting",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 12 },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 12 },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -326,43 +261,14 @@
         { "refId": "A", "expr": "sum(db_pool_waiting_requests) or vector(0)", "instant": true, "range": false }
       ]
     },
-    {
-      "id": 14,
-      "type": "stat",
-      "title": "RabbitMQ consumers",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 12 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "max(rabbitmq_queue_consumers) or vector(0)", "instant": true, "range": false }
-      ]
-    },
+    
     {
       "id": 15,
       "type": "stat",
       "title": "Host CPU usage",
       "description": "Non-idle CPU time across all cores",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 12 },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -396,7 +302,7 @@
       "title": "Host memory usage",
       "description": "Used RAM as a share of total RAM",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 12 },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -430,7 +336,7 @@
       "title": "Host disk usage",
       "description": "Root filesystem usage; falls back to /var/lib on Docker Desktop",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 12 },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -456,31 +362,6 @@
       },
       "targets": [
         { "refId": "A", "expr": "host:disk_usage:percent", "instant": true, "range": false }
-      ]
-    },
-    {
-      "id": 18,
-      "type": "stat",
-      "title": "Host network throughput",
-      "description": "Received plus transmitted bytes per second",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 16 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "Bps",
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "(host:network_receive:rate5m + host:network_transmit:rate5m) or vector(0)", "instant": true, "range": false }
       ]
     }
   ]

@@ -30,7 +30,7 @@ groups:
         expr: 100 * sum(rate(pg_stat_database_blks_hit{datname=~"db_.*"}[5m])) / (sum(rate(pg_stat_database_blks_hit{datname=~"db_.*"}[5m])) + sum(rate(pg_stat_database_blks_read{datname=~"db_.*"}[5m])))
 
       - record: rabbitmq:queue_backlog
-        expr: rabbitmq_queue_messages_ready
+        expr: rabbitmq_queue_messages_ready{queue="notifications"}
 
       - record: host:cpu_usage:percent
         expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
