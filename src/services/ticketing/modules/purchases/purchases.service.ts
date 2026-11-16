@@ -1,14 +1,4 @@
 import { ticketingConfig } from '@/services/ticketing/config.js';
-import {
-  holdRejectionsTotal,
-  holdsCreatedTotal,
-  holdsExpiredTotal,
-  purchasesTotal,
-  refundedCentsTotal,
-  refundsTotal,
-  revenueCentsTotal,
-  ticketsSoldTotal,
-} from '@/services/ticketing/observability/business-metrics.constants.js';
 import { transaction } from '@/shared/db/transaction.js';
 import { EventsRepository } from '@/services/ticketing/modules/events/events.repository.js';
 import { HoldsRepository } from '@/services/ticketing/modules/purchases/holds.repository.js';
@@ -55,14 +45,12 @@ export class PurchasesService {
       }
 
       if (event.status !== 'on_sale') {
-        holdRejectionsTotal.inc({ reason: 'event_not_on_sale' });
         throw HttpError.conflict('event_not_on_sale', `Event ${event.id} is not on sale`);
       }
 
       const reserved = await this.tiers.reserve(tier.id, input.quantity, tx);
 
       if (!reserved) {
-        holdRejectionsTotal.inc({ reason: 'insufficient_inventory' });
         throw HttpError.conflict(
           'insufficient_inventory',
           'Not enough seats are available for this price tier',
@@ -81,8 +69,6 @@ export class PurchasesService {
         tx,
       );
     });
-
-    holdsCreatedTotal.inc();
 
     return hold;
   }
@@ -131,10 +117,6 @@ export class PurchasesService {
       return expired.length;
     });
 
-    if (expiredCount > 0) {
-      holdsExpiredTotal.inc(expiredCount);
-    }
-
     return expiredCount;
   }
 
@@ -142,7 +124,6 @@ export class PurchasesService {
     const existing = await this.orders.findByIdempotencyKey(input.idempotencyKey);
 
     if (existing) {
-      purchasesTotal.inc({ status: 'replay' });
       return this.loadOrder(existing, false);
     }
 
@@ -221,10 +202,6 @@ export class PurchasesService {
         return { order, tickets: issued, created: true };
       });
 
-      purchasesTotal.inc({ status: 'ok' });
-      ticketsSoldTotal.inc(result.tickets.length);
-      revenueCentsTotal.inc(result.order.totalCents);
-
       void this.publisher.publish(result);
 
       return result;
@@ -232,11 +209,9 @@ export class PurchasesService {
       const concurrent = await this.orders.findByIdempotencyKey(input.idempotencyKey);
 
       if (concurrent) {
-        purchasesTotal.inc({ status: 'replay' });
         return this.loadOrder(concurrent, false);
       }
 
-      purchasesTotal.inc({ status: 'failed' });
       throw error;
     }
   }
@@ -328,9 +303,6 @@ export class PurchasesService {
 
       return { order: updated, refund, tickets: refundedTickets };
     });
-
-    refundsTotal.inc();
-    refundedCentsTotal.inc(result.refund.amountCents);
 
     return result;
   }

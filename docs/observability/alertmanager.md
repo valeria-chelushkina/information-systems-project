@@ -6,7 +6,7 @@ Alertmanager receives alerts from Prometheus and decides what to do with them:
 group similar alerts, suppress duplicates, repeat notifications on a schedule
 and deliver them to a receiver.
 
-Prometheus evaluates 17 rules from `infra/prometheus/alerts.yml`. When a rule
+Prometheus evaluates 18 rules from `infra/prometheus/alerts.yml`. When a rule
 becomes `firing`, Alertmanager groups it and sends the notification to the
 `gmail-receiver`, which contains both an email integration and the `notify`
 webhook. On recovery it also sends `resolved`, because `send_resolved: true`.
@@ -29,9 +29,6 @@ SMTP credentials are injected at container start, so they never live in Git.
 | `RabbitmqQueueBacklog` | more than 100 ready messages for 5m |
 | `RabbitmqNoConsumers` | no active consumers for 5m |
 | `RabbitmqPublishFailures` | any failed publish in the last 5m |
-| `NoEventsOnSale` | `events_total{status="on_sale"} == 0` for 10m |
-| `RefundRateHigh` | more than 20% refunds over the last hour, for 30m |
-| `PurchaseFailures` | any failed purchase in the last 5m |
 | `AuthFailureSpike` | more than 1 failure/s for 5m |
 
 ## Configuration

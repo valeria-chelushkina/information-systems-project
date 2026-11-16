@@ -11,8 +11,6 @@ In this project it is the only source of numeric data:
 - HTTP metrics: `http_requests_total`, `http_request_duration_seconds`,
   `http_requests_in_flight`;
 - application database metrics: pool gauges, query duration;
-- business metrics: tickets, purchases, refunds, holds, revenue, bookings,
-  check-ins, `hold_rejections_total`;
 - PostgreSQL engine metrics from postgres_exporter;
 - RabbitMQ and exporter health;
 - host CPU, memory, swap, filesystem, disk I/O and network metrics from
@@ -72,7 +70,7 @@ Expected: `Prometheus Server is Ready.`
   Select-Object @{ n = 'job'; e = { $_.labels.job } }, health
 ```
 
-4. Rules: `http://localhost:9090/rules` contains the `default` group with 21
+4. Rules: `http://localhost:9090/rules` contains the `default` group with 18
    alerts and the `concert-ops` group with 18 recording rules.
 
 5. Current alerts: `http://localhost:9090/alerts`.
@@ -83,10 +81,8 @@ Expected: `Prometheus Server is Ready.`
 up
 service:http_requests:rate5m
 1000 * service:http_request_duration_p95:15m
-sum by (status) (rate(purchases_total[5m]))
 pg_up
 rabbitmq_queue_messages_ready
-events_total{status="on_sale"}
 host:cpu_usage:percent
 host:memory_usage:percent
 host:disk_usage:percent

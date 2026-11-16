@@ -43,17 +43,16 @@ Alloy ──► Loki ──► Grafana
 
 ## Dashboards
 
-Grafana contains nine provisioned dashboards, grouped by the `concert-ops` tag:
+Grafana contains eight provisioned dashboards, grouped by the `concert-ops` tag:
 
 | Dashboard | UID | Focus |
 | --- | --- | --- |
-| Concert Ops Overview | `concert-ops-overview` | availability, errors, latency, business, saturation |
+| Concert Ops Overview | `concert-ops-overview` | availability, errors, latency, queue and host saturation |
 | API Monitoring | `concert-ops-api` | percentiles, routes, failures, route and status tables |
 | Service Detail | `concert-ops-service` | one service: golden signals, routes, latency heatmap, DB queries, pool |
 | Infrastructure | `concert-ops-infrastructure` | host CPU, memory, swap, disk I/O, network and per-service process usage |
 | Postgres | `concert-ops-postgres` | connections, transactions, cache, locks, slow statements |
 | Messaging | `concert-ops-messaging` | queue depth, throughput, consumers, failures |
-| Business | `concert-ops-business` | sales outcomes, revenue, funnel, event portfolio, unit economics |
 | Logs | `concert-ops-logs` | log volume, errors, request lookup, status from logs |
 | Traces | `concert-ops-traces` | recent traces and error traces |
 
@@ -103,6 +102,3 @@ Tempo may return `503` during its first 20-30 seconds after start.
 - **Alerts**: Prometheus evaluates rules from
   `infra/prometheus/alerts.yml`, Alertmanager groups them and calls the
   `notify` webhook, which logs the alert to stdout and therefore to Loki.
-- **Business state**: ticketing exposes gauges recomputed from PostgreSQL every
-  15 seconds (`events_total`, inventory, upcoming events) and counters such as
-  `hold_rejections_total`.

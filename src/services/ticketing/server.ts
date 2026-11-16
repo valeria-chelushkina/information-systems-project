@@ -4,7 +4,6 @@ import { ticketingConfig } from '@/services/ticketing/config.js';
 import { config } from '@/shared/config/index.js';
 import { pool } from '@/shared/db/client.js';
 import { PurchasesSweeper } from '@/services/ticketing/modules/purchases/purchases.sweeper.js';
-import { BusinessStateSweeper } from '@/services/ticketing/observability/business-state.sweeper.js';
 import { logger } from '@/shared/observability/logger.js';
 
 const app = createApp();
@@ -25,14 +24,10 @@ server.on('error', (error: NodeJS.ErrnoException) => {
 const sweeper = new PurchasesSweeper();
 sweeper.start(ticketingConfig.holdSweepIntervalMs);
 
-const businessState = new BusinessStateSweeper();
-businessState.start();
-
 function shutdown(signal: string): void {
   logger.info({ signal }, 'shutting down');
 
   sweeper.stop();
-  businessState.stop();
 
   server.close(() => {
     void shutdownTracing().finally(() => {

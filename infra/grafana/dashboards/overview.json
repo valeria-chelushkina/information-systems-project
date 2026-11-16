@@ -229,123 +229,12 @@
       ]
     },
     {
-      "id": 7,
-      "type": "stat",
-      "title": "Tickets sold (range)",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 12 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": { "mode": "fixed", "fixedColor": "blue" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "round(sum(increase(tickets_sold_total[$__range]))) or vector(0)", "instant": true, "range": false }
-      ]
-    },
-    {
-      "id": 8,
-      "type": "stat",
-      "title": "Revenue (range)",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 12 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "currencyUSD",
-          "color": { "mode": "fixed", "fixedColor": "green" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "sum(increase(revenue_cents_total[$__range])) / 100 or vector(0)", "instant": true, "range": false }
-      ]
-    },
-    {
-      "id": 9,
-      "type": "stat",
-      "title": "Purchase success ratio",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 12 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "min": 0,
-          "max": 100,
-          "noValue": "n/a",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "orange", "value": 95 },
-              { "color": "green", "value": 99 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "100 * sum(increase(purchases_total{status=\"ok\"}[$__range])) / sum(increase(purchases_total[$__range]))",
-          "instant": true,
-          "range": false
-        }
-      ]
-    },
-    {
-      "id": 10,
-      "type": "stat",
-      "title": "Refunds (range)",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 12 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": { "mode": "fixed", "fixedColor": "orange" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "textMode": "auto"
-      },
-      "targets": [
-        { "refId": "A", "expr": "round(sum(increase(refunds_total[$__range]))) or vector(0)", "instant": true, "range": false }
-      ]
-    },
-    {
       "id": 11,
       "type": "stat",
       "title": "DB connections used",
       "description": "worst database, percent of max_connections",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 12 },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -378,7 +267,7 @@
       "type": "stat",
       "title": "Postgres cache hit",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 12 },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -411,7 +300,7 @@
       "type": "stat",
       "title": "DB pool waiting",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 12 },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -442,7 +331,7 @@
       "type": "stat",
       "title": "RabbitMQ consumers",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 16 },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 12 },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -473,7 +362,7 @@
       "title": "Host CPU usage",
       "description": "Non-idle CPU time across all cores",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 20 },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -507,7 +396,7 @@
       "title": "Host memory usage",
       "description": "Used RAM as a share of total RAM",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 20 },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -541,7 +430,7 @@
       "title": "Host disk usage",
       "description": "Root filesystem usage; falls back to /var/lib on Docker Desktop",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 20 },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -575,7 +464,7 @@
       "title": "Host network throughput",
       "description": "Received plus transmitted bytes per second",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 20 },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 16 },
       "fieldConfig": {
         "defaults": {
           "unit": "Bps",

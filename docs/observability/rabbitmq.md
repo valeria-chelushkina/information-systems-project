@@ -150,10 +150,6 @@ The call happens after the purchase transaction commits
 (`purchases.service.ts`), so a failed purchase never publishes an event:
 
 ```ts
-purchasesTotal.inc({ status: 'ok' });
-ticketsSoldTotal.inc(result.tickets.length);
-revenueCentsTotal.inc(result.order.totalCents);
-
 void this.publisher.publish(result);
 ```
 

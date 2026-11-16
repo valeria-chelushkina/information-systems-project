@@ -149,8 +149,8 @@ More commands: [development](docs/development.md). More scenarios:
 
 ## Observability
 
-Grafana contains nine provisioned dashboards: Overview, API Monitoring,
-Service Detail, Infrastructure, Postgres, Messaging, Business, Logs and Traces.
+Grafana contains eight provisioned dashboards: Overview, API Monitoring,
+Service Detail, Infrastructure, Postgres, Messaging, Logs and Traces.
 The stack exposes metrics, logs and traces out of the box. Alertmanager can also
 email alerts when `SMTP_*` and `ALERT_EMAIL_TO` are set.
 
@@ -215,12 +215,6 @@ Captured from the Docker demo with the Last 15 minutes time range.
 ### Messaging
 
 ![Messaging](docs/screenshots/messaging.png)
-
-### Business
-
-![Business](docs/screenshots/business-1.png)
-
-![Events by status](docs/screenshots/business-2.png)
 
 ### Logs
 

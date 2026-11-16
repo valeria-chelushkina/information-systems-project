@@ -1,5 +1,4 @@
 import { CheckInRepository } from '@/services/ticketing/modules/check-in/check-in.repository.js';
-import { ticketsCheckedInTotal } from '@/services/ticketing/observability/business-metrics.constants.js';
 import type { CheckInResult } from '@/services/ticketing/typedefs/check-in.typedefs.js';
 import type { TicketRow } from '@/services/ticketing/typedefs/ticket.typedefs.js';
 import { HttpError } from '@/shared/errors/http-error.js';
@@ -11,7 +10,6 @@ export class CheckInService {
     const ticket = await this.resolve(qrToken);
 
     if (!ticket) {
-      ticketsCheckedInTotal.inc({ result: 'rejected' });
       throw HttpError.notFound('ticket_not_found', 'No ticket matches this code');
     }
 
@@ -28,7 +26,6 @@ export class CheckInService {
         this.reject(current);
       }
 
-      ticketsCheckedInTotal.inc({ result: 'rejected' });
       throw HttpError.conflict('ticket_not_admitted', 'Ticket could not be admitted');
     }
 
@@ -37,8 +34,6 @@ export class CheckInService {
     if (!event) {
       throw HttpError.notFound('event_not_found', `Event ${updated.eventId} was not found`);
     }
-
-    ticketsCheckedInTotal.inc({ result: 'ok' });
 
     return { ticket: updated, event };
   }
@@ -80,8 +75,6 @@ export class CheckInService {
   }
 
   private reject(ticket: TicketRow): never {
-    ticketsCheckedInTotal.inc({ result: 'rejected' });
-
     if (ticket.status === 'checked_in') {
       throw HttpError.conflict('ticket_already_checked_in', 'Ticket was already checked in', {
         checkedInAt: ticket.checkedInAt?.toISOString() ?? null,
