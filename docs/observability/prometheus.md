@@ -11,6 +11,10 @@ In this project it is the only source of numeric data:
 - HTTP metrics: `http_requests_total`, `http_request_duration_seconds`,
   `http_requests_in_flight`;
 - application database metrics: pool gauges, query duration;
+- RabbitMQ application counters: `rabbitmq_messages_published_total`,
+  `rabbitmq_messages_consumed_total`, `rabbitmq_publish_failures_total`;
+- ticket email delivery metrics: `notification_deliveries_total`,
+  `notification_delivery_duration_seconds`;
 - PostgreSQL engine metrics from postgres_exporter;
 - RabbitMQ and exporter health;
 - host CPU, memory, swap, filesystem, disk I/O and network metrics from

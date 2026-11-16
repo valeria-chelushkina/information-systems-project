@@ -31,7 +31,7 @@ from the business services.
         │
  ┌──────▼──────┐        ┌──────────────┐
  │ PostgreSQL  │◄───────│ postgres_    │
- │ 3 databases │        │ exporter ×2  │
+ │ 2 databases │        │ exporter ×2  │
  └─────────────┘        └──────────────┘
 ```
 
@@ -46,7 +46,8 @@ from the business services.
 | `notify` | Alertmanager webhook, RabbitMQ consumer and ticket email worker | SQLite (`notify.db`) |
 
 Infrastructure: PostgreSQL, RabbitMQ, Prometheus, Grafana, Loki + Alloy,
-Tempo + OpenTelemetry Collector, Alertmanager, two postgres exporters.
+Tempo + OpenTelemetry Collector, Alertmanager, Mailpit, two postgres exporters
+and node_exporter.
 
 ## Data ownership
 

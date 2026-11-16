@@ -32,6 +32,10 @@ SMTP credentials are injected at container start, so they never live in Git.
 | `RabbitmqDlqNotEmpty` | any message in `notifications.dlq` for 5m |
 | `TicketEmailRetries` | more than 3 ticket email retries in 10m |
 | `TicketEmailDeadLettered` | any ticket email parked in the dead-letter queue |
+| `HostDown` | `up{instance_type="host"} == 0` for 5m |
+| `HostHighCpu` | host CPU above 85% for 10m |
+| `HostHighMemory` | host memory above 90% for 10m |
+| `HostLowDisk` | host disk above 85% for 10m |
 | `AuthFailureSpike` | more than 1 failure/s for 5m |
 
 ## Configuration
@@ -188,12 +192,11 @@ With the stack running:
 npm run demo:alerts
 ```
 
-The script runs three scenarios by default:
+The script runs two scenarios by default:
 
 | Scenario | Trigger | Alerts |
 | --- | --- | --- |
 | `database` | stops PostgreSQL, sends requests, restarts it | `ServiceError`, `PostgresDown` |
-| `purchase` | keeps sending failed purchase attempts until the rule fires | `PurchaseFailures` |
 | `synthetic` | injects alerts with distinct reasons into Alertmanager | `HighLatency`, `PostgresDeadlocks`, `RefundRateHigh`, `RabbitmqQueueBacklog` |
 
 Choose scenarios explicitly:
@@ -201,7 +204,7 @@ Choose scenarios explicitly:
 ```bash
 npm run demo:alerts -- --scenario=database
 npm run demo:alerts -- --scenario=synthetic
-npm run demo:alerts -- --scenario=database,purchase,synthetic
+npm run demo:alerts -- --scenario=database,synthetic
 ```
 
 Two optional long-running scenarios:

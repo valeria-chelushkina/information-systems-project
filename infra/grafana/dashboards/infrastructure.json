@@ -111,7 +111,7 @@
         "textMode": "auto"
       },
       "targets": [
-        { "refId": "A", "expr": "host:swap_usage:percent or vector(0)", "instant": true, "range": false }
+        { "refId": "A", "expr": "max(host:swap_usage:percent) or vector(0)", "instant": true, "range": false }
       ]
     },
     {

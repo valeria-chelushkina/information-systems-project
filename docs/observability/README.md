@@ -14,15 +14,23 @@ cd D:\University\4course\1sem\information-systems
 
 ```
 ticketing / catalog / auth / notify
-        ├── /metrics ────────────────► Prometheus
-        ├── OTLP HTTP 4318 ──────────► otel-collector ──► Tempo
-        └── ticketing ──publish──► RabbitMQ ──consume──► notify
+        | /metrics
+        v
+   Prometheus ---> Grafana
+        |              ^
+        +--> Alertmanager --> SMTP + notify --> Alloy --> Loki --> Grafana
+        |
+        +-- rules / recording
 
-Prometheus ──► Grafana (dashboards, Explore)
-Prometheus ──► Alertmanager ──► notify (webhook)
+ticketing --publish--> RabbitMQ --consume--> notify --> Mailpit / SMTP
+                          |
+                          +-- notifications.retry (TTL, delayed retry)
+                          +-- notifications.dlq (parking queue)
 
-postgres_exporter ──► Prometheus
-Alloy ──► Loki ──► Grafana
+postgres_exporter --> Prometheus
+node_exporter     --> Prometheus
+Alloy             --> Loki
+otel-collector    --> Tempo
 ```
 
 ## Services
@@ -72,6 +80,7 @@ Invoke-WebRequest -UseBasicParsing http://localhost:9093/-/ready | Select-Object
 (Invoke-WebRequest -UseBasicParsing http://localhost:9188/metrics).StatusCode
 (Invoke-WebRequest -UseBasicParsing http://localhost:15692/metrics).StatusCode
 (Invoke-WebRequest -UseBasicParsing http://localhost:9100/metrics).StatusCode
+(Invoke-WebRequest -UseBasicParsing http://localhost:8025/api/v1/info).StatusCode
 ```
 
 Expected:
@@ -82,6 +91,7 @@ Prometheus Server is Ready.
 ready
 ready
 OK
+200
 200
 200
 200
@@ -98,6 +108,8 @@ Tempo may return `503` during its first 20-30 seconds after start.
   CPU, memory, swap, filesystem, disk I/O and network series to Prometheus.
 - **Logs**: Alloy reads container stdout through the Docker socket and sends it
   to Loki; Grafana shows it in Explore.
+- **Ticket email**: `notify` consumes `purchase.completed`, stores delivery
+  state in SQLite and sends the ticket email through Mailpit or SMTP.
 - **Traces**: services export OTLP to otel-collector, which batches and forwards
   to Tempo; Grafana renders the waterfall.
 - **Alerts**: Prometheus evaluates rules from

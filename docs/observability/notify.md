@@ -15,16 +15,17 @@
 The alert path:
 
 ```
-Prometheus → Alertmanager → notify → stdout → Alloy → Loki → Grafana
-                         └→ SMTP → email
+Prometheus --> Alertmanager --> SMTP --> email
+                     |
+                     +--> notify --> stdout --> Alloy --> Loki --> Grafana
 ```
 
 The messaging path:
 
 ```
-ticketing → RabbitMQ (notifications) → notify → ticket email → Mailpit / SMTP
-                                            └→ delivery state (SQLite)
-                                            └→ stdout → Alloy → Loki
+ticketing --> RabbitMQ (notifications) --> notify --> ticket email --> Mailpit / SMTP
+                                              +--> delivery state (SQLite)
+                                              +--> stdout --> Alloy --> Loki
 ```
 
 The service has no host port: it is reachable only inside the Compose network
@@ -86,7 +87,8 @@ one entry code per ticket.
    (30 s by default) and then dead-letters it back to the main exchange, so the
    consumer sees the same event again with `x-attempts` incremented.
 5. **Park** — after `PURCHASE_MAX_ATTEMPTS` (4 by default) the row becomes
-   `dead` and the message is published to `notifications.dlq`.
+   `dead` and the message is published to `concert-ops.dlx`, which routes it to
+   `notifications.dlq`.
 6. **Observe** — `notification_deliveries_total{status}` counts `delivered`,
    `retried`, `dead_lettered`, `skipped` and `invalid`; the admin panel reads
    the same state through `GET /notifications`. The last error is kept after a

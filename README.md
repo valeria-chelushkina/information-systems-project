@@ -191,7 +191,7 @@ per-service documents: [Prometheus](docs/observability/prometheus.md),
 | [Observability](docs/observability/README.md) | per-service guides and quick health checks |
 ## Screenshots
 
-Captured from the Docker demo with the Last 15 minutes time range.
+Captured from the Docker demo with recent load-test traffic.
 
 ### Concert Ops Overview
 
@@ -208,6 +208,10 @@ Captured from the Docker demo with the Last 15 minutes time range.
 ![Service Detail](docs/screenshots/service-detail-1.png)
 
 ![Database query statistics](docs/screenshots/service-detail-2.png)
+
+### Infrastructure
+
+![Infrastructure](docs/screenshots/infrastructure.png)
 
 ### Postgres
 

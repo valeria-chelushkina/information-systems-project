@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -27,7 +26,7 @@ const prometheusUrl = process.env.PROMETHEUS_URL ?? 'http://127.0.0.1:9090';
 const alertmanagerUrl = process.env.ALERTMANAGER_URL ?? 'http://127.0.0.1:9093';
 const composeEnv = existsSync('.env') ? [] : ['--env-file', '.env.example'];
 
-const DEFAULT_SCENARIOS = 'database,purchase,synthetic';
+const DEFAULT_SCENARIOS = 'database,synthetic';
 const scenarioArg = process.argv.find((arg) => arg.startsWith('--scenario='));
 const scenarios = new Set(
   (scenarioArg ? scenarioArg.split('=')[1] : DEFAULT_SCENARIOS)?.split(',') ?? [],
@@ -128,27 +127,6 @@ async function hitEvents(token: string): Promise<number> {
   try {
     const response = await fetch(`${ticketingUrl}/api/events`, {
       headers: { authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(5000),
-    });
-    return response.status;
-  } catch {
-    return 0;
-  }
-}
-
-async function failedPurchase(token: string): Promise<number> {
-  try {
-    const response = await fetch(`${ticketingUrl}/api/purchases`, {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${token}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        holdId: randomUUID(),
-        idempotencyKey: randomUUID(),
-        customerEmail: 'demo@example.com',
-      }),
       signal: AbortSignal.timeout(5000),
     });
     return response.status;
@@ -306,31 +284,6 @@ async function runDatabase(token: string): Promise<void> {
   record('database', 'ServiceError cleared', await waitForPrometheusClear('ServiceError', 120_000));
 }
 
-async function runPurchase(token: string): Promise<void> {
-  console.log('[alerts] scenario purchase: sending failed purchase attempts');
-
-  const until = Date.now() + 7 * 60_000;
-  let fired = false;
-  let lastState = '';
-
-  while (Date.now() < until && !fired) {
-    const status = await failedPurchase(token);
-    const alerts = await prometheusAlerts();
-    const alert = alerts.find((item) => item.labels.alertname === 'PurchaseFailures');
-    const state = alert?.state ?? 'inactive';
-
-    if (state !== lastState) {
-      console.log(`[alerts] purchase attempt: ${status}, PurchaseFailures ${state}`);
-      lastState = state;
-    }
-
-    fired = state === 'firing';
-    await delay(5000);
-  }
-
-  await recordAlert('purchase', 'PurchaseFailures', fired);
-}
-
 async function runBroker(): Promise<void> {
   console.log('[alerts] scenario broker: stopping rabbitmq');
   compose('stop', 'rabbitmq');
@@ -461,10 +414,6 @@ async function main(): Promise<void> {
 
   if (scenarios.has('database')) {
     await runDatabase(token);
-  }
-
-  if (scenarios.has('purchase')) {
-    await runPurchase(token);
   }
 
   if (scenarios.has('broker')) {

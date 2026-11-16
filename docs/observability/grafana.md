@@ -36,7 +36,7 @@ GRAFANA_ADMIN_PASSWORD=admin-password
 | Dashboard | UID | Focus |
 | --- | --- | --- |
 | Concert Ops Overview | `concert-ops-overview` | 10 panels: availability, errors, p95, queue and host saturation |
-| API Monitoring | `concert-ops-api` | p50/p95/p99, 4xx/5xx ratios, slow routes, request columns, tables |
+| API Monitoring | `concert-ops-api` | p50/p95/p99, 4xx/5xx ratios, slow routes, requests per minute, route and status tables |
 | Service Detail | `concert-ops-service` | one service: golden signals, routes, latency heatmap, DB query table, pool |
 | Infrastructure | `concert-ops-infrastructure` | host CPU, memory, swap, disk usage and I/O, network, per-service process CPU and memory |
 | Postgres | `concert-ops-postgres` | connections, transactions, cache, locks, slow statements |
@@ -44,9 +44,9 @@ GRAFANA_ADMIN_PASSWORD=admin-password
 | Logs | `concert-ops-logs` | log volume, errors, request lookup, status from logs |
 | Traces | `concert-ops-traces` | recent traces and error traces |
 
-**API Monitoring** and **Service Detail** use `service` and `method` variables;
-**Postgres** uses `datname`; **Traces** uses `service`. Every dashboard has a
-**Dashboards** dropdown in the top bar.
+**API Monitoring** uses `service` and `method` variables; **Service Detail**
+uses `service`; **Postgres** uses `datname`; **Traces** uses `service`. Every
+dashboard has a **Dashboards** dropdown in the top bar.
 
 ## How to verify
 

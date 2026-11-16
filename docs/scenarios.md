@@ -68,12 +68,11 @@ the main [README](../README.md#one-command-demo).
 
 ## Alert demo
 
-`npm run demo:alerts` exercises the alert path and email delivery. It runs three
-scenarios by default: a PostgreSQL outage (`ServiceError`, `PostgresDown`),
-repeated failed purchases (`PurchaseFailures`) and four injected alerts with
-different reasons (`HighLatency`, `PostgresDeadlocks`, `RefundRateHigh`,
-`RabbitmqQueueBacklog`). Select scenarios with `--scenario=name[,name]`;
-`broker` and `auth` are optional longer runs. See
+`npm run demo:alerts` exercises the alert path and email delivery. It runs two
+scenarios by default: a PostgreSQL outage (`ServiceError`, `PostgresDown`) and
+four injected alerts with different reasons (`HighLatency`,
+`PostgresDeadlocks`, `RefundRateHigh`, `RabbitmqQueueBacklog`). Select scenarios
+with `--scenario=name[,name]`; `broker` and `auth` are optional longer runs. See
 [Alertmanager](observability/alertmanager.md#run-the-alert-demo).
 
 Synthetic alerts go straight to Alertmanager with a `demo` instance label, so

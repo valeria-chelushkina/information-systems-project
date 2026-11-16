@@ -1,12 +1,13 @@
 # Database schema
 
-The system has three databases with separate ownership:
+The system has four databases with separate ownership:
 
 | Database | Engine | Owner | Tables |
 | --- | --- | --- | --- |
 | `db_ticketing` | PostgreSQL 17 | `ticketing` | events, price tiers, holds, orders, tickets, payments, refunds |
 | `db_catalog` | PostgreSQL 17 | `catalog` | performers, venues, booking requests |
 | `auth.db` | SQLite | `auth` | users, sessions, login attempts |
+| `notify.db` | SQLite | `notify` | notification_deliveries |
 
 There are no foreign keys between databases. References across services are
 ids plus snapshotted display names. Money is always integer cents.
@@ -254,6 +255,45 @@ erDiagram
 The SQLite schema is created at startup and by the auth seed script; there is
 no SQL migration folder for auth.
 
+## Notify (SQLite)
+
+`notify` keeps a delivery journal so a redelivered RabbitMQ event does not send
+a second ticket email.
+
+```mermaid
+erDiagram
+    NOTIFICATION_DELIVERIES {
+        text event_id PK
+        text order_id
+        text recipient
+        text status
+        int attempts
+        text last_error
+        text created_at
+        text updated_at
+    }
+```
+
+| Column | Notes |
+| --- | --- |
+| `event_id` | primary key; the `id` from `purchase.completed` |
+| `order_id` | ticketing order reference, no foreign key |
+| `recipient` | customer email used for the delivery |
+| `status` | `sending`, `delivered`, `retrying`, `dead` or `skipped` |
+| `attempts` | incremented on every claim, including redeliveries |
+| `last_error` | truncated error from the last failed attempt |
+| `created_at`, `updated_at` | ISO timestamps |
+
+Rules:
+
+- the claim uses `INSERT … ON CONFLICT DO UPDATE … WHERE status <> 'delivered'`,
+  so a delivered event is skipped and a redelivery increments `attempts`;
+- `last_error` is kept after a successful retry, so the admin page can show
+  `Recovered after: <error>`;
+- index `notification_deliveries_status_idx` on `(status, updated_at)`;
+- the database runs in WAL mode with a 5-second busy timeout;
+- the schema is created at startup, with no SQL migration folder.
+
 ## Cross-database rules
 
 | Rule | Reason |
@@ -264,6 +304,7 @@ no SQL migration folder for auth.
 | money is integer cents | no floating-point rounding |
 | timestamps are timezone-aware in PostgreSQL | consistent event and hold expiry |
 | statuses are text plus `CHECK` constraints | explicit state machines without enum migrations |
+| notify delivery rows reference `event_id` and `order_id` without FKs | ticketing owns the event and order; notify only keeps its delivery journal |
 
 Migrations live in `drizzle/ticketing/` and `drizzle/catalog/`. Apply them with
 `npm run db:migrate` and `npm run db:migrate:catalog`.

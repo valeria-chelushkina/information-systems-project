@@ -24,28 +24,25 @@ provides idempotency and delivery state.
 ## Topology
 
 ```
-ticketing ──publish──► exchange concert-ops (direct, durable)
-                         routing key: purchase.completed
-                              │
-                              ▼
+ticketing --publish--> exchange concert-ops (direct)
+                         routing key purchase.completed
+                              |
+                              v
                     queue notifications (durable, 1 consumer)
-                         │                         │
-                consume  │                         │ retry
-                         ▼                         ▼
+                         |                         |
+                consume  |                         | retry (transient failure)
+                         v                         v
                       notify            queue notifications.retry
-                         │                 TTL 30s, then dead-letter
-                         │                         │ back to concert-ops
-                         │                         ▼
-                         │                 (redelivered to notifications)
-                         │
-                         │ after the last attempt
-                         ▼
-                 exchange concert-ops.dlx (direct)
-                         │ notifications.failed
-                         ▼
-                  queue notifications.dlq
+                         |                 TTL 30s
+                         |                    |
+                         |                    +--> concert-ops (redelivered)
+                         |
+                         +-- last attempt --> exchange concert-ops.dlx
+                                                   routing key notifications.failed
+                                                   |
+                                                   v
+                                            queue notifications.dlq
 ```
-
 Every service has its own RabbitMQ user and the project uses a dedicated
 virtual host, `concert_ops`. The broker itself lives in the `rabbitmq`
 container; the exchange, queues and bindings are declared by the application.
@@ -98,17 +95,17 @@ API, then exits. It is idempotent, so it can run on every `docker compose up`.
 1. Container is healthy and the init job succeeded:
 
 ```powershell
-docker compose ps rabbitmq rabbitmq-init
+docker compose ps -a rabbitmq rabbitmq-init
 ```
 
 2. Management UI: `http://localhost:15672`, login `admin` / `admin`.
 
    Switch the virtual host to **concert_ops**. Queues should contain
-   `notifications` (`1 consumer`, `Ready: 0`, `Unacked: 0`) and
-   `notifications.dlq` (empty). Exchanges should contain `concert-ops` and
-   `concert-ops.dlx`, both of type `direct`. **Admin → Users** shows
-   `svc_ticketing` and `svc_notify`; **Admin → Permissions** shows both under
-   `concert_ops`.
+   `notifications` (`1 consumer`, `Ready: 0`, `Unacked: 0`),
+   `notifications.retry` (empty, TTL 30s) and `notifications.dlq` (empty).
+   Exchanges should contain `concert-ops` and `concert-ops.dlx`, both of type
+   `direct`. **Admin → Users** shows `svc_ticketing` and `svc_notify`;
+   **Admin → Permissions** shows both under `concert_ops`.
 
 3. Broker metrics with queue labels:
 
