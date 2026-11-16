@@ -5,6 +5,7 @@ export const webConfig = {
   authBaseUrl: optionalEnv('AUTH_BASE_URL', 'http://127.0.0.1:3005'),
   ticketingBaseUrl: optionalEnv('TICKETING_BASE_URL', 'http://127.0.0.1:3001'),
   catalogBaseUrl: optionalEnv('CATALOG_BASE_URL', 'http://127.0.0.1:3003'),
+  notifyBaseUrl: optionalEnv('NOTIFY_BASE_URL', 'http://127.0.0.1:3000'),
   timeoutMs: Number(optionalEnv('WEB_UPSTREAM_TIMEOUT_MS', '5000')),
   cookieName: optionalEnv('WEB_COOKIE_NAME', 'concert_session'),
   cookieSecure: optionalEnv('WEB_COOKIE_SECURE', 'false') === 'true',

@@ -18,6 +18,11 @@ export const STATUS_TONES: Record<string, string> = {
   failed: 'danger',
   sold_out: 'brand',
   admin: 'brand',
+  sending: 'info',
+  delivered: 'ok',
+  retrying: 'warn',
+  dead: 'danger',
+  skipped: 'muted',
 };
 
 export const EVENT_TRANSITION_LABELS: Record<string, string> = {

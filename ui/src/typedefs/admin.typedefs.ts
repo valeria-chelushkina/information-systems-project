@@ -46,3 +46,21 @@ export interface BookingsPage {
 }
 
 export type TeamRole = 'staff' | 'admin';
+
+export type NotificationStatus = 'sending' | 'delivered' | 'retrying' | 'dead' | 'skipped';
+
+export interface NotificationDelivery {
+  eventId: string;
+  orderId: string;
+  recipient: string;
+  status: NotificationStatus;
+  attempts: number;
+  lastError: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationSummary {
+  total: number;
+  byStatus: Record<NotificationStatus, number>;
+}

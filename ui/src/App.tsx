@@ -19,6 +19,7 @@ import { DashboardPage } from '@/pages/admin/DashboardPage';
 import { EventAdminPage } from '@/pages/admin/EventAdminPage';
 import { EventsAdminPage } from '@/pages/admin/EventsAdminPage';
 import { NewEventPage } from '@/pages/admin/NewEventPage';
+import { NotificationsPage } from '@/pages/admin/NotificationsPage';
 import { OrdersPage } from '@/pages/admin/OrdersPage';
 import { PerformersPage } from '@/pages/admin/PerformersPage';
 import { ReportsPage } from '@/pages/admin/ReportsPage';
@@ -83,6 +84,7 @@ export function App() {
               <Route path="bookings" element={<BookingsPage />} />
               <Route path="orders" element={<OrdersPage />} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
               <Route path="scan" element={<ScanPage />} />
               <Route
                 path="users"

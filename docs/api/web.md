@@ -79,6 +79,8 @@ All admin routes require the `staff` or `admin` role.
 | POST | `/api/admin/orders/:id/refund` | — | `{ orderId }` |
 | POST | `/api/admin/tickets/check-in` | `{ qrToken }` | admitted ticket and event, `staff` or `admin` only |
 | GET | `/api/admin/reports` | `from`, `to` (Kyiv days) | revenue, occupancy, performers and refunds |
+| GET | `/api/admin/notifications` | `limit`, `offset` | ticket email deliveries: `{ items, total, limit, offset }` |
+| GET | `/api/admin/notifications/summary` | - | delivery counts by status |
 | GET | `/api/admin/users` | `limit`, `offset` | team members only: `{ items, total, limit, offset }` (admin only) |
 | POST | `/api/admin/users` | `{ email, password, role }` where role is `staff` or `admin` | created team member (admin only) |
 

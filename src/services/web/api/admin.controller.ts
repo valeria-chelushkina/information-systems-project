@@ -278,6 +278,17 @@ export class AdminController {
     ok(res, report);
   });
 
+  notifications = asyncHandler(async (req: Request, res: Response) => {
+    const query = validate(pageQuerySchema, req.query);
+    const page = await this.service.listNotifications(query.limit, query.offset);
+
+    ok(res, page);
+  });
+
+  notificationSummary = asyncHandler(async (_req: Request, res: Response) => {
+    ok(res, await this.service.notificationSummary());
+  });
+
   users = asyncHandler(async (req: Request, res: Response) => {
     const token = currentToken(res);
     const query = validate(pageQuerySchema, req.query);

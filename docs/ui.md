@@ -69,6 +69,7 @@ Admin (staff and admin):
 | `/admin/bookings` | paginated booking requests, confirm or reject |
 | `/admin/orders` | order lookup and refund |
 | `/admin/reports` | analytics: revenue, occupancy, top performers, refunds by day, CSV export |
+| `/admin/notifications` | ticket email delivery state: status, attempts, last error, retry and dead-letter counts |
 | `/admin/scan` | door check-in: enter the code printed under the ticket QR, admit or report a used ticket |
 | `/admin/users` | Team: staff and admin accounts, creation (admin only) |
 

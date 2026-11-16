@@ -215,6 +215,24 @@ export interface AdminUserDto {
   createdAt: string;
 }
 
+export type NotificationStatus = 'sending' | 'delivered' | 'retrying' | 'dead' | 'skipped';
+
+export interface NotificationDeliveryDto {
+  eventId: string;
+  orderId: string;
+  recipient: string;
+  status: NotificationStatus;
+  attempts: number;
+  lastError: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationSummaryDto {
+  total: number;
+  byStatus: Record<NotificationStatus, number>;
+}
+
 export interface Page<T> {
   items: T[];
   total: number;

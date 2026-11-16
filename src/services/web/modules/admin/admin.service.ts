@@ -5,6 +5,7 @@ import type {
   UpdateVenuePayload,
 } from '@/services/web/clients/catalog.client.js';
 import { probe } from '@/services/web/clients/http.client.js';
+import { NotifyClient } from '@/services/web/clients/notify.client.js';
 import { TicketingClient } from '@/services/web/clients/ticketing.client.js';
 import { webConfig } from '@/services/web/config.js';
 import { PagesService } from '@/services/web/modules/pages/pages.service.js';
@@ -13,6 +14,9 @@ import type {
   BookingDto,
   EventDto,
   EventStatus,
+  NotificationDeliveryDto,
+  NotificationSummaryDto,
+  Page,
   PerformerDto,
   SessionUser,
   TierDto,
@@ -112,6 +116,7 @@ export class AdminService {
   protected readonly ticketing = new TicketingClient();
   protected readonly catalog = new CatalogClient();
   protected readonly auth = new AuthClient();
+  protected readonly notify = new NotifyClient();
   protected readonly pages = new PagesService();
 
   async dashboard(token: string): Promise<DashboardResult> {
@@ -297,5 +302,13 @@ export class AdminService {
 
   createUser(token: string, input: CreateAccountInput): Promise<AdminUserDto> {
     return this.auth.createUser(token, input);
+  }
+
+  listNotifications(limit: number, offset: number): Promise<Page<NotificationDeliveryDto>> {
+    return this.notify.listDeliveries(limit, offset);
+  }
+
+  notificationSummary(): Promise<NotificationSummaryDto> {
+    return this.notify.summary();
   }
 }

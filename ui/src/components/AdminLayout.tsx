@@ -5,7 +5,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { ADMIN_NAV_LINKS } from '@/constants/navigation.constants';
-import { GRAFANA_URL, PROMETHEUS_URL, RABBITMQ_URL, TRACES_URL } from '@/constants/links.constants';
+import { GRAFANA_URL, MAILPIT_URL, PROMETHEUS_URL, RABBITMQ_URL, TRACES_URL } from '@/constants/links.constants';
 import { initials } from '@/helpers/user';
 
 export function AdminLayout() {
@@ -89,6 +89,11 @@ export function AdminLayout() {
             <a className="side-link" href={RABBITMQ_URL} target="_blank" rel="noreferrer">
               <Icon name="inbox" className="side-link__icon" />
               <span>RabbitMQ</span>
+              <Icon name="external" className="side-link__out" />
+            </a>
+            <a className="side-link" href={MAILPIT_URL} target="_blank" rel="noreferrer">
+              <Icon name="bell" className="side-link__icon" />
+              <span>Inbox</span>
               <Icon name="external" className="side-link__out" />
             </a>
           </nav>
