@@ -1,13 +1,25 @@
+export interface PurchaseEventTicket {
+  id: string;
+  code: string;
+  tierName: string;
+}
+
+export interface PurchaseEventDetails {
+  id: string;
+  title: string;
+  performerName: string;
+  venueName: string;
+  startsAt: string;
+}
+
 export interface PurchaseCompletedEvent {
   id: string;
   type: 'purchase.completed';
   occurredAt: string;
   orderId: string;
-  showId: string;
-  tierId: string;
-  quantity: number;
-  amountCents: number;
-  currency: string;
   customerEmail: string;
-  ticketIds: string[];
+  totalCents: number;
+  currency: string;
+  event: PurchaseEventDetails;
+  tickets: PurchaseEventTicket[];
 }

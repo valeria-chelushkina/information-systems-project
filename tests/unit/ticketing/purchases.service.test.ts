@@ -142,6 +142,7 @@ function ticket(overrides: Record<string, unknown> = {}): Record<string, unknown
     unitPriceCents: 5000,
     status: 'issued',
     issuedAt: new Date(),
+    qrToken: 'a'.repeat(32),
     ...overrides,
   };
 }
@@ -288,6 +289,17 @@ describe('PurchasesService', () => {
     mocks.payments.insertOne.mockResolvedValue({ id: 'payment-1' });
     mocks.holds.updateStatus.mockResolvedValue(1);
     mocks.tiers.remainingInventory.mockResolvedValue(10);
+    mocks.events.findByIds.mockResolvedValue([
+      {
+        id: 'event-1',
+        title: 'After the Rain',
+        performerName: 'After the Rain',
+        venueName: 'Tokyo Dome',
+        startsAt: new Date('2026-11-17T12:35:34.053Z'),
+        status: 'on_sale',
+      },
+    ]);
+    mocks.tiers.findByIds.mockResolvedValue([{ id: 'tier-1', name: 'Floor GA' }]);
 
     const result = await service.purchase({
       holdId: 'hold-1',
@@ -303,7 +315,23 @@ describe('PurchasesService', () => {
       expect.objectContaining({ amountCents: 10000, status: 'captured' }),
       expect.anything(),
     );
-    expect(mocks.publisher.publish).toHaveBeenCalledWith(result);
+
+    await vi.waitFor(() => expect(mocks.publisher.publish).toHaveBeenCalledTimes(1));
+
+    const payload = mocks.publisher.publish.mock.calls[0]?.[0] as Record<string, unknown>;
+
+    expect(payload).toMatchObject({
+      type: 'purchase.completed',
+      orderId: 'order-1',
+      customerEmail: 'buyer@example.com',
+      totalCents: 10000,
+      currency: 'USD',
+      event: { id: 'event-1', title: 'After the Rain', venueName: 'Tokyo Dome' },
+    });
+    expect(payload.tickets).toHaveLength(2);
+    expect(payload.tickets).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: 'a'.repeat(32), tierName: 'Floor GA' })]),
+    );
   });
 
   it('rejects a refund for an order that is not paid', async () => {

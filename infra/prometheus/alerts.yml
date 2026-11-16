@@ -103,6 +103,14 @@ groups:
         annotations:
           summary: "Service {{ $labels.service }} failed to publish a RabbitMQ message"
 
+      - alert: RabbitmqDlqNotEmpty
+        expr: max(rabbitmq_queue_messages_ready{queue='notifications.dlq'}) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RabbitMQ dead-letter queue has messages"
+
       - alert: AuthFailureSpike
         expr: sum by (service) (rate(auth_failures_total[5m])) > 1
         for: 5m
@@ -142,3 +150,18 @@ groups:
           severity: warning
         annotations:
           summary: "Host disk usage is above 85% for more than 10 minutes"
+
+      - alert: TicketEmailRetries
+        expr: increase(notification_deliveries_total{status='retried'}[10m]) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ticket emails are being retried repeatedly"
+
+      - alert: TicketEmailDeadLettered
+        expr: increase(notification_deliveries_total{status='dead_lettered'}[5m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "A ticket email exhausted its retries and was parked in the dead-letter queue"

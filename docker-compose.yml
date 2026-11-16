@@ -75,6 +75,7 @@ services:
       - "${RABBITMQ_PROMETHEUS_PORT}:15692"
     volumes:
       - rabbitmqdata:/var/lib/rabbitmq
+      - ./infra/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -82,6 +83,23 @@ services:
       retries: 10
       start_period: 20s
     restart: unless-stopped
+    logging: *default-logging
+
+  rabbitmq-init:
+    image: curlimages/curl:8.10.1
+    container_name: concert-ops-rabbitmq-init
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASSWORD: ${RABBITMQ_DEFAULT_PASSWORD}
+      TICKETING_RABBITMQ_PASSWORD: ${TICKETING_RABBITMQ_PASSWORD:-dev_ticketing_rabbit}
+      NOTIFY_RABBITMQ_PASSWORD: ${NOTIFY_RABBITMQ_PASSWORD:-dev_notify_rabbit}
+    volumes:
+      - ./infra/rabbitmq/init.sh:/init.sh:ro
+    entrypoint: ["/bin/sh", "/init.sh"]
+    restart: "no"
     logging: *default-logging
 
   node-exporter:
@@ -94,6 +112,14 @@ services:
       - /:/host:ro
     ports:
       - "${NODE_EXPORTER_HOST_PORT:-9100}:9100"
+    restart: unless-stopped
+    logging: *default-logging
+
+  mailpit:
+    image: axllent/mailpit:v1.33.1
+    container_name: concert-ops-mailpit
+    ports:
+      - "${MAILPIT_HOST_PORT:-8025}:8025"
     restart: unless-stopped
     logging: *default-logging
 
@@ -130,12 +156,26 @@ services:
       SERVICE_NAME: notify
       NOTIFY_PORT: 3000
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
-      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@rabbitmq:5672
+      RABBITMQ_URL: amqp://svc_notify:${NOTIFY_RABBITMQ_PASSWORD:-dev_notify_rabbit}@rabbitmq:5672/concert_ops
+      TICKET_EMAIL_TRANSPORT: ${TICKET_EMAIL_TRANSPORT:-mailpit}
+      TICKET_EMAIL_FROM: ${TICKET_EMAIL_FROM:-tickets@concert-ops.local}
+      PURCHASE_MAX_ATTEMPTS: ${PURCHASE_MAX_ATTEMPTS:-4}
+      PURCHASE_RETRY_DELAY_MS: ${PURCHASE_RETRY_DELAY_MS:-30000}
+      MAILPIT_HOST: mailpit
+      MAILPIT_SMTP_PORT: 1025
+      NOTIFY_DB_PATH: /app/data/notify.db
+      WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:${WEB_HOST_PORT:-3008}}
+    volumes:
+      - notifydata:/app/data
     depends_on:
       otel-collector:
         condition: service_started
+      mailpit:
+        condition: service_started
       rabbitmq:
         condition: service_healthy
+      rabbitmq-init:
+        condition: service_completed_successfully
     restart: unless-stopped
     logging: *default-logging
 
@@ -207,7 +247,9 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       HOLD_TTL_MS: ${HOLD_TTL_MS}
       HOLD_SWEEP_INTERVAL_MS: ${HOLD_SWEEP_INTERVAL_MS}
-      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@rabbitmq:5672
+      RABBITMQ_URL: amqp://svc_ticketing:${TICKETING_RABBITMQ_PASSWORD:-dev_ticketing_rabbit}@rabbitmq:5672/concert_ops
+      PURCHASE_MAX_ATTEMPTS: ${PURCHASE_MAX_ATTEMPTS:-4}
+      PURCHASE_RETRY_DELAY_MS: ${PURCHASE_RETRY_DELAY_MS:-30000}
     ports:
       - "${TICKETING_HOST_PORT}:3000"
     depends_on:
@@ -215,6 +257,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      rabbitmq-init:
+        condition: service_completed_successfully
       auth:
         condition: service_started
       catalog:
@@ -264,6 +308,7 @@ services:
       AUTH_BASE_URL: http://auth:3000
       TICKETING_BASE_URL: http://ticketing:3000
       CATALOG_BASE_URL: http://catalog:3000
+      NOTIFY_BASE_URL: http://notify:3000
       WEB_COOKIE_SECURE: ${WEB_COOKIE_SECURE:-false}
       WEB_TIME_ZONE: ${WEB_TIME_ZONE:-Europe/Kyiv}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
@@ -275,6 +320,8 @@ services:
       catalog:
         condition: service_started
       ticketing:
+        condition: service_started
+      notify:
         condition: service_started
     restart: unless-stopped
     logging: *default-logging
@@ -403,6 +450,7 @@ services:
 volumes:
   pgdata:
   authdata:
+  notifydata:
   promdata:
   alertmanagerdata:
   rabbitmqdata:

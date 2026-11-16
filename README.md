@@ -14,7 +14,7 @@ and a full observability stack.
 - print an order's tickets or save them as a PDF;
 - show performer bios in the storefront, with a public performer directory;
 - authenticate users with opaque session tokens and per-service introspection;
-- publish `purchase.completed` to RabbitMQ and consume it in `notify`;
+- publish `purchase.completed` to RabbitMQ, retry it with a delay and deliver the ticket email from `notify`;
 - expose metrics, structured logs, distributed traces and alerts;
 - serve an English-language React storefront with an admin panel backed by a cookie-based BFF;
 - let customers register, buy tickets and see their purchases in a profile;
@@ -83,6 +83,7 @@ docker compose --env-file .env.example --profile demo up --build -d
 | node_exporter | `http://localhost:9100/metrics` |
 | Alertmanager | `http://localhost:9093` |
 | RabbitMQ | `http://localhost:15672` (`admin` / `admin`) |
+| Mailpit (ticket emails) | `http://localhost:8025` |
 
 The UI has a public catalogue, customer checkout and an admin panel. Seeded
 accounts: `admin@example.com`, `staff@example.com`, `customer@example.com`;
@@ -152,7 +153,9 @@ More commands: [development](docs/development.md). More scenarios:
 Grafana contains eight provisioned dashboards: Overview, API Monitoring,
 Service Detail, Infrastructure, Postgres, Messaging, Logs and Traces.
 The stack exposes metrics, logs and traces out of the box. Alertmanager can also
-email alerts when `SMTP_*` and `ALERT_EMAIL_TO` are set.
+email alerts when `SMTP_*` and `ALERT_EMAIL_TO` are set. Ticket emails go to
+Mailpit by default; set `TICKET_EMAIL_TRANSPORT=smtp` to send them through the
+same SMTP account.
 
 | Where | What |
 | --- | --- |

@@ -40,7 +40,7 @@ GRAFANA_ADMIN_PASSWORD=admin-password
 | Service Detail | `concert-ops-service` | one service: golden signals, routes, latency heatmap, DB query table, pool |
 | Infrastructure | `concert-ops-infrastructure` | host CPU, memory, swap, disk usage and I/O, network, per-service process CPU and memory |
 | Postgres | `concert-ops-postgres` | connections, transactions, cache, locks, slow statements |
-| Messaging | `concert-ops-messaging` | queue depth, throughput, consumers, failures |
+| Messaging | `concert-ops-messaging` | queue depth, throughput, consumers, failures, DLQ, ticket email outcomes |
 | Logs | `concert-ops-logs` | log volume, errors, request lookup, status from logs |
 | Traces | `concert-ops-traces` | recent traces and error traces |
 

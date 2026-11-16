@@ -39,7 +39,8 @@ Alloy ──► Loki ──► Grafana
 | node_exporter | 9100 | host CPU, memory, swap, disk and network metrics | [node-exporter.md](node-exporter.md) |
 | RabbitMQ | 5672 / 15672 / 15692 | message broker, management UI, built-in metrics | [rabbitmq.md](rabbitmq.md) |
 | Alertmanager | 9093 | alert routing | [alertmanager.md](alertmanager.md) |
-| notify | internal | alert webhook and RabbitMQ consumer | [notify.md](notify.md) |
+| notify | internal | alert webhook, ticket email worker and RabbitMQ consumer | [notify.md](notify.md) |
+| Mailpit | 8025 | development inbox for ticket emails | [notify.md](notify.md#ticket-email-pipeline) |
 
 ## Dashboards
 
@@ -52,7 +53,7 @@ Grafana contains eight provisioned dashboards, grouped by the `concert-ops` tag:
 | Service Detail | `concert-ops-service` | one service: golden signals, routes, latency heatmap, DB queries, pool |
 | Infrastructure | `concert-ops-infrastructure` | host CPU, memory, swap, disk I/O, network and per-service process usage |
 | Postgres | `concert-ops-postgres` | connections, transactions, cache, locks, slow statements |
-| Messaging | `concert-ops-messaging` | queue depth, throughput, consumers, failures |
+| Messaging | `concert-ops-messaging` | queue depth, throughput, consumers, failures, DLQ, ticket email outcomes |
 | Logs | `concert-ops-logs` | log volume, errors, request lookup, status from logs |
 | Traces | `concert-ops-traces` | recent traces and error traces |
 

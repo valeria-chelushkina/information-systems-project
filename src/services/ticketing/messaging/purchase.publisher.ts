@@ -1,8 +1,7 @@
-import { randomUUID } from 'node:crypto';
 import type { ConfirmChannel } from 'amqplib';
 import {
   assertPurchaseTopology,
-  PURCHASE_EVENT,
+  PURCHASE_ATTEMPTS_HEADER,
   PURCHASE_EXCHANGE,
   PURCHASE_ROUTING_KEY,
 } from '@/shared/messaging/purchase-topology.js';
@@ -13,32 +12,11 @@ import {
   publishFailuresTotal,
 } from '@/shared/observability/messaging-metrics.js';
 import { logger } from '@/shared/observability/logger.js';
-import type { PurchaseResult } from '@/services/ticketing/typedefs/purchase.typedefs.js';
 
 export class PurchasePublisher {
   protected channelPromise: Promise<ConfirmChannel> | null = null;
 
-  async publish(result: PurchaseResult): Promise<void> {
-    const ticket = result.tickets[0];
-
-    if (!ticket) {
-      return;
-    }
-
-    const event: PurchaseCompletedEvent = {
-      id: randomUUID(),
-      type: PURCHASE_EVENT,
-      occurredAt: new Date().toISOString(),
-      orderId: result.order.id,
-      showId: ticket.eventId,
-      tierId: ticket.tierId,
-      quantity: result.tickets.length,
-      amountCents: result.order.totalCents,
-      currency: 'USD',
-      customerEmail: result.order.customerEmail,
-      ticketIds: result.tickets.map((row) => row.id),
-    };
-
+  async publish(event: PurchaseCompletedEvent): Promise<void> {
     try {
       const channel = await this.getChannel();
 
@@ -51,6 +29,7 @@ export class PurchasePublisher {
             persistent: true,
             contentType: 'application/json',
             messageId: event.id,
+            headers: { [PURCHASE_ATTEMPTS_HEADER]: 1 },
           },
           (error) => {
             if (error) {

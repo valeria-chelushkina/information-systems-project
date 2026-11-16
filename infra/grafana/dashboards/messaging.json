@@ -51,8 +51,8 @@
         "tooltip": { "mode": "multi", "sort": "desc" }
       },
       "targets": [
-        { "refId": "A", "expr": "rabbitmq_queue_messages_ready", "legendFormat": "ready" },
-        { "refId": "B", "expr": "rabbitmq_queue_messages_unacked", "legendFormat": "unacked" }
+        { "refId": "A", "expr": "rabbitmq_queue_messages_ready", "legendFormat": "{{queue}} ready" },
+        { "refId": "B", "expr": "rabbitmq_queue_messages_unacked", "legendFormat": "{{queue}} unacked" }
       ]
     },
     {
@@ -95,7 +95,7 @@
       "type": "stat",
       "title": "Consumers",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -125,7 +125,7 @@
       "type": "stat",
       "title": "Publish failures (range)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 8 },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -160,7 +160,7 @@
       "type": "stat",
       "title": "Message bytes",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
@@ -177,6 +177,129 @@
       },
       "targets": [
         { "refId": "A", "expr": "max(rabbitmq_queue_messages_bytes) or vector(0)", "instant": true, "range": false }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Dead-letter queue",
+      "description": "Messages rejected by the consumer and routed to notifications.dlq",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 10 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        { "refId": "A", "expr": "max(rabbitmq_queue_messages_ready{queue=\"notifications.dlq\"}) or vector(0)", "instant": true, "range": false }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Ticket email deliveries",
+      "description": "Outcomes recorded by the notify worker: delivered, retried, dead-lettered, skipped, invalid",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (status) (rate(notification_deliveries_total[$__rate_interval]))",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Dead-lettered (range)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 16 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(notification_deliveries_total{status=\"dead_lettered\"}[$__range])) or vector(0)",
+          "instant": true,
+          "range": false
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "Retry queue ready",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 16 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      },
+      "targets": [
+        { "refId": "A", "expr": "max(rabbitmq_queue_messages_ready{queue=\"notifications.retry\"}) or vector(0)", "instant": true, "range": false }
       ]
     }
   ]

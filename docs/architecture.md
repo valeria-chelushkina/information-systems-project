@@ -43,7 +43,7 @@ from the business services.
 | `ticketing` | events, price tiers, holds, orders, tickets, payments, refunds | `db_ticketing` (PostgreSQL) |
 | `catalog` | performers, venues, booking requests | `db_catalog` (PostgreSQL) |
 | `auth` | users, sessions, login attempts | `auth.db` (SQLite) |
-| `notify` | Alertmanager webhook receiver + RabbitMQ consumer | no database |
+| `notify` | Alertmanager webhook, RabbitMQ consumer and ticket email worker | SQLite (`notify.db`) |
 
 Infrastructure: PostgreSQL, RabbitMQ, Prometheus, Grafana, Loki + Alloy,
 Tempo + OpenTelemetry Collector, Alertmanager, two postgres exporters.
@@ -123,9 +123,12 @@ The second overlapping confirmation returns `409 booking_conflict`.
 ### Messaging
 
 `ticketing` publishes `purchase.completed` after the purchase transaction
-commits. `notify` consumes the durable `notifications` queue, validates the
-payload and logs the notification. Queue and messages are durable, so stopping
-the consumer does not lose events.
+commits. `notify` consumes the durable `notifications` queue, claims each event
+once, renders the ticket email and sends it through Mailpit or SMTP. Failed
+sends wait in `notifications.retry` and are parked in `notifications.dlq` after
+`PURCHASE_MAX_ATTEMPTS`. Queue and messages are durable, so stopping the
+consumer does not lose events, and the delivery store makes redelivery
+idempotent.
 
 ### Observability
 
@@ -154,6 +157,7 @@ network services reach each other by service name (`http://catalog:3000`,
 | catalog | 3004 | 3000 |
 | auth | 3006 | 3000 |
 | notify | internal only | 3000 |
+| mailpit | 8025 | 8025 |
 | prometheus | 9090 | 9090 |
 | alertmanager | 9093 | 9093 |
 | grafana | 3007 | 3000 |
@@ -164,7 +168,7 @@ network services reach each other by service name (`http://catalog:3000`,
 | postgres | 5434 | 5432 |
 | postgres exporters | 9187 / 9188 | 9187 |
 
-Persistent data lives in named volumes: `pgdata`, `authdata`, `promdata`,
+Persistent data lives in named volumes: `pgdata`, `authdata`, `notifydata`, `promdata`,
 `grafanadata`, `lokidata`, `alloydata`, `tempodata`, `alertmanagerdata`,
 `rabbitmqdata`.
 

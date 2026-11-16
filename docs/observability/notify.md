@@ -2,12 +2,15 @@
 
 ## What it is for
 
-`notify` has two roles:
+`notify` has three roles:
 
 1. **Alertmanager webhook receiver** — accepts `POST /alerts`, validates the
    payload and writes every alert to a structured log.
 2. **RabbitMQ consumer** — reads the `notifications` queue and processes
    `purchase.completed` events from `ticketing`.
+3. **Ticket email worker** — claims each event once, renders the ticket email
+   with the entry codes and sends it through Mailpit or SMTP. Failures are
+   retried with a delay and parked in `notifications.dlq`.
 
 The alert path:
 
@@ -19,11 +22,14 @@ Prometheus → Alertmanager → notify → stdout → Alloy → Loki → Grafana
 The messaging path:
 
 ```
-ticketing → RabbitMQ (notifications) → notify → stdout → Alloy → Loki
+ticketing → RabbitMQ (notifications) → notify → ticket email → Mailpit / SMTP
+                                            └→ delivery state (SQLite)
+                                            └→ stdout → Alloy → Loki
 ```
 
 The service has no host port: it is reachable only inside the Compose network
-at `http://notify:3000`. Its clients are Alertmanager and RabbitMQ.
+at `http://notify:3000`. Its clients are Alertmanager, RabbitMQ and the web BFF
+(read-only delivery API).
 
 ## Configuration
 
@@ -39,8 +45,15 @@ at `http://notify:3000`. Its clients are Alertmanager and RabbitMQ.
 | email config | `src/services/notify/config.ts` |
 | RabbitMQ consumer | `src/services/notify/modules/notifications/notifications.consumer.ts` |
 | notification handler | `src/services/notify/modules/notifications/notifications.service.ts` |
+| ticket email | `src/services/notify/modules/notifications/notifications.email.ts` |
+| delivery store | `src/services/notify/modules/notifications/deliveries.repository.ts` |
+| delivery API | `src/services/notify/modules/notifications/notifications.router.ts` |
+| local inbox | Mailpit, `http://localhost:8025` |
+| database | SQLite, `notifydata` volume, `/app/data/notify.db` |
 | container | `concert-ops-notify`, port `3000` internally |
 | queue | `notifications`, exchange `concert-ops`, key `purchase.completed` |
+| retry queue | `notifications.retry`, TTL `PURCHASE_RETRY_DELAY_MS` |
+| parking queue | `notifications.dlq` |
 
 The Alertmanager payload follows webhook v4: an `alerts` array with `status`,
 `labels`, `annotations`, `startsAt` and `endsAt`.
@@ -54,6 +67,34 @@ the email integration and the webhook, so `notify` only logs the alert for Loki.
 `notify` still contains an optional SMTP sender (`SMTP_*`, `ALERT_EMAIL_TO`,
 `ALERT_EMAIL_RETRY_MINUTES`) for standalone use, but Compose does not pass those
 variables to it. Enabling both paths would send two emails per alert.
+
+## Ticket email pipeline
+
+Every `purchase.completed` event carries the customer address, the order total
+and the event snapshot (`title`, `performerName`, `venueName`, `startsAt`), plus
+one entry code per ticket.
+
+1. **Claim** — `notification_deliveries` stores one row per event id. The claim
+   is an atomic `INSERT … ON CONFLICT DO UPDATE … WHERE status <> 'delivered'`:
+   a delivered event is skipped, a redelivery increments `attempts`.
+2. **Render** — `notifications.email.ts` builds a plain-text and an HTML email
+   with the order link, total, event details and the entry codes.
+3. **Send** — `TICKET_EMAIL_TRANSPORT=mailpit` (default) sends to Mailpit at
+   `mailpit:1025`; `smtp` uses the existing `SMTP_*` credentials.
+4. **Retry** — a transient failure publishes the message to
+   `notifications.retry`. That queue holds it for `PURCHASE_RETRY_DELAY_MS`
+   (30 s by default) and then dead-letters it back to the main exchange, so the
+   consumer sees the same event again with `x-attempts` incremented.
+5. **Park** — after `PURCHASE_MAX_ATTEMPTS` (4 by default) the row becomes
+   `dead` and the message is published to `notifications.dlq`.
+6. **Observe** — `notification_deliveries_total{status}` counts `delivered`,
+   `retried`, `dead_lettered`, `skipped` and `invalid`; the admin panel reads
+   the same state through `GET /notifications`. The last error is kept after a
+   successful retry, so a two-attempt row shows `Recovered after: <error>`.
+
+Changing `PURCHASE_RETRY_DELAY_MS` changes the retry queue argument, so the
+queue must be deleted once (`rabbitmqctl delete_queue notifications.retry`) or
+redeclared through the management UI before the next start.
 
 ## How to verify
 
@@ -111,8 +152,21 @@ Expected: `"queue":"notifications","msg":"purchase consumer started"`.
 8. After a purchase:
 
 ```
-"event":"purchase.completed","order_id":"...","msg":"purchase notification received"
+"event_id":"...","order_id":"...","attempts":1,"message_id":"<...>","msg":"ticket email sent"
 ```
+
+9. Mailpit inbox: `http://localhost:8025` shows the message with the subject
+   `Your tickets: <event>`, the total and one entry code per ticket.
+
+10. Delivery API:
+
+```powershell
+docker compose exec -T notify node -e "fetch('http://127.0.0.1:3000/notifications?limit=5').then(r=>r.json()).then(j=>console.log(JSON.stringify(j,null,2)))"
+```
+
+11. Admin panel: **Notifications** in the sidebar shows the same rows with
+    status, attempts and the last error. See
+    [notify API](../api/notify.md#delivery-api).
 
 More details in [rabbitmq.md](rabbitmq.md).
 
@@ -163,6 +217,7 @@ app.use(requestMetrics);
 app.use(healthRouter);
 app.use(metricsRouter);
 app.use(alertsRouter);
+app.use(notificationsRouter);
 ```
 
 That is why every Alertmanager call also appears in
@@ -180,13 +235,22 @@ const server = app.listen(config.port, () => {
 });
 ```
 
-Message handling (`notifications.consumer.ts`) acknowledges only after
-validation and processing:
+Message handling (`notifications.consumer.ts`) acknowledges only after the
+outcome is committed to the broker or the delivery store:
 
 ```ts
 const event = purchaseCompletedSchema.parse(JSON.parse(message.content.toString()));
+const outcome = await this.service.handle(event);
 
-this.service.handle(event);
+if (outcome.status === 'retry') {
+  await this.requeueWithDelay(channel, message, outcome.attempts + 1, outcome.error);
+} else if (outcome.status === 'dead') {
+  await this.moveToDeadLetter(channel, message, outcome.error);
+}
+
 channel.ack(message);
-messagesConsumedTotal.inc({ event: PURCHASE_EVENT, status: 'ok' });
+messagesConsumedTotal.inc({ event: PURCHASE_EVENT, status: outcome.status });
 ```
+
+`service.handle` claims the event, sends the email and writes the delivery row;
+the consumer only decides whether the message is acked, delayed or parked.

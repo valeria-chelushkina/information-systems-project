@@ -139,7 +139,7 @@ Invoke-RestMethod "http://localhost:9090/api/v1/query?query=host:disk_usage:perc
 ```
 
 4. Rules: `http://localhost:9090/rules` shows the `concert-ops` group with 18
-   recording rules and the `default` group with 18 alerts.
+   recording rules and the `default` group with 19 alerts.
 
 5. Dashboard: `http://localhost:3007/d/concert-ops-infrastructure`.
 

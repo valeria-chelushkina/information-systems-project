@@ -1,5 +1,8 @@
+import { randomUUID } from 'node:crypto';
 import { ticketingConfig } from '@/services/ticketing/config.js';
 import { transaction } from '@/shared/db/transaction.js';
+import type { PurchaseCompletedEvent } from '@/shared/messaging/purchase-event.typedefs.js';
+import { logger } from '@/shared/observability/logger.js';
 import { EventsRepository } from '@/services/ticketing/modules/events/events.repository.js';
 import { HoldsRepository } from '@/services/ticketing/modules/purchases/holds.repository.js';
 import { OrdersRepository } from '@/services/ticketing/modules/purchases/orders.repository.js';
@@ -202,7 +205,7 @@ export class PurchasesService {
         return { order, tickets: issued, created: true };
       });
 
-      void this.publisher.publish(result);
+      void this.publishPurchaseEvent(result);
 
       return result;
     } catch (error) {
@@ -354,5 +357,59 @@ export class PurchasesService {
   private async loadOrder(order: OrderRow, created: boolean): Promise<PurchaseResult> {
     const tickets = await this.tickets.findByOrderId(order.id);
     return { order, tickets, created };
+  }
+
+  private async publishPurchaseEvent(result: PurchaseResult): Promise<void> {
+    const ticket = result.tickets[0];
+
+    if (!ticket) {
+      return;
+    }
+
+    try {
+      const [events, tiers] = await Promise.all([
+        this.events.findByIds([ticket.eventId]),
+        this.tiers.findByIds([...new Set(result.tickets.map((row) => row.tierId))]),
+      ]);
+      const event = events[0];
+
+      if (!event) {
+        logger.warn(
+          { order_id: result.order.id, event_id: ticket.eventId },
+          'purchase event skipped: event not found',
+        );
+        return;
+      }
+
+      const tierNames = new Map(tiers.map((tier) => [tier.id, tier.name]));
+      const payload: PurchaseCompletedEvent = {
+        id: randomUUID(),
+        type: 'purchase.completed',
+        occurredAt: new Date().toISOString(),
+        orderId: result.order.id,
+        customerEmail: result.order.customerEmail,
+        totalCents: result.order.totalCents,
+        currency: 'USD',
+        event: {
+          id: event.id,
+          title: event.title,
+          performerName: event.performerName,
+          venueName: event.venueName,
+          startsAt: event.startsAt.toISOString(),
+        },
+        tickets: result.tickets.map((row) => ({
+          id: row.id,
+          code: row.qrToken,
+          tierName: tierNames.get(row.tierId) ?? 'Standard',
+        })),
+      };
+
+      await this.publisher.publish(payload);
+    } catch (error) {
+      logger.error(
+        { err: error, order_id: result.order.id },
+        'failed to build purchase event',
+      );
+    }
   }
 }

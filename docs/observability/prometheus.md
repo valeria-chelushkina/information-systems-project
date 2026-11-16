@@ -70,7 +70,7 @@ Expected: `Prometheus Server is Ready.`
   Select-Object @{ n = 'job'; e = { $_.labels.job } }, health
 ```
 
-4. Rules: `http://localhost:9090/rules` contains the `default` group with 18
+4. Rules: `http://localhost:9090/rules` contains the `default` group with 21
    alerts and the `concert-ops` group with 18 recording rules.
 
 5. Current alerts: `http://localhost:9090/alerts`.
