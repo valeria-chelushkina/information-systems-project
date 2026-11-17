@@ -62,8 +62,10 @@ receiver: 'gmail-receiver'
 ## Email notifications
 
 Alertmanager reads SMTP settings from the environment and renders
-`alertmanager.template.yml` into `/tmp/alertmanager.yml` on start. Missing
-values fail the container immediately instead of silently dropping alerts.
+`alertmanager.template.yml` into `/tmp/alertmanager.yml` on start. If
+`SMTP_HOST`, `SMTP_FROM` or `ALERT_EMAIL_TO` is missing, it falls back to
+`alertmanager.webhook.template.yml`: the webhook still delivers alerts to
+`notify`, email is disabled, and a warning is written to the container log.
 
 | Variable | Example | Purpose |
 | --- | --- | --- |

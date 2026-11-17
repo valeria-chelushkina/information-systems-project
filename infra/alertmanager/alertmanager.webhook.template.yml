@@ -1,0 +1,12 @@
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10m
+  repeat_interval: 1h
+  receiver: 'gmail-receiver'
+
+receivers:
+  - name: 'gmail-receiver'
+    webhook_configs:
+      - send_resolved: true
+        url: http://notify:3000/alerts

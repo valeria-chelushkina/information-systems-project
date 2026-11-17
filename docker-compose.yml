@@ -363,6 +363,7 @@ services:
       ALERTMANAGER_EXTERNAL_URL: ${ALERTMANAGER_EXTERNAL_URL:-http://localhost:${ALERTMANAGER_HOST_PORT:-9093}}
     volumes:
       - ./infra/alertmanager/alertmanager.template.yml:/etc/alertmanager/alertmanager.template.yml:ro
+      - ./infra/alertmanager/alertmanager.webhook.template.yml:/etc/alertmanager/alertmanager.webhook.template.yml:ro
       - ./infra/alertmanager/entrypoint.sh:/etc/alertmanager/entrypoint.sh:ro
       - alertmanagerdata:/alertmanager
     ports:
