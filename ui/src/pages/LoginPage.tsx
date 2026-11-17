@@ -72,38 +72,8 @@ export function LoginPage() {
   return (
     <section className="auth">
       <div className="container auth__inner">
-        <div className="auth__brand">
-          <span className="eyebrow eyebrow--pill">
-            <Icon name="shield" className="icon icon--xs" />
-            Secure access
-          </span>
-          <h1>Run your concert venue from one place</h1>
-          <p>
-            Events, ticket tiers, bookings, orders and users in a single interface. What you can
-            see depends on your role.
-          </p>
-          <ul className="auth__points">
-            <li>
-              <Icon name="check" className="icon icon--sm" />
-              Session is stored in an httpOnly cookie
-            </li>
-            <li>
-              <Icon name="check" className="icon icon--sm" />
-              Tokens are verified through auth introspection
-            </li>
-            <li>
-              <Icon name="check" className="icon icon--sm" />
-              Roles: admin, staff or customer
-            </li>
-          </ul>
-          <div className="auth__demo">
-            <span className="auth__demo-label">Demo access</span>
-            <code>admin@example.com</code>
-            <code>admin-password</code>
-          </div>
-        </div>
-
-        <div className="auth__card">
+        <div className="auth__panel">
+          <div className="auth__card">
           <div className="auth__card-head">
             <div>
               <h2>{isRegister ? 'Create your account' : 'Welcome back'}</h2>
@@ -222,6 +192,13 @@ export function LoginPage() {
             <Icon name="arrow" className="icon icon--sm icon--flip" />
             Back to the site
           </Link>
+          </div>
+
+          <div className="auth__demo auth__demo--below">
+            <span className="auth__demo-label">Demo admin</span>
+            <code>admin@example.com</code>
+            <code>admin-password</code>
+          </div>
         </div>
       </div>
     </section>

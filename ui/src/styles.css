@@ -1787,11 +1787,18 @@ code {
 }
 
 .auth__inner {
-  display: grid;
-  grid-template-columns: 1fr 440px;
-  gap: 56px;
+  display: flex;
   align-items: center;
+  justify-content: center;
   min-height: calc(100vh - 220px);
+}
+
+.auth__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 440px;
 }
 
 .auth__brand h1 {
@@ -1837,6 +1844,11 @@ code {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.auth__demo--below {
+  margin-top: 0;
+  justify-content: center;
 }
 
 .auth__tabs {
@@ -1890,6 +1902,8 @@ code {
 }
 
 .auth__card {
+  width: 100%;
+  max-width: 440px;
   padding: 30px;
   border: 1px solid var(--line);
   border-radius: 20px;
