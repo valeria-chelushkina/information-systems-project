@@ -1,0 +1,38 @@
+{
+  "rabbit_version": "4.0.0",
+  "users": [
+    {
+      "name": "svc_ticketing",
+      "password_hash": "RNNjVvItfueXncyjEYUWaq4+dRlSW7UPK/WZf/pCKnupGrVo",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": []
+    },
+    {
+      "name": "svc_notify",
+      "password_hash": "4b8lI4K6pELYYEHIpzedNqPFII8xCiVI2OuxyR+ZPv0pckl2",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": []
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "concert_ops"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "svc_ticketing",
+      "vhost": "concert_ops",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    },
+    {
+      "user": "svc_notify",
+      "vhost": "concert_ops",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ]
+}

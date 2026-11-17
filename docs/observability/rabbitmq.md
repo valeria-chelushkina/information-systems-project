@@ -59,7 +59,7 @@ container; the exchange, queues and bindings are declared by the application.
 | virtual host | `concert_ops` |
 | publisher user | `svc_ticketing` |
 | consumer user | `svc_notify` |
-| users and permissions | `infra/rabbitmq/init.sh`, one-shot `rabbitmq-init` service |
+| users and permissions | `infra/rabbitmq/definitions.json`, loaded at startup by `rabbitmq.conf` |
 | plugin config | `infra/rabbitmq/rabbitmq.conf` |
 | storage | `rabbitmqdata` volume, `/var/lib/rabbitmq` |
 | queues | `notifications`, `notifications.retry`, `notifications.dlq` |
@@ -86,16 +86,19 @@ command: >
 prometheus.return_per_object_metrics = true
 ```
 
-The `rabbitmq-init` container runs after RabbitMQ becomes healthy, creates the
-virtual host, both service users and their permissions through the management
-API, then exits. It is idempotent, so it can run on every `docker compose up`.
+The `concert_ops` vhost, both service users and their permissions are declared
+in `infra/rabbitmq/definitions.json`. RabbitMQ loads that file at startup via
+`load_definitions` in `rabbitmq.conf`, so no separate init container is needed.
+The file contains password hashes for the development credentials; if you
+change `TICKETING_RABBITMQ_PASSWORD` or `NOTIFY_RABBITMQ_PASSWORD`, regenerate
+the hashes with `rabbitmqctl hash_password` and update the definitions file.
 
 ## How to verify
 
-1. Container is healthy and the init job succeeded:
+1. Container is healthy:
 
 ```powershell
-docker compose ps -a rabbitmq rabbitmq-init
+docker compose ps rabbitmq
 ```
 
 2. Management UI: `http://localhost:15672`, login `admin` / `admin`.
